@@ -44,12 +44,11 @@ export function ProductShowcase() {
       <div className="dots" aria-hidden="true" />
       <Tabs.Root asChild value={tab} onValueChange={setTab}>
         <div className="wrap sc-wrap">
-          <div className="head-row">
-            <div className="head-col">
-              <div className="mono">Product</div>
-              <h2 className="h2">Everything a call needs. <em>One window.</em></h2>
-            </div>
-            <p className="lede" style={{ maxWidth: 360 }}>Build agents, hear them translate, and test them live — the same tools your team uses in the workspace.</p>
+          {/* A centered statement, unlike the side-by-side section heads around it. */}
+          <div className="head-center">
+            <div className="mono">Product</div>
+            <h2 className="h2">Everything a call needs. One window.</h2>
+            <p className="lede">Build agents, hear them translate, and test them live — the same tools your team uses in the workspace.</p>
           </div>
 
           <Tabs.List className="seg" aria-label="Product areas">

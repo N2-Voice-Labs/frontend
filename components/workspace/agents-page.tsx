@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { listAgents, type AgentView } from "@/lib/agents/view";
 import { ROUTES } from "@/lib/landing/config";
 import { AgentCard } from "./agent-card";
@@ -9,6 +9,8 @@ import { WORKSPACE_SEARCH_ID } from "./workspace-nav";
 
 type Phase = "loading" | "error" | "empty" | "ready";
 type StatusFilter = "all" | "ready" | "draft";
+type SortKey = "name" | "updated";
+const SORTS: { id: SortKey; label: string }[] = [{ id: "name", label: "Name" }, { id: "updated", label: "Updated" }];
 const LANGS = ["EN", "RU", "KO"];
 
 function StateOrb({ error }: { error?: boolean }) {
@@ -27,6 +29,7 @@ export function AgentsPage() {
   const [status, setStatus] = useState<StatusFilter>("all");
   const [langs, setLangs] = useState<string[]>([]);
   const [view, setView] = useState<"grid" | "list">("grid");
+  const [sort, setSort] = useState<SortKey>("name");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const load = useCallback((isCurrent: () => boolean = () => true) => {
@@ -47,8 +50,29 @@ export function AgentsPage() {
     const q = query.trim().toLowerCase();
     return agents.filter((a) => (status === "all" || (status === "ready") === a.ready)
       && langs.every((l) => a.langs.includes(l))
-      && (!q || `${a.name} ${a.purpose} ${a.langs.join(" ")}`.toLowerCase().includes(q)));
-  }, [agents, query, status, langs]);
+      && (!q || `${a.name} ${a.purpose} ${a.langs.join(" ")}`.toLowerCase().includes(q)))
+      .sort(sort === "name"
+        ? (a, b) => a.name.localeCompare(b.name)
+        : (a, b) => (b.updatedAt ?? -Infinity) - (a.updatedAt ?? -Infinity)); // most recent first
+  }, [agents, query, status, langs, sort]);
+
+  /**
+   * Arrow keys move between cards (Up/Down by a whole row in grid view), Home/End jump to the ends.
+   * Selection follows focus, so the inspector updates as you move.
+   */
+  const onGridKey = (e: KeyboardEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (!target.classList.contains("ag-select")) return;
+    const buttons = [...e.currentTarget.querySelectorAll<HTMLButtonElement>(".ag-select")];
+    const i = buttons.indexOf(target as HTMLButtonElement);
+    const cols = view === "list" ? 1 : getComputedStyle(e.currentTarget).gridTemplateColumns.split(" ").length;
+    const next = { ArrowRight: i + 1, ArrowLeft: i - 1, ArrowDown: i + cols, ArrowUp: i - cols, Home: 0, End: buttons.length - 1 }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    const to = buttons[Math.max(0, Math.min(buttons.length - 1, next))];
+    to.focus();
+    to.click();
+  };
 
   // Keep a visible agent selected (the first one when the selection is filtered out).
   const selected = filtered.find((a) => a.id === selectedId) ?? filtered[0] ?? null;
@@ -107,6 +131,12 @@ export function AgentsPage() {
                   <button key={s} type="button" className="filter" aria-pressed={status === s} onClick={() => setStatus(s)}>{{ all: "All", ready: "Ready", draft: "Drafts" }[s]}</button>
                 ))}
               </div>
+              <div className="sort" role="group" aria-label="Sort by">
+                <span className="mono sm" aria-hidden="true">Sort</span>
+                {SORTS.map((s) => (
+                  <button key={s.id} type="button" className="filter" aria-pressed={sort === s.id} onClick={() => setSort(s.id)}>{s.label}</button>
+                ))}
+              </div>
               <div className="chips" role="group" aria-label="Languages">
                 {LANGS.map((l) => (
                   <button key={l} type="button" className="chip" aria-pressed={langs.includes(l)} onClick={() => setLangs((cur) => (cur.includes(l) ? cur.filter((x) => x !== l) : [...cur, l]))}>{l}</button>
@@ -142,7 +172,7 @@ export function AgentsPage() {
           {phase === "ready" && (
             <div className="body" data-view={view}>
               <div>
-                <div className="grid">
+                <div className="grid" onKeyDown={onGridKey}>
                   {filtered.map((a) => (
                     <AgentCard key={a.id} agent={a} n={agents.indexOf(a) + 1} selected={a.id === selected?.id} onSelect={() => setSelectedId(a.id)} />
                   ))}

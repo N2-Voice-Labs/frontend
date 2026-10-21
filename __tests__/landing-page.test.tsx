@@ -101,6 +101,30 @@ describe("landing page", () => {
     expect(toggle.querySelector(".theme-sun")).toBeTruthy();
   });
 
+  it("pauses animations in sections that are mostly off screen", () => {
+    const observed: Element[] = [];
+    let callback: IntersectionObserverCallback = () => {};
+    const Original = globalThis.IntersectionObserver;
+    globalThis.IntersectionObserver = class {
+      constructor(cb: IntersectionObserverCallback) { callback = cb; }
+      observe(el: Element) { observed.push(el); }
+      disconnect() {}
+      unobserve() {}
+      takeRecords() { return []; }
+    } as unknown as typeof IntersectionObserver;
+    try {
+      render(<LandingPage />);
+      const hero = document.getElementById("top")!;
+      expect(observed).toContain(hero);
+      callback([{ target: hero, intersectionRatio: 0.1 } as unknown as IntersectionObserverEntry], {} as IntersectionObserver);
+      expect(hero.hasAttribute("data-offscreen")).toBe(true);
+      callback([{ target: hero, intersectionRatio: 0.8 } as unknown as IntersectionObserverEntry], {} as IntersectionObserver);
+      expect(hero.hasAttribute("data-offscreen")).toBe(false);
+    } finally {
+      globalThis.IntersectionObserver = Original;
+    }
+  });
+
   it("footer never renders dead # links", () => {
     const { container } = render(<LandingPage />);
     expect(container.querySelector('footer a[href="#"]')).toBeNull();

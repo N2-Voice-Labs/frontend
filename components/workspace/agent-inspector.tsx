@@ -56,21 +56,22 @@ export function AgentInspector({ agent }: { agent: AgentView }) {
           <p>“{agent.greeting}”</p>
         </div>
       )}
-      <div className="player">
-        <button
-          type="button"
-          className="play-btn"
-          aria-label={playing ? "Pause voice preview" : "Play voice preview"}
-          title={agent.sample ? "Play the first message" : "No voice preview yet"}
-          disabled={!agent.sample}
-          onClick={play}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={playing ? "M7 5h4v14H7zM13 5h4v14h-4z" : "M8 5v14l11-7z"} /></svg>
-        </button>
-        <div className="pbars" aria-hidden="true">
-          {HEIGHTS.map((h, i) => <span key={i} className={i < lit ? "on" : undefined} style={{ height: h }} />)}
+      {agent.sample ? (
+        <div className="player">
+          <button type="button" className="play-btn" aria-label={playing ? "Pause voice preview" : "Play voice preview"} title="Play the first message" onClick={play}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={playing ? "M7 5h4v14H7zM13 5h4v14h-4z" : "M8 5v14l11-7z"} /></svg>
+          </button>
+          <div className="pbars" aria-hidden="true">
+            {HEIGHTS.map((h, i) => <span key={i} className={i < lit ? "on" : undefined} style={{ height: h }} />)}
+          </div>
         </div>
-      </div>
+      ) : (
+        // No recording of this agent's voice yet: say so instead of showing a dead play button.
+        <div className="no-preview">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z" /><path d="M22 9l-6 6M16 9l6 6" /></svg>
+          <span>No preview yet</span>
+        </div>
+      )}
       <span className="mono sm">Voice / {agent.voice}</span>
       <div className="kv">
         <div><span className="mono sm">Speech</span><span className="pill">{agent.providers.speech}</span></div>

@@ -23,8 +23,13 @@ export function AsciiField() {
     const canvas = ref.current;
     const ctx = canvas?.getContext("2d") ?? null;
     if (!canvas || !ctx) return;
-    let visible = false, last = -Infinity, frame = 0;
-    const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; });
+    // `onScreen`: any part visible (draw a still frame). `focused`: at least half visible, the only time it
+    // animates, so it does not compete with the closing section's ripples above it.
+    let onScreen = false, focused = false, last = -Infinity, frame = 0;
+    const io = new IntersectionObserver(([e]) => {
+      onScreen = e.isIntersecting;
+      focused = e.intersectionRatio >= 0.5;
+    }, { threshold: [0, 0.5] });
     io.observe(canvas);
     const mo = new MutationObserver(() => { needsDraw.current = true; });
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-vl-theme"] });
@@ -55,8 +60,9 @@ export function AsciiField() {
 
     const tick = (now: number) => {
       frame = requestAnimationFrame(tick);
-      if (!visible) return;
-      if (reduce ? !needsDraw.current : now - last < FRAME_MS && !needsDraw.current) return;
+      if (!onScreen) return;
+      const animate = focused && !reduce && now - last >= FRAME_MS;
+      if (!animate && !needsDraw.current) return;
       last = now;
       needsDraw.current = false;
       draw(now);

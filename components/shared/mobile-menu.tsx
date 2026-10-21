@@ -2,7 +2,8 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
-export type MenuLink = { label: string; href: string; current?: boolean };
+/** `current`: true marks the current page; "location" marks the section in view (in-page links). */
+export type MenuLink = { label: string; href: string; current?: boolean | "location" };
 
 /**
  * Menu button + sheet for narrow screens, where the nav links are hidden (under 900px). Closes on Escape
@@ -40,7 +41,7 @@ export function MobileMenu({ links, label, action }: { links: MenuLink[]; label:
       </button>
       <div id={id} className="menu-sheet" hidden={!open} onClick={(e) => { if ((e.target as HTMLElement).closest("a")) setOpen(false); }}>
         <nav aria-label={label}>
-          {links.map((l) => <a key={l.label} href={l.href} aria-current={l.current ? "page" : undefined}>{l.label}</a>)}
+          {links.map((l) => <a key={l.label} href={l.href} aria-current={l.current ? (l.current === "location" ? "location" : "page") : undefined}>{l.label}</a>)}
         </nav>
         {action && <div className="menu-action">{action}</div>}
       </div>

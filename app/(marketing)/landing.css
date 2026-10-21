@@ -4,13 +4,18 @@
    ========================================================= */
 html{scroll-behavior:smooth;scroll-padding-top:88px}
 .wrap{max-width:1200px;margin:0 auto;padding:0 32px}
-.h1{font-size:80px;line-height:1;font-weight:600;letter-spacing:-.035em}
+/* Three lines beside the orb: the statement on two, the italic turn on its own (80px wrapped to five). */
+.h1{font-size:60px;line-height:1.02;font-weight:600;letter-spacing:-.035em}
+.hero .h1 em{display:block}
 .h2{font-size:56px;line-height:1.04;font-weight:600;letter-spacing:-.03em}
 .lede{font-size:16px;line-height:1.6;color:var(--muted)}
 .sec{border-top:1px solid var(--line)}
 .alt{background:var(--bg-2)}
 .head-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px}
 .head-col{display:flex;flex-direction:column;gap:16px;max-width:640px}
+.head-center{display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;max-width:760px;margin:0 auto}
+.head-center .lede{max-width:520px}
+.head-center .h2{text-wrap:balance}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:20px}
 .stack{display:flex;flex-direction:column}
 .t-teal{color:var(--teal)}
@@ -44,6 +49,9 @@ a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
 .links{display:flex;gap:28px;font-size:14px}
 .links a{text-decoration:none;color:var(--muted)}
 .links a:hover{color:var(--ink)}
+.links a{position:relative;transition:color .2s ease}
+.links a[aria-current]{color:var(--ink)}
+.links a[aria-current]::after{content:"";position:absolute;left:50%;bottom:-9px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--ink)}
 .icon-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
 
 /* ---------- Waveform bars ---------- */
@@ -117,6 +125,8 @@ a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
 .pinsec{position:relative}
 .pin{position:sticky;top:76px;display:flex;align-items:center}
 .pin .wrap{width:100%}
+/* Sections that are mostly off screen pause their CSS animations (OffscreenPause). */
+[data-offscreen] *,[data-offscreen] *::before,[data-offscreen] *::after{animation-play-state:paused !important}
 /* Thin progress line along the top of a pinned panel, so people can see the section will end. */
 .pin-progress{position:absolute;top:0;left:0;right:0;height:2px;background:var(--line);overflow:hidden}
 .pin-progress i{position:absolute;inset:0;background:var(--ink);opacity:.55;transform-origin:left;transform:scaleX(0)}
@@ -196,6 +206,8 @@ a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
 .flow{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
 .ft{position:relative;grid-column:span 3;display:flex;flex-direction:column;gap:18px;min-height:300px;padding:22px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,var(--bg-2),var(--surface));text-decoration:none;color:var(--ink);overflow:hidden;transition:border-color .25s ease,box-shadow .25s ease,transform .25s ease}
 .ft-6{grid-column:span 6}
+/* One motion per screen: only the large first tile animates by itself; the rest animate on hover/focus. */
+.ft:not(.ft-6):not(:hover):not(:focus-visible) .ft-art *{animation-play-state:paused}
 .ft::before{content:"";position:absolute;inset:0;background-image:radial-gradient(var(--dot) 1px,transparent 1.3px);background-size:12px 12px;-webkit-mask-image:linear-gradient(180deg,#000,transparent 70%);mask-image:linear-gradient(180deg,#000,transparent 70%);pointer-events:none}
 .ft::after{content:"";position:absolute;right:12px;bottom:12px;width:10px;height:10px;border-right:1px solid var(--muted);border-bottom:1px solid var(--muted);opacity:.55}
 .ft:hover{color:var(--ink);transform:translateY(-2px);border-color:color-mix(in srgb,var(--teal) 55%,var(--line));box-shadow:0 0 0 1px color-mix(in srgb,var(--teal) 22%,transparent),0 22px 44px -26px color-mix(in srgb,var(--teal) 60%,transparent)}
@@ -345,8 +357,10 @@ a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
 }
 
 /* ---------- Latency ---------- */
-.latency-inner{display:flex;flex-direction:column;gap:64px}
-.latency-aside{display:flex;flex-direction:column;gap:14px;max-width:380px}
+.latency-inner{display:flex;flex-direction:column;gap:56px}
+.lat-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px 32px;padding-top:24px;border-top:1px solid var(--line)}
+.lat-foot .lede{max-width:560px}
+.lat-foot .lat-yours{align-self:center}
 .lat{position:relative}
 .lat-track{position:absolute;left:0;right:0;top:11px;height:2px;background:var(--line)}
 .lat-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--lime)}
@@ -378,7 +392,8 @@ a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
 @media (max-width:900px){
   .wrap{padding:0 20px}
   .links{display:none}
-  .h1{font-size:52px}
+  .h1{font-size:44px}
+  .hero .h1 em{display:inline}
   .h2{font-size:38px}
   .hero{min-height:0}
   .hero-grid{grid-template-columns:minmax(0,1fr);padding-top:56px;padding-bottom:72px;min-height:0;text-align:left}

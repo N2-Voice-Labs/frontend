@@ -18,6 +18,10 @@ They ship different stylesheets (the previous app's tokens use the same variable
 in `styles/legacy/`), and moving between root layouts is a full page load, so the styles never mix. Unknown
 URLs render `app/global-not-found.tsx`.
 
+Fonts are declared in `lib/fonts/site.ts` (new design) and `lib/fonts/legacy.ts` (previous app). The
+bundler merges font preloads across areas, so only the two headline fonts (Manrope, Instrument Serif)
+are preloaded; everything else loads without preloading.
+
 ## Run locally
 
 ```bash

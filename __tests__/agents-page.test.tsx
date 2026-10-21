@@ -54,11 +54,36 @@ describe("Agents page", () => {
     expect(screen.getByRole("heading", { level: 2, name: "Interpreter" })).toBeTruthy();
   });
 
-  it("keeps the voice preview disabled without a real sample", async () => {
+  it("says “No preview yet” instead of a dead play button when there is no real sample", async () => {
     mockPlatform([base]);
     render(<AgentsPage />);
-    const play = await screen.findByRole("button", { name: "Play voice preview" });
-    expect((play as HTMLButtonElement).disabled).toBe(true);
+    expect(await screen.findByText("No preview yet")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Play voice preview" })).toBeNull();
+  });
+
+  it("sorts by name or by last updated", async () => {
+    const older = { ...base, id: "a3", name: "Alpha", updated_at: new Date(Date.now() - 30 * 86400e3).toISOString() };
+    const newest = { ...base, id: "a4", name: "Zulu", updated_at: new Date().toISOString() };
+    mockPlatform([base, older, newest]);
+    render(<AgentsPage />);
+    await screen.findByRole("button", { name: "Concierge" });
+    const names = () => [...document.querySelectorAll(".ag-select")].map((b) => b.textContent);
+    expect(names()).toEqual(["Alpha", "Concierge", "Zulu"]);
+    fireEvent.click(screen.getByRole("button", { name: "Updated" }));
+    expect(names()).toEqual(["Zulu", "Concierge", "Alpha"]);
+  });
+
+  it("moves between cards with the arrow keys and selects the focused one", async () => {
+    mockPlatform([base, interpreter]);
+    render(<AgentsPage />);
+    const first = await screen.findByRole("button", { name: "Concierge" });
+    first.focus();
+    fireEvent.keyDown(first, { key: "ArrowRight" });
+    const second = screen.getByRole("button", { name: "Interpreter" });
+    expect(document.activeElement).toBe(second);
+    expect(screen.getByRole("heading", { level: 2, name: "Interpreter" })).toBeTruthy();
+    fireEvent.keyDown(second, { key: "Home" });
+    expect(document.activeElement).toBe(first);
   });
 
   it("links actions to the playground, call and edit routes", async () => {

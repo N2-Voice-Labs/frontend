@@ -21,18 +21,10 @@ export function LatencyTimeline() {
       <div className="pin" style={{ height: 680 }}>
         <PinProgress value={progress} />
         <div className="wrap latency-inner">
-          <div className="head-row">
-            <div className="head-col">
-              <div className="mono">Measured, not guessed</div>
-              <h2 className="h2">Every millisecond <em>has an address.</em></h2>
-            </div>
-            <div className="latency-aside">
-              <p className="lede">Our live benchmark times each stage of a call, from the first syllable to the moment the other person hears the translation.</p>
-              <p className="lat-yours" hidden={medianTurn === null}>
-                <span className="ldot pulse" />
-                <span>Your session: <b>{medianTurn === null ? "—" : formatSeconds(medianTurn)}</b> median response, measured in your browser</span>
-              </p>
-            </div>
+          {/* Title only: the explanation sits under the timeline it describes. */}
+          <div className="head-col">
+            <div className="mono">Measured, not guessed</div>
+            <h2 className="h2">Every millisecond has an address.</h2>
           </div>
           <div className="lat">
             <div className="lat-track" aria-hidden="true">
@@ -49,6 +41,13 @@ export function LatencyTimeline() {
                 </li>
               ))}
             </ol>
+          </div>
+          <div className="lat-foot">
+            <p className="lede">Our live benchmark times each stage of a call, from the first syllable to the moment the other person hears the translation.</p>
+            <p className="lat-yours" hidden={medianTurn === null}>
+              <span className="ldot pulse" />
+              <span>Your session: <b>{medianTurn === null ? "—" : formatSeconds(medianTurn)}</b> median response, measured in your browser</span>
+            </p>
           </div>
         </div>
       </div>

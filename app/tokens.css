@@ -36,7 +36,7 @@ button{font:inherit}
 .menu-sheet[hidden]{display:none}
 .menu-sheet nav{display:flex;flex-direction:column}
 .menu-sheet nav a{display:flex;align-items:center;min-height:48px;padding:0 14px;border-radius:12px;text-decoration:none;font-size:17px;font-weight:500;color:var(--ink)}
-.menu-sheet nav a:hover,.menu-sheet nav a[aria-current="page"]{background:var(--bg-2);color:var(--ink)}
+.menu-sheet nav a:hover,.menu-sheet nav a[aria-current]{background:var(--bg-2);color:var(--ink)}
 .menu-action{display:flex;padding:0 2px 2px}
 .menu-action .btn{flex:1;justify-content:center;display:inline-flex}
 @media (max-width:900px){

@@ -88,6 +88,7 @@ a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
 .ag-select{all:unset;cursor:pointer}
 .ag-select::before{content:"";position:absolute;inset:0;border-radius:16px}
 .ag-select:focus-visible::before{outline:2px solid var(--teal);outline-offset:2px}
+.ag-select:focus-visible{outline:none} /* the ring is drawn on the whole card (::before) */
 .round-btn{position:relative;z-index:1;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
 .round-btn:hover{border-color:var(--ink);color:var(--ink)}
 .ag-foot{margin-top:auto;display:flex;align-items:center;gap:12px}
@@ -120,6 +121,9 @@ a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
 .pbars span{flex:1;border-radius:2px;background:color-mix(in srgb,var(--muted) 40%,transparent)}
 .pbars span.on{background:var(--teal)}
 .insp-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.no-preview{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:14px}
+.sort{display:flex;align-items:center;gap:2px}
+.sort .mono{margin-right:6px}
 .insp-actions .btn-primary{grid-column:1/-1}
 
 /* States */

@@ -143,7 +143,7 @@ export function HeroVoice() {
       <canvas ref={canvasRef} aria-hidden="true" />
       <div className="wrap hero-grid">
         <div className="hero-copy">
-          <div className="mono badge"><span className="ldot pulse" />Realtime voice AI</div>
+          <div className="mono badge"><span className="ldot" />Realtime voice AI</div>
           <h1 className="h1">Voice AI that speaks your language. <em>Even when you switch.</em></h1>
           <p className="hero-sub">Voice agents and live translation that follow people across languages — mid-sentence, in real time.</p>
           <div className="cta-row">

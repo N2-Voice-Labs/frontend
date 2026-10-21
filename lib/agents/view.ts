@@ -17,6 +17,8 @@ export type AgentView = {
   providers: { speech: string; language: string; voice: string };
   glossary: number;
   updated: string;
+  /** `updated_at` in ms, for sorting; null when the Platform did not send it. */
+  updatedAt: number | null;
   /**
    * A real recording of this agent's voice (e.g. its first message rendered by its own TTS voice).
    * Null until one exists: the preview button stays disabled, never a stand-in voice.
@@ -85,6 +87,7 @@ export function toAgentView(agent: Agent, providers: ProviderConfig[], voices: V
     providers: { speech: provider(agent.stt_provider_id), language: provider(agent.llm_provider_id), voice: provider(agent.tts_provider_id) },
     glossary: glossaryCount(agent),
     updated: relativeTime(agent.updated_at, now),
+    updatedAt: agent.updated_at && Number.isFinite(Date.parse(agent.updated_at)) ? Date.parse(agent.updated_at) : null,
     sample: null,
   };
 }
