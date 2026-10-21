@@ -80,8 +80,8 @@ a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
 .orb-col{display:flex;flex-direction:column;align-items:center;gap:22px}
 .orb-stage{--level:0;position:relative;width:min(100%,520px);aspect-ratio:1}
 .orb-stage svg.orbits{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-.orbit-dash{transform-origin:260px 260px;animation:spin 48s linear infinite}
-.orbit-tilt{transform-origin:260px 260px;animation:spin 90s linear infinite reverse}
+.orbit-dash{transform-origin:50% 50%;will-change:transform;animation:spin 48s linear infinite}
+.orbit-tilt{transform-origin:50% 50%;will-change:transform;animation:spin 90s linear infinite reverse}
 .orb-stage[data-state="connecting"] .orbit-dash{animation-duration:6s}
 .orb-stage[data-state="speaking"] .orbit-dash{animation-duration:16s}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -89,7 +89,10 @@ a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
 .orb-mark{font-weight:800;font-size:clamp(64px,8vw,104px);line-height:.9;color:#F7F5EF;letter-spacing:-.02em;display:flex;align-items:flex-end}
 .orb-mark i{display:inline-block;width:.2em;height:.2em;background:var(--coral);margin-left:.04em;margin-bottom:.06em}
 .orb-bars{display:flex;align-items:center;gap:5px;height:64px;color:#C6E34A}
-.orb-bars span{width:5px;height:100%;border-radius:3px;background:currentColor;transform:scaleY(.2);transform-origin:center}
+.orb-bars span{width:5px;height:100%;border-radius:3px;background:currentColor;transform:scaleY(.2);transform-origin:center;will-change:transform} /* own layers: no orb repaint per frame */
+/* Idle breathing runs on the compositor; during a live session hero-voice.tsx writes the transforms. */
+.orb-bars[data-mode="idle"] span{transform:scaleY(var(--mid));animation:breathe 2.244s ease-in-out var(--d) infinite alternate}
+@keyframes breathe{from{transform:scaleY(var(--lo))}to{transform:scaleY(var(--hi))}}
 .orb-label{font-family:var(--font-code);font-size:13px;letter-spacing:.18em;color:#9AA19F;text-transform:uppercase}
 .tag{position:absolute;display:flex;align-items:center;gap:8px;font-family:var(--font-code);font-size:14px;letter-spacing:.06em;color:var(--ink)}
 .tag i{width:9px;height:9px;border-radius:50%}

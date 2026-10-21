@@ -3,6 +3,7 @@ import { RootHtml } from "@/components/shared/root-html";
 import { siteFonts } from "@/lib/fonts/site";
 import { baseMetadata } from "@/lib/site-metadata";
 import "../tokens.css";
+import "../nav-shared.css";
 import "./landing.css";
 
 export const metadata: Metadata = {

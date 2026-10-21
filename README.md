@@ -8,8 +8,9 @@ Next.js App Router, plain CSS, no animation libraries.
   `components/workspace`). It reads the Platform API from the browser at `NEXT_PUBLIC_PLATFORM_URL`.
   Preview its other states with `/agents?state=loading`, `?state=error` and `?state=empty`.
 
-- The other workspace pages come from the previous app (`frontend.voice-labs`) unchanged, to be
-  restyled later: `/call`, `/join`, `/conversations`, `/voices` (+ clone/design), `/usage` (formerly
+- The other workspace pages come from the previous app (`frontend.voice-labs`). Their components and CSS are
+  kept, and `styles/legacy/restyle.css` maps their tokens, fonts, radii and shared pieces onto the new design;
+  they use the same pill nav and ASCII footer as `/agents` (`app/shell.css`). The pages: `/call`, `/join`, `/conversations`, `/voices` (+ clone/design), `/usage` (formerly
   `/analytics`, which redirects), `/agents/new`, `/agents/:id` (+ edit, and `/test`, the Voice
   Playground), `/campaigns`, `/knowledge`, `/tools`. `/playground?agent=<id>` redirects to the playground.
 
@@ -18,9 +19,10 @@ They ship different stylesheets (the previous app's tokens use the same variable
 in `styles/legacy/`), and moving between root layouts is a full page load, so the styles never mix. Unknown
 URLs render `app/global-not-found.tsx`.
 
-Fonts are declared in `lib/fonts/site.ts` (new design) and `lib/fonts/legacy.ts` (previous app). The
-bundler merges font preloads across areas, so only the two headline fonts (Manrope, Instrument Serif)
-are preloaded; everything else loads without preloading.
+Fonts live in `lib/fonts/site.ts` and every area uses them. Only the two headline fonts (Manrope,
+Instrument Serif) are preloaded. Korean uses the system faces (`--font-kr`, `--font-hangul-system`), not a
+web font: Noto Sans KR through next/font adds 120–370 render-blocking `@font-face` rules per page, which was
+the main reason first paint was slow.
 
 ## Run locally
 

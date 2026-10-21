@@ -29,11 +29,6 @@ html[data-vl-theme="dark"] .dash-root .button-dark span, html[data-vl-theme="dar
 html[data-vl-theme="dark"] .dash-root .inline-kbd { color: #a7aaa3; background: #222829; border-color: #3a4142; }
 
 /* ----- Header ----- */
-html[data-vl-theme="dark"] .dash-root .dash-header { background: rgb(18 21 22 / 88%); border-bottom-color: rgb(255 255 255 / 8%); }
-html[data-vl-theme="dark"] .dash-root .dash-brand em { color: #8b8f88; border-color: #3a4142; }
-html[data-vl-theme="dark"] .dash-root .dash-link { color: #a7aaa3; }
-html[data-vl-theme="dark"] .dash-root .dash-link:hover { color: var(--ink); background: rgb(255 255 255 / 6%); }
-html[data-vl-theme="dark"] .dash-root .dash-link[aria-current="page"] { color: var(--ink); background: rgb(255 255 255 / 9%); }
 html[data-vl-theme="dark"] .dash-root .palette-trigger, html[data-vl-theme="dark"] .dash-root .theme-toggle { color: #a7aaa3; border-color: #3a4142; }
 html[data-vl-theme="dark"] .dash-root .palette-trigger:hover, html[data-vl-theme="dark"] .dash-root .theme-toggle:hover { color: var(--ink); border-color: #5a6263; background: rgb(255 255 255 / 5%); }
 html[data-vl-theme="dark"] .dash-root .palette-trigger kbd, html[data-vl-theme="dark"] .dash-root .dash-search kbd { color: #8b8f88; background: #252b2c; }

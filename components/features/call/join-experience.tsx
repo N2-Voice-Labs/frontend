@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { parseInviteFragment, stripFragment, type Invite, type InviteParseResult } from "@/lib/invite";
 import { getConversation } from "@/lib/platform";
-import { ThemeToggle } from "@/components/features/landing/theme/theme-toggle";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { CallEnded } from "./call-ended";
 import { CallScreen } from "./call-screen";
 import { EmptyState, ErrorState, LoadingState } from "./call-states";

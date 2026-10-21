@@ -1,32 +1,9 @@
 /* =========================================================
    Voice Labs workspace pages (reference: agents.html).
-   Tokens and base rules live in app/tokens.css.
+   Tokens and base rules live in app/tokens.css; the nav and footer in app/shell.css.
    ========================================================= */
-.wrap{max-width:1280px;margin:0 auto;padding:0 32px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;font-size:15px;font-weight:600;text-decoration:none;border:1px solid transparent;cursor:pointer;transition:transform .2s ease,border-color .2s ease}
-a.btn-primary,.btn-primary{background:var(--ink);color:var(--bg)}
-a.btn-primary:hover,.btn-primary:hover{color:var(--bg);transform:translateY(-1px)}
-a.btn-ghost,.btn-ghost{border-color:var(--line);color:var(--ink);background:var(--bg)}
-a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
-.icon-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none}
 .bars{display:flex;align-items:center;gap:3px}
 .bar{width:3px;border-radius:2px;background:currentColor}
-
-/* ---------- App nav (floating pill) ---------- */
-.nav{position:sticky;top:12px;z-index:40;padding:0 16px}
-.nav-pill{max-width:1240px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px;padding:0 10px 0 18px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);box-shadow:var(--shadow)}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
-.logo-mark{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
-.logo-mark span{color:var(--coral)}
-.logo-word{font-weight:700;font-size:15px;letter-spacing:.04em}
-.ws-tag{font-family:var(--font-code);font-size:10px;letter-spacing:.1em;padding:3px 7px;border:1px solid var(--line);border-radius:6px;color:var(--muted)}
-.links{display:flex;gap:4px;font-size:14px}
-.links a{text-decoration:none;color:var(--muted);padding:8px 12px;border-radius:999px}
-.links a:hover{color:var(--ink)}
-.links a[aria-current="page"]{color:var(--ink);background:var(--bg-2);font-weight:600}
-.nav-right{display:flex;align-items:center;gap:8px}
-.kbd-search{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 10px 0 14px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);cursor:pointer;font-size:14px}
-.kbd-search kbd{font-family:var(--font-code);font-size:11px;padding:2px 6px;border-radius:6px;background:var(--bg-2);border:1px solid var(--line)}
 
 /* ---------- Page head ---------- */
 .page{position:relative;padding:56px 0 96px}
@@ -137,24 +114,12 @@ a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
 @keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
 [hidden]{display:none !important}
 
-/* ---------- Compact footer with ASCII field ---------- */
-.foot{position:relative;border-top:1px solid var(--line);overflow:hidden}
-.foot-field{position:relative;height:220px}
-.foot-field canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.foot-mark{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
-.foot-word{font-family:var(--font-serif);font-size:clamp(72px,12vw,170px);line-height:.8;letter-spacing:-.02em;white-space:nowrap;background:linear-gradient(180deg,var(--ink) 30%,color-mix(in srgb,var(--ink) 25%,transparent));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:-.1em}
-.foot-bottom{position:relative;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding-top:20px;padding-bottom:24px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);background:var(--bg)}
-.foot-bottom nav{display:flex;gap:18px}
-.foot-bottom a{text-decoration:none;color:var(--muted)}
-.foot-bottom a:hover{color:var(--ink)}
-
 /* 44px-tall hit areas without changing how the controls look */
 .filter,.chip,.view-toggle button{position:relative}
 .filter::before{content:"";position:absolute;inset:-2px 0}
 .chip::before{content:"";position:absolute;inset:-5px -3px}
 .view-toggle button::before{content:"";position:absolute;inset:-6px -1px}
 .page-head-actions{display:flex;align-items:center;gap:10px}
-.nav-left{display:flex;align-items:center;gap:10px}
 .insp-title{display:flex;flex-direction:column;gap:6px;min-width:0}
 .count{margin-top:18px}
 
@@ -165,8 +130,6 @@ a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
   .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width:900px){
-  .wrap{padding:0 20px}
-  .links,.kbd-search span{display:none}
   .head h1{font-size:52px}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
   .tools,.body{padding-left:16px;padding-right:16px}
@@ -175,14 +138,8 @@ a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
 }
 @media (max-width:600px){
   .grid{grid-template-columns:minmax(0,1fr)}
-  .nav-right > .btn-primary{display:none}
-  /* No keyboard shortcut on phones, and the search field is on the page; keeps the pill inside 390px. */
-  .kbd-search{display:none}
   .search{min-width:0;width:100%}
   .win-bar .view-toggle{display:none}
-}
-@media (max-width:360px){
-  .ws-tag{display:none}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation:none !important;transition:none !important}

@@ -1,0 +1,74 @@
+/* =========================================================
+   Workspace shell: the floating pill nav and the compact ASCII footer, shared by /agents, the dashboard
+   pages and the call pages. Needs the new-design tokens (app/tokens.css, or styles/legacy/restyle.css on
+   the pages ported from the previous app).
+   ========================================================= */
+.wrap{max-width:1280px;margin:0 auto;padding:0 32px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;font-size:15px;font-weight:600;text-decoration:none;border:1px solid transparent;cursor:pointer;transition:transform .2s ease,border-color .2s ease}
+a.btn-primary,.btn-primary{background:var(--ink);color:var(--bg)}
+a.btn-primary:hover,.btn-primary:hover{color:var(--bg);transform:translateY(-1px)}
+a.btn-ghost,.btn-ghost{border-color:var(--line);color:var(--ink);background:var(--bg)}
+a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
+.icon-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none}
+
+/* ---------- App nav (floating pill) ---------- */
+.nav{position:sticky;top:12px;z-index:40;padding:0 16px}
+.nav-pill{max-width:1240px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px;padding:0 10px 0 18px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);box-shadow:var(--shadow)}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.logo-mark{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+.logo-mark span{color:var(--coral)}
+.logo-word{font-weight:700;font-size:15px;letter-spacing:.04em}
+.ws-tag{font-family:var(--font-code);font-size:10px;letter-spacing:.1em;padding:3px 7px;border:1px solid var(--line);border-radius:6px;color:var(--muted)}
+.links{display:flex;gap:4px;font-size:14px}
+.links a{text-decoration:none;color:var(--muted);padding:8px 12px;border-radius:999px}
+.links a:hover{color:var(--ink)}
+.links a[aria-current="page"]{color:var(--ink);background:var(--bg-2);font-weight:600}
+.nav-right{display:flex;align-items:center;gap:8px}
+.kbd-search{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 10px 0 14px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);cursor:pointer;font-size:14px}
+.kbd-search kbd{font-family:var(--font-code);font-size:11px;padding:2px 6px;border-radius:6px;background:var(--bg-2);border:1px solid var(--line)}
+
+.nav-left{display:flex;align-items:center;gap:10px}
+
+/* ---------- Compact footer with ASCII field ---------- */
+.foot{position:relative;border-top:1px solid var(--line);overflow:hidden}
+.foot-field{position:relative;height:220px}
+.foot-field canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.foot-mark{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
+.foot-word{font-family:var(--font-serif);font-size:clamp(72px,12vw,170px);line-height:.8;letter-spacing:-.02em;white-space:nowrap;background:linear-gradient(180deg,var(--ink) 30%,color-mix(in srgb,var(--ink) 25%,transparent));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:-.1em}
+.foot-bottom{position:relative;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding-top:20px;padding-bottom:24px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);background:var(--bg)}
+.foot-bottom nav{display:flex;gap:18px}
+.foot-bottom a{text-decoration:none;color:var(--muted)}
+.foot-bottom a:hover{color:var(--ink)}
+
+
+@media (max-width:900px){
+  .wrap{padding:0 20px}
+  .links,.kbd-search span{display:none}
+}
+@media (max-width:600px){
+  .nav-right > .btn-primary{display:none}
+  /* No keyboard shortcut on phones; keeps the pill inside 390px. */
+  .kbd-search{display:none}
+}
+@media (max-width:360px){
+  .ws-tag{display:none}
+}
+
+/* "More" group in the workspace nav */
+.more{position:relative}
+.more summary{list-style:none;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;color:var(--muted);cursor:pointer}
+.more summary::-webkit-details-marker{display:none}
+.more summary::after{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-2px) rotate(45deg)}
+.more summary:hover,.more[open] summary{color:var(--ink)}
+.more summary[aria-current="page"]{color:var(--ink);background:var(--bg-2);font-weight:600}
+.more-sheet{position:absolute;top:calc(100% + 10px);left:0;min-width:180px;display:flex;flex-direction:column;padding:6px;border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:var(--shadow);z-index:2}
+.more-sheet a{padding:10px 12px;border-radius:10px}
+.more-sheet a:hover,.more-sheet a[aria-current="page"]{background:var(--bg-2);color:var(--ink)}
+
+/* Same specificity as the call pages' `.call-root a:not(.skip-link){color:inherit}` (the nav sits inside
+   .call-root there); loaded later, so the nav keeps its own link colours. */
+.nav a.btn-primary{color:var(--bg)}
+.nav .links a{color:var(--muted)}
+.nav .links a:hover,.nav .links a[aria-current="page"]{color:var(--ink)}
+.nav a.logo{color:var(--ink)}
+.nav .more-sheet a,.nav .menu-sheet a{color:var(--ink)}

@@ -32,7 +32,7 @@ export function ThemeToggle() {
   };
 
   return (
-    <button type="button" className="icon-btn" aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"} onClick={toggle}>
+    <button type="button" className="icon-btn" data-bare aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"} onClick={toggle}>
       {/* The icon shows what a click does (moon → dark, sun → light). CSS picks it from data-vl-theme, so it
           is right from the first paint. */}
       <svg className="theme-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>

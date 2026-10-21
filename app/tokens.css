@@ -6,6 +6,8 @@
 :root{--bg:#FBFAF7;--bg-2:#F3F1EB;--surface:#FFFFFF;--ink:#141617;--muted:#555B5E;--line:#E4E1D9;--teal:#0E7A75;--plum:#8A3A6B;--lime:#B5D130;--coral:#E8553A;--glass:rgba(251,250,247,.78);--shadow:0 1px 2px rgba(20,22,23,.06),0 14px 36px -14px rgba(20,22,23,.16);--dot:rgba(20,22,23,.12);
   /* Text-only coral: --coral is 3.5:1 on --bg in light, below AA for the 14px status line. */
   --coral-text:#BF4129;
+  /* Hangul: Noto Sans KR when installed, otherwise the platform's Korean face. No web font download. */
+  --font-kr:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic","Noto Sans CJK KR","Nanum Gothic";
   --font-ui:var(--font-manrope),var(--font-kr),system-ui,sans-serif;
   --font-code:var(--font-dm-mono),ui-monospace,monospace;
   --font-serif:var(--font-instrument),Georgia,serif;
@@ -25,20 +27,3 @@ button{font:inherit}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mono{font-family:var(--font-code);letter-spacing:.08em;text-transform:uppercase;font-size:12px;color:var(--muted)}
 .mono.sm{font-size:11px}
-
-/* ---------- Shared nav pieces (landing + workspace) ---------- */
-.theme-sun{display:none}
-:root[data-vl-theme="dark"] .theme-sun{display:block}
-:root[data-vl-theme="dark"] .theme-moon{display:none}
-.nav-pill{position:relative}
-.menu{display:none}
-.menu-sheet{position:absolute;top:calc(100% + 8px);left:0;right:0;display:flex;flex-direction:column;gap:14px;padding:12px;border:1px solid var(--line);border-radius:22px;background:var(--surface);box-shadow:var(--shadow)}
-.menu-sheet[hidden]{display:none}
-.menu-sheet nav{display:flex;flex-direction:column}
-.menu-sheet nav a{display:flex;align-items:center;min-height:48px;padding:0 14px;border-radius:12px;text-decoration:none;font-size:17px;font-weight:500;color:var(--ink)}
-.menu-sheet nav a:hover,.menu-sheet nav a[aria-current]{background:var(--bg-2);color:var(--ink)}
-.menu-action{display:flex;padding:0 2px 2px}
-.menu-action .btn{flex:1;justify-content:center;display:inline-flex}
-@media (max-width:900px){
-  .menu{display:block}
-}

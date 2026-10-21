@@ -1,5 +1,6 @@
 import { getAgents, getProviders, type Agent, type ProviderConfig } from "@/lib/platform";
 import { getVoices, type Voice } from "@/lib/voices";
+import { isLiveStatus } from "@/lib/agent-view";
 
 /** What the Agents page shows for one agent, mapped from the Platform's agent, providers and voices. */
 export type AgentView = {
@@ -26,10 +27,6 @@ export type AgentView = {
   sample: string | null;
 };
 
-/** Same rules as the workspace app (frontend.voice-labs lib/agent-view.ts). */
-export function isLiveStatus(status: string): boolean {
-  return /^(active|ready|enabled|published|live)$/i.test(status);
-}
 
 const capitalize = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 

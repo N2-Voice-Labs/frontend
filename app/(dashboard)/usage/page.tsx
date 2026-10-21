@@ -35,7 +35,7 @@ export default function Analytics() {
   const hasLatency = data ? Object.keys(data.latency).length > 0 : false;
 
   return <main className="page-shell dash-main">
-    <PageHead eyebrow="Workspace / Analytics" title="Analytics" intro="How calls end, where they come from, and which languages people speak." />
+    <PageHead eyebrow="Workspace / Usage" title="Usage" intro="How calls end, where they come from, and which languages people speak." />
     <div className="ws-toolbar">
       <label className="sr-only" htmlFor="analytics-agent">Agent</label>
       <select id="analytics-agent" value={agentId} onChange={(event) => setAgentId(event.target.value)} style={{ width: "auto" }}>

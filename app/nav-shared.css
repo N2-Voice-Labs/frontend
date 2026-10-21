@@ -1,0 +1,16 @@
+/* Shared nav pieces: menu sheet and theme icon, used by every area (landing, workspace, dashboard, call). */
+.theme-sun{display:none}
+:root[data-vl-theme="dark"] .theme-sun{display:block}
+:root[data-vl-theme="dark"] .theme-moon{display:none}
+.nav-pill{position:relative}
+.menu{display:none}
+.menu-sheet{position:absolute;top:calc(100% + 8px);left:0;right:0;display:flex;flex-direction:column;gap:14px;padding:12px;border:1px solid var(--line);border-radius:22px;background:var(--surface);box-shadow:var(--shadow)}
+.menu-sheet[hidden]{display:none}
+.menu-sheet nav{display:flex;flex-direction:column}
+.menu-sheet nav a{display:flex;align-items:center;min-height:48px;padding:0 14px;border-radius:12px;text-decoration:none;font-size:17px;font-weight:500;color:var(--ink)}
+.menu-sheet nav a:hover,.menu-sheet nav a[aria-current]{background:var(--bg-2);color:var(--ink)}
+.menu-action{display:flex;padding:0 2px 2px}
+.menu-action .btn{flex:1;justify-content:center;display:inline-flex}
+@media (max-width:900px){
+  .menu{display:block}
+}

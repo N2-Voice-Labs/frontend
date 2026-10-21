@@ -18,7 +18,26 @@ const NODES = Array.from({ length: 80 }, (_, i) => ({
   p: frac(Math.sin(i * 7.7) * 999.1) * 6.28,
 }));
 
+/** Opacity steps for batching the network lines (per colour), and the highest line opacity (0.14 + 0.5). */
+const ALPHA_STEPS = 12;
+const MAX_ALPHA = 0.64;
+
 const ENVELOPE = Array.from({ length: ORB_BARS }, (_, i) => Math.sin((Math.PI * (i + 0.5)) / ORB_BARS));
+
+/** Bar height (scaleY) for a band level 0–1, shaped so the middle bars stand taller. */
+const barScale = (i: number, band: number) => Math.max(0.12, Math.min(1, band * 1.6 * (0.55 + 0.45 * ENVELOPE[i]) + 0.08));
+
+/**
+ * Idle breathing, as CSS variables for the orb-bars keyframes: each bar swings between band levels
+ * ENV·0.05 and ENV·0.45 (the reference's ENV·(0.25 ± 0.2·sin(1.4t + 0.6i))), half a period one way
+ * (π/1.4 s), phase-shifted by 0.6 rad per bar. `--mid` is the static reduced-motion shape (ENV·0.35).
+ */
+const IDLE_VARS = ENVELOPE.map((env, i) => ({
+  "--lo": barScale(i, env * 0.05).toFixed(3),
+  "--hi": barScale(i, env * 0.45).toFixed(3),
+  "--mid": barScale(i, env * 0.35).toFixed(3),
+  "--d": `${(-(i * 0.6) / 1.4).toFixed(2)}s`,
+}) as React.CSSProperties);
 
 function speakNote(hasAgent: boolean) {
   if (!hasAgent) return "Optional. Mic preview only: your voice is drawn on this page and is not sent anywhere.";
@@ -71,7 +90,10 @@ export function HeroVoice() {
     const bars = Array.from(barsEl.children) as HTMLElement[];
     const bands = new Array<number>(ORB_BARS).fill(0);
     let orbLevel = 0;
+    let lastLevel = "";
+    let lastNet = -Infinity;
     let frame = 0;
+    const buckets: number[][] = Array.from({ length: ALPHA_STEPS * 2 }, () => []);
 
     const drawNet = (now: number) => {
       if (!ctx) return;
@@ -83,20 +105,40 @@ export function HeroVoice() {
       const pts = NODES.map((n) => ({ x: n.x * w + Math.sin(t * 0.25 + n.p) * 14, y: n.y * h + Math.cos(t * 0.2 + n.p) * 12 }));
       const maxD = Math.min(190, w / 6);
       ctx.lineWidth = 1;
+      // Lines are batched into one path per colour and opacity step (ALPHA_STEPS), so a frame is ~a dozen
+      // stroke() calls instead of several hundred. The quantised opacity is not visible at these alphas.
+      for (const b of buckets) b.length = 0;
       for (let i = 0; i < pts.length; i++) {
         for (let j = i + 1; j < pts.length; j++) {
-          const d = Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y);
+          const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
+          if (dx > maxD || dx < -maxD || dy > maxD || dy < -maxD) continue;
+          const d = Math.hypot(dx, dy);
           if (d > maxD) continue;
           const mx = (pts[i].x + pts[j].x) / 2 - ox, my = (pts[i].y + pts[j].y) / 2 - oy;
           const glow = clamp(1 - Math.hypot(mx, my) / 420) * orbLevel;
-          ctx.globalAlpha = (1 - d / maxD) * (0.14 + 0.5 * glow);
-          ctx.strokeStyle = glow > 0.08 ? coral : ink;
-          ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke();
+          const alpha = (1 - d / maxD) * (0.14 + 0.5 * glow);
+          const step = Math.min(ALPHA_STEPS - 1, Math.round((alpha / MAX_ALPHA) * (ALPHA_STEPS - 1)));
+          if (step === 0) continue;
+          buckets[(glow > 0.08 ? ALPHA_STEPS : 0) + step].push(i, j);
         }
+      }
+      for (let k = 0; k < buckets.length; k++) {
+        const list = buckets[k];
+        if (!list.length) continue;
+        ctx.globalAlpha = ((k % ALPHA_STEPS) / (ALPHA_STEPS - 1)) * MAX_ALPHA;
+        ctx.strokeStyle = k >= ALPHA_STEPS ? coral : ink;
+        ctx.beginPath();
+        for (let n = 0; n < list.length; n += 2) {
+          ctx.moveTo(pts[list[n]].x, pts[list[n]].y);
+          ctx.lineTo(pts[list[n + 1]].x, pts[list[n + 1]].y);
+        }
+        ctx.stroke();
       }
       ctx.fillStyle = ink;
       ctx.globalAlpha = 0.28;
-      for (const p of pts) { ctx.beginPath(); ctx.arc(p.x, p.y, 1.8, 0, 6.283); ctx.fill(); }
+      ctx.beginPath();
+      for (const p of pts) { ctx.moveTo(p.x + 1.8, p.y); ctx.arc(p.x, p.y, 1.8, 0, 6.283); }
+      ctx.fill();
       ctx.globalAlpha = 1;
     };
 
@@ -106,28 +148,31 @@ export function HeroVoice() {
 
       const src = session.agentSpeaking && session.agentAnalyser ? session.agentAnalyser : session.micAnalyser;
       if (src) {
+        // Live: the bars follow the real audio, so they are written from here every frame.
+        if (barsEl.dataset.mode !== "live") barsEl.dataset.mode = "live";
         readBands(src, bands);
-      } else if (reduce) {
-        for (let i = 0; i < ORB_BARS; i++) bands[i] = 0.35 * ENVELOPE[i];
-      } else {
-        // Idle: slow breathing shape.
-        const t = now / 1000;
-        for (let i = 0; i < ORB_BARS; i++) bands[i] = ENVELOPE[i] * (0.25 + 0.2 * Math.sin(t * 1.4 + i * 0.6));
-      }
-      if (src || !reduce || needsDraw.current) {
         let sum = 0;
         for (let i = 0; i < ORB_BARS; i++) {
-          const env = 0.55 + 0.45 * ENVELOPE[i];
-          bars[i].style.transform = `scaleY(${Math.max(0.12, Math.min(1, bands[i] * 1.6 * env + 0.08)).toFixed(3)})`;
+          bars[i].style.transform = `scaleY(${barScale(i, bands[i]).toFixed(3)})`;
           sum += bands[i];
         }
-        const target = src ? clamp((sum / ORB_BARS) * 2.2) : 0;
-        orbLevel += (target - orbLevel) * 0.2;
-        stage.style.setProperty("--level", orbLevel.toFixed(3));
+        orbLevel += (clamp((sum / ORB_BARS) * 2.2) - orbLevel) * 0.2;
+      } else {
+        // Idle: the breathing is a CSS animation (orb-bars[data-mode=idle]), run by the compositor
+        // instead of 13 style writes per frame from here.
+        if (barsEl.dataset.mode !== "idle") {
+          barsEl.dataset.mode = "idle";
+          for (const b of bars) b.style.transform = "";
+        }
+        orbLevel += (0 - orbLevel) * 0.2;
       }
+      const level = orbLevel.toFixed(3);
+      if (level !== lastLevel) { stage.style.setProperty("--level", level); lastLevel = level; }
 
       // Reduced motion: one static frame, redrawn only on scroll, resize or theme change.
-      if (!reduce || needsDraw.current) drawNet(now);
+      // The idle network drifts slowly: 30 fps is enough. While a voice session glows it, full rate.
+      const netDue = src ? true : now - lastNet >= 32;
+      if ((!reduce && netDue) || needsDraw.current) { drawNet(now); lastNet = now; }
       needsDraw.current = false;
     };
     frame = requestAnimationFrame(tick);
@@ -157,15 +202,21 @@ export function HeroVoice() {
 
         <div className="orb-col">
           <div className="orb-stage" ref={stageRef} data-state={state}>
-            <svg className="orbits" viewBox="0 0 520 520" aria-hidden="true">
+            {/* Each spinning orbit is its own <svg> box rotated by CSS, so the GPU turns it without repainting
+                (rotating <g> elements inside one SVG repainted the whole stage every frame). */}
+            <svg className="orbits orbit-dash" viewBox="0 0 520 520" aria-hidden="true">
               <defs>
                 <linearGradient id="orbitGrad" x1="0" y1="0" x2="1" y2="1">
                   <stop offset="0" style={{ stopColor: "var(--coral)" }} />
                   <stop offset="1" style={{ stopColor: "var(--lime)" }} />
                 </linearGradient>
               </defs>
-              <g className="orbit-dash"><circle cx="260" cy="260" r="232" fill="none" stroke="url(#orbitGrad)" strokeWidth="3" strokeDasharray="14 18" strokeLinecap="round" opacity=".85" /></g>
-              <g className="orbit-tilt"><ellipse cx="260" cy="260" rx="250" ry="118" transform="rotate(-32 260 260)" fill="none" style={{ stroke: "var(--muted)" }} strokeOpacity=".55" strokeWidth="1.5" /></g>
+              <circle cx="260" cy="260" r="232" fill="none" stroke="url(#orbitGrad)" strokeWidth="3" strokeDasharray="14 18" strokeLinecap="round" opacity=".85" />
+            </svg>
+            <svg className="orbits orbit-tilt" viewBox="0 0 520 520" aria-hidden="true">
+              <ellipse cx="260" cy="260" rx="250" ry="118" transform="rotate(-32 260 260)" fill="none" style={{ stroke: "var(--muted)" }} strokeOpacity=".55" strokeWidth="1.5" />
+            </svg>
+            <svg className="orbits" viewBox="0 0 520 520" aria-hidden="true">
               <circle cx="40" cy="190" r="9" fill="none" style={{ stroke: "var(--coral)" }} strokeWidth="3" />
               <circle cx="468" cy="390" r="8" style={{ fill: "var(--lime)", stroke: "var(--ink)" }} strokeWidth="3" />
             </svg>
@@ -173,8 +224,8 @@ export function HeroVoice() {
             <span className="tag tag-ru"><i style={{ background: "var(--teal)" }} />RU</span>
             <div className="orb">
               <div className="orb-mark">V<i /></div>
-              <div className="orb-bars" ref={barsRef} aria-hidden="true">
-                {ENVELOPE.map((_, i) => <span key={i} />)}
+              <div className="orb-bars" ref={barsRef} data-mode="idle" aria-hidden="true">
+                {IDLE_VARS.map((vars, i) => <span key={i} style={vars} />)}
               </div>
               <div className="orb-label">{LABELS[state]}</div>
             </div>

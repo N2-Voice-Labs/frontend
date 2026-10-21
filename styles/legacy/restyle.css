@@ -1,0 +1,163 @@
+/* =========================================================
+   New design for the pages ported from the previous app (dashboard, call, 404).
+   Loaded last in those root layouts. It maps the previous app's tokens onto the new palette, fonts, radii
+   and shadows (app/tokens.css values), defines the new tokens the shell needs (app/shell.css), and restyles
+   the shared pieces (page head, buttons, fields, cards) to match /agents.
+   Token blocks repeat the dashboard/call root selectors because the previous app redefines its dark tokens
+   on .dash-root itself; equal specificity, loaded later, wins.
+   ========================================================= */
+
+:root,
+html .dash-root,
+html .call-root,
+html .lost {
+  color-scheme: light;
+  /* New-design tokens (same values as app/tokens.css) */
+  --bg: #FBFAF7; --bg-2: #F3F1EB; --surface: #FFFFFF; --ink: #141617; --muted: #555B5E; --line: #E4E1D9;
+  --teal: #0E7A75; --plum: #8A3A6B; --lime: #B5D130; --coral: #E8553A; --coral-text: #BF4129;
+  --glass: rgba(251, 250, 247, .78); --dot: rgba(20, 22, 23, .12);
+  --shadow: 0 1px 2px rgba(20, 22, 23, .06), 0 14px 36px -14px rgba(20, 22, 23, .16);
+  --font-code: var(--font-dm-mono), ui-monospace, monospace;
+  --font-serif: var(--font-instrument), Georgia, serif;
+
+  /* Previous app's names → new values */
+  --surface-2: #F3F1EB; --surface-elevated: #FFFFFF;
+  --text: #141617; --text-2: #555B5E; --text-muted: #555B5E; --text-faint: #6C7174;
+  --border: #E4E1D9; --border-strong: #D3CFC4; --border-control: #8C908D;
+  --primary: #141617; --on-primary: #FBFAF7; --primary-hover: #2B3032;
+  --accent: #E8553A; --accent-text: #BF4129; --accent-dark: #BF4129; --focus: #0E7A75;
+  --id-self: #0E7A75; --id-self-tint: #E3F0EE; --id-other: #8A3A6B; --id-other-tint: #F3E7EE;
+  --interp: #B5D130; --interp-tint: #EEF4D2;
+  --paper: #FBFAF7; --paper-2: #F3F1EB; --ink-2: #555B5E; --ink-3: #6C7174; --line-strong: #D3CFC4; --signal: #B5D130;
+  --radius-control: 12px; --radius-row: 12px; --radius-surface: 16px; --radius-window: 24px;
+  --elev-1: 0 1px 2px rgba(20, 22, 23, .06);
+  --elev-2: 0 1px 2px rgba(20, 22, 23, .06), 0 14px 36px -14px rgba(20, 22, 23, .16);
+  --elev-3: 0 1px 2px rgba(20, 22, 23, .06), 0 24px 56px -20px rgba(20, 22, 23, .22);
+
+  /* Fonts: the new design's faces under the previous app's variable names */
+  --font-display: var(--font-manrope);
+  --font-sans: var(--font-manrope);
+  --font-mono: var(--font-dm-mono);
+  --serif: var(--font-instrument), Georgia, serif;
+  /* The call pages' font stacks read --font-hangul (the previous app's self-hosted Noto Sans KR). Without a
+     value the whole stack is invalid, so point it at a locally installed Noto Sans KR; the system Korean
+     faces (--font-hangul-system) follow it in the stack. */
+  --font-hangul: "Noto Sans KR";
+}
+
+html[data-vl-theme="dark"],
+html[data-vl-theme="dark"] .dash-root,
+html[data-vl-theme="dark"] .call-root,
+html[data-vl-theme="dark"] .lost {
+  color-scheme: dark;
+  --bg: #0D1011; --bg-2: #121617; --surface: #161B1C; --ink: #F1EFE9; --muted: #A2A8A6; --line: #262C2E;
+  --teal: #3EC2B6; --plum: #D47DB0; --lime: #C6E34A; --coral: #F06A4E; --coral-text: #F06A4E;
+  --glass: rgba(18, 22, 23, .72); --dot: rgba(241, 239, 233, .08);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 18px 44px -16px rgba(0, 0, 0, .65);
+
+  --surface-2: #121617; --surface-elevated: #1B2122;
+  --text: #F1EFE9; --text-2: #A2A8A6; --text-muted: #A2A8A6; --text-faint: #8A908E;
+  --border: #262C2E; --border-strong: #353C3E; --border-control: #6A7274;
+  --primary: #F1EFE9; --on-primary: #0D1011; --primary-hover: #FFFFFF;
+  --accent: #F06A4E; --accent-text: #F06A4E; --accent-dark: #F06A4E; --focus: #3EC2B6;
+  --id-self: #3EC2B6; --id-self-tint: #12302D; --id-other: #D47DB0; --id-other-tint: #33202B;
+  --interp: #C6E34A; --interp-ink: #C6E34A; --interp-tint: #262E10;
+  --paper: #0D1011; --paper-2: #121617; --ink-2: #A2A8A6; --ink-3: #8A908E; --line-strong: #353C3E; --signal: #C6E34A;
+  --elev-1: 0 1px 2px rgba(0, 0, 0, .4);
+  --elev-2: 0 1px 2px rgba(0, 0, 0, .4), 0 18px 44px -16px rgba(0, 0, 0, .65);
+  --elev-3: 0 1px 2px rgba(0, 0, 0, .4), 0 24px 56px -18px rgba(0, 0, 0, .7);
+}
+
+/* ---------- Base ---------- */
+html body:has(.dash-root),
+html body:has(.call-root),
+html body:has(.lost),
+html[data-vl-theme="dark"] body:has(.dash-root),
+html[data-vl-theme="dark"] body:has(.call-root),
+html[data-vl-theme="dark"] body:has(.lost) { background: var(--bg); color: var(--ink); transition: background .4s ease, color .4s ease; }
+.dash-root em, .call-root em { font-family: var(--font-serif); font-style: italic; font-weight: 400; letter-spacing: 0; }
+.dash-root :focus-visible, .call-root :focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+.dash-root .dash-content:focus-visible { outline: none; } /* skip-link target */
+
+/* ---------- Page frame (same column and texture as /agents) ---------- */
+.dash-content { position: relative; }
+.dash-content::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 520px; pointer-events: none; background-image: radial-gradient(var(--dot) 1px, transparent 1.3px); background-size: 14px 14px; -webkit-mask-image: radial-gradient(ellipse 70% 80% at 50% 0%, #000, transparent 75%); mask-image: radial-gradient(ellipse 70% 80% at 50% 0%, #000, transparent 75%); }
+.dash-root main.page-shell.dash-main { position: relative; width: min(100% - 64px, 1216px); padding: 56px 0 96px; }
+
+/* ---------- Page head ---------- */
+.dash-root .eyebrow, html[data-vl-theme="dark"] .dash-root .eyebrow { margin: 0 0 14px; color: var(--coral-text); font: 400 11px/1.4 var(--font-code); letter-spacing: .08em; text-transform: uppercase; }
+.dash-root .dash-head { gap: 24px; margin-bottom: 36px; }
+.dash-root .dash-head h1, .dash-root .page-shell h1 { margin: 0; font: 600 72px/1 var(--font-manrope); letter-spacing: -.04em; }
+.dash-root .dash-head .page-intro, .dash-root .page-intro { max-width: 560px; margin: 14px 0 0; color: var(--muted); font-size: 17px; line-height: 1.55; }
+.dash-root .dash-back, html[data-vl-theme="dark"] .dash-root .dash-back { color: var(--muted); font-size: 14px; }
+.dash-root .dash-back:hover { color: var(--ink); }
+.dash-root h2, .dash-root h3, .call-root h2, .call-root h3 { letter-spacing: -.02em; }
+
+/* ---------- Buttons ---------- */
+.dash-root button:not(.preview-tab):not([data-bare]),
+.dash-root .page-shell .button-link,
+.call-root button:not(.preview-tab):not([data-bare]),
+html[data-vl-theme="dark"] .dash-root button:not(.preview-tab):not([data-bare]),
+html[data-vl-theme="dark"] .dash-root .page-shell .button-link {
+  min-height: 44px; padding: 0 18px; border-radius: 999px; color: var(--on-primary); background: var(--primary);
+  font: 600 15px/1 var(--font-manrope); letter-spacing: 0; transition: transform .2s ease, background .2s ease, border-color .2s ease;
+}
+.dash-root button:not(.preview-tab):not([data-bare]):hover,
+.dash-root .page-shell .button-link:hover,
+.call-root button:not(.preview-tab):not([data-bare]):hover,
+html[data-vl-theme="dark"] .dash-root button:not(.preview-tab):not([data-bare]):hover,
+html[data-vl-theme="dark"] .dash-root .page-shell .button-link:hover { color: var(--on-primary); background: var(--primary-hover); transform: translateY(-1px); }
+.dash-root .button-link { border-radius: 999px; font-weight: 600; font-size: 15px; gap: 10px; min-height: 44px; }
+.dash-root .button-dark, html[data-vl-theme="dark"] .dash-root .button-dark { color: var(--on-primary); background: var(--primary); }
+.dash-root .button-dark span { color: var(--lime); }
+.dash-root .mini-action, html[data-vl-theme="dark"] .dash-root .mini-action { min-height: 36px; padding: 0 14px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 999px; font-weight: 600; }
+.dash-root .mini-action:hover, html[data-vl-theme="dark"] .dash-root .mini-action:hover { color: var(--ink); background: var(--bg); border-color: var(--ink); }
+
+/* ---------- Fields ---------- */
+.dash-root input, .dash-root textarea, .dash-root select,
+.call-root input, .call-root textarea, .call-root select,
+html[data-vl-theme="dark"] .dash-root input, html[data-vl-theme="dark"] .dash-root textarea, html[data-vl-theme="dark"] .dash-root select {
+  color: var(--ink); background: var(--surface); border: 1px solid var(--border-control); border-radius: 12px; font-family: var(--font-manrope);
+}
+.dash-root input:focus, .dash-root textarea:focus, .dash-root select:focus,
+.call-root input:focus, .call-root textarea:focus, .call-root select:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal) 22%, transparent); }
+.dash-root input[type="checkbox"], .dash-root input[type="radio"], .call-root input[type="checkbox"], .call-root input[type="radio"] { width: auto; min-height: 0; accent-color: var(--teal); box-shadow: none; }
+
+/* ---------- Surfaces ---------- */
+.dash-root .ws-card, .dash-root .panel, .dash-root .list-row {
+  border: 1px solid var(--line); border-radius: 16px; background: linear-gradient(180deg, var(--bg-2), var(--surface));
+}
+.dash-root .ws-form, .dash-root .detail-panel { border: 1px solid var(--line); border-radius: 24px; background: var(--surface); box-shadow: var(--shadow); }
+.dash-root .notice { border-radius: 12px; }
+.dash-root .form-section > h2, html[data-vl-theme="dark"] .dash-root .form-section > h2 { color: var(--muted); font: 400 11px/1.4 var(--font-code); letter-spacing: .08em; text-transform: uppercase; }
+.dash-root .badge { font-family: var(--font-code); }
+
+@media (max-width: 900px) {
+  .dash-root main.page-shell.dash-main { width: min(100% - 40px, 1216px); padding-top: 40px; }
+  .dash-root .dash-head h1, .dash-root .page-shell h1 { font-size: 52px; }
+}
+
+/* ---------- Agent avatar and header: the brand orb instead of per-agent hues ---------- */
+.dash-root .agent-orb, html[data-vl-theme="dark"] .dash-root .agent-orb { background: radial-gradient(circle at 35% 30%, #343A3A, #1B1F20); box-shadow: var(--elev-1); color: #C6E34A; }
+.dash-root .agent-orb i { background: #C6E34A; }
+.dash-root .agent-orb::after { border-color: color-mix(in srgb, var(--lime) 45%, transparent); }
+.dash-root .agent-hero { border: 1px solid var(--line); border-radius: 24px; background: linear-gradient(180deg, var(--bg-2), var(--surface)); }
+.dash-root .agent-hero::before { background: radial-gradient(closest-side, color-mix(in srgb, var(--lime) 16%, transparent), transparent); }
+
+/* ---------- "Good" states use teal (the palette has no green) ---------- */
+.dash-root .badge[data-tone="good"], html[data-vl-theme="dark"] .dash-root .badge[data-tone="good"] { color: var(--teal); background: color-mix(in srgb, var(--teal) 10%, transparent); border-color: color-mix(in srgb, var(--teal) 35%, transparent); }
+.dash-root .bars li[data-tone="good"] i::after { background: var(--teal); }
+.dash-root .agent-status.is-live i { background: var(--teal); box-shadow: none; }
+
+/* ---------- Usage and playground surfaces ---------- */
+.dash-root .ws-stats { border-radius: 16px; overflow: hidden; background: linear-gradient(180deg, var(--bg-2), var(--surface)); }
+.dash-root .ws-stats strong { font-weight: 600; }
+.dash-root .play-primary, .dash-root .stage-badge { border-radius: 999px; }
+.dash-root .pipe-banner { border-radius: 12px; }
+.dash-root .play-transcript li { border-radius: 12px; }
+.dash-root .agent-status.is-live, html[data-vl-theme="dark"] .dash-root .agent-status.is-live { color: var(--teal); }
+.dash-root .agent-status.is-live i, html[data-vl-theme="dark"] .dash-root .agent-status.is-live i { background: var(--teal); box-shadow: none; animation: none; }
+.dash-root .agent-status, html[data-vl-theme="dark"] .dash-root .agent-status { color: var(--muted); font-family: var(--font-code); }
+
+/* Section labels inside panels: the same mono label as "Configuration" */
+.dash-root .ws-section-head h2, html[data-vl-theme="dark"] .dash-root .ws-section-head h2 { color: var(--muted); font: 400 11px/1.4 var(--font-code); letter-spacing: .08em; text-transform: uppercase; }

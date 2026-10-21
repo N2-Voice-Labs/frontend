@@ -1,13 +1,15 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { MobileMenu } from "@/components/shared/mobile-menu";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { ROUTES } from "@/lib/landing/config";
 
 /** The page's search field registers with this id; ⌘K / Ctrl+K and the Search button focus it. */
 export const WORKSPACE_SEARCH_ID = "workspace-search";
+/** Opens the command palette on pages that have one (components/features/agents/command-palette.tsx). */
+const OPEN_PALETTE_EVENT = "voice-labs:open-palette";
 
 const LINKS = [
   { label: "Call", href: ROUTES.call },
@@ -17,21 +19,50 @@ const LINKS = [
   { label: "Usage", href: ROUTES.usage },
 ];
 
-const focusSearch = () => document.getElementById(WORKSPACE_SEARCH_ID)?.focus();
+/** Agent-builder and outbound tools, grouped under More (as in the previous workspace header). */
+const MORE = [
+  { label: "Campaigns", href: "/campaigns" },
+  { label: "Knowledge", href: "/knowledge" },
+  { label: "Tools", href: "/tools" },
+];
+
+const isCurrent = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
+
+/** Focuses the page's search field, or opens the command palette when the page has no search. */
+function openSearch() {
+  const field = document.getElementById(WORKSPACE_SEARCH_ID);
+  if (field) field.focus();
+  else window.dispatchEvent(new Event(OPEN_PALETTE_EVENT));
+}
 
 export function WorkspaceNav() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
+  const more = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
+    // ⌘K on pages with a search field. Pages with the command palette handle ⌘K themselves.
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k" && document.getElementById(WORKSPACE_SEARCH_ID)) {
         e.preventDefault();
-        focusSearch();
+        openSearch();
+      }
+      if (e.key === "Escape" && more.current?.open) {
+        more.current.open = false;
+        more.current.querySelector("summary")?.focus();
       }
     };
+    const onPointer = (e: PointerEvent) => {
+      if (more.current?.open && !more.current.contains(e.target as Node)) more.current.open = false;
+    };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointer);
+    };
   }, []);
+
+  const moreCurrent = MORE.some((l) => isCurrent(pathname, l.href));
 
   return (
     <header className="nav">
@@ -41,10 +72,16 @@ export function WorkspaceNav() {
           <span className="ws-tag">WORKSPACE</span>
         </div>
         <nav className="links" aria-label="Workspace">
-          {LINKS.map((l) => <a key={l.label} href={l.href} aria-current={l.href === pathname ? "page" : undefined}>{l.label}</a>)}
+          {LINKS.map((l) => <a key={l.label} href={l.href} aria-current={isCurrent(pathname, l.href) ? "page" : undefined}>{l.label}</a>)}
+          <details className="more" ref={more}>
+            <summary aria-current={moreCurrent ? "page" : undefined}>More</summary>
+            <div className="more-sheet">
+              {MORE.map((l) => <a key={l.label} href={l.href} aria-current={isCurrent(pathname, l.href) ? "page" : undefined}>{l.label}</a>)}
+            </div>
+          </details>
         </nav>
         <div className="nav-right">
-          <button type="button" className="kbd-search" aria-label="Search agents (Ctrl or Command + K)" onClick={focusSearch}>
+          <button type="button" className="kbd-search" data-bare aria-label="Search (Ctrl or Command + K)" onClick={openSearch}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
             <span>Search</span><kbd>⌘K</kbd>
           </button>
@@ -55,7 +92,7 @@ export function WorkspaceNav() {
           </a>
           <MobileMenu
             label="Workspace"
-            links={LINKS.map((l) => ({ ...l, current: l.href === pathname }))}
+            links={[...LINKS, ...MORE].map((l) => ({ ...l, current: isCurrent(pathname, l.href) }))}
             action={<a href={ROUTES.call} className="btn btn-primary">Start a call</a>}
           />
         </div>
