@@ -1,0 +1,237 @@
+/* Voice Labs design tokens (A×C "two lanes, one bridge", docs/frontend/VOICE_LABS_DESIGN_SYSTEM.md §2).
+   Defined once for light at :root and once for dark under html[data-vl-theme="dark"], so every route
+   group (marketing, workspace, call) gets both themes. Old names (--ink, --paper, --line, …) are kept
+   as aliases at the bottom; per-area files (theme-dark.css, dashboard-dark.css) may still override them. */
+
+:root {
+  color-scheme: light;
+
+  /* Core colour */
+  --bg: #f6f5ef;
+  --surface: #fffefa;
+  --surface-2: #efeee6;
+  --surface-elevated: #ffffff;
+  --text: #1d2022;
+  --text-2: #5a5d58;
+  --text-muted: #6b6d69; /* was #747675 (4.19:1 on paper, fails AA); now 4.79:1 */
+  --text-faint: #7a7d77; /* large or decorative text only */
+  --border: #dfdfd8;
+  --border-strong: #c9c9c1;
+  --border-control: #8d8f88;
+  --primary: #1d2022;
+  --on-primary: #ffffff;
+  --primary-hover: #383d3e;
+  --accent: #ff624c;
+  --accent-text: #b5372a;
+  --focus: #283ee8;
+  --success: #1b6e36;
+  --success-tint: #e5f2e8;
+  --warning: #8a5300;
+  --warning-tint: #fbf0dc;
+  --danger: #b42318;
+  --danger-tint: #fbe9e7;
+  --danger-solid: #b42318;
+
+  /* Participant identity: by seat, not by language. Teal is always you, plum is always them. */
+  --id-self: #0f6e6a;
+  --id-self-tint: #e6f1ef;
+  --id-other: #9b3a6e;
+  --id-other-tint: #f4e6ee;
+  --id-agent: #5a5d58;
+
+  /* Interpreter and realtime state. Lime is a fill only in light; strokes and text use --interp-ink. */
+  --interp: #d9f455;
+  --interp-ink: #566300;
+  --interp-on: #1d2022;
+  --interp-tint: #eef7c4;
+  --state-idle: #8d8f88;
+  --state-muted: #6b6d69;
+
+  /* Landing band */
+  --band: #202425;
+  --band-text: #f6f5ef;
+  --band-text-2: #b4b7b0;
+  --band-border: #3a4040;
+
+  /* Radii */
+  --radius-control: 4px;
+  --radius-row: 4px;
+  --radius-surface: 6px;
+  --radius-window: 8px;
+  --radius-pill: 999px;
+
+  /* Elevation */
+  --elev-1: 0 1px 2px rgb(29 32 34 / 8%);
+  --elev-2: 0 2px 4px rgb(29 32 34 / 8%), 0 12px 24px -8px rgb(29 32 34 / 18%);
+  --elev-3: 0 1px 2px rgb(29 32 34 / 10%), 0 8px 16px -4px rgb(29 32 34 / 10%), 0 32px 64px -16px rgb(29 32 34 / 26%);
+
+  /* Spacing (4 px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Type (app area; the landing keeps --text-display … --text-label in globals.css) */
+  --type-h1: 600 28px/34px var(--display);
+  --type-h2: 600 20px/28px var(--display);
+  --type-h3: 600 16px/24px var(--display);
+  --type-name: 600 20px/26px var(--display);
+  --type-call-title: 600 16px/22px var(--display);
+  --type-body-lg: 400 17px/28px var(--sans);
+  --type-body: 400 15px/24px var(--sans);
+  --type-body-sm: 400 14px/22px var(--sans);
+  --type-small: 500 13px/20px var(--sans);
+  --type-label: 500 12px/16px var(--mono);
+  --type-code: 400 13px/20px var(--mono);
+
+  /* Font stacks. Manrope (Cyrillic) sits second in --sans because DM Sans has no Cyrillic.
+     Hangul: system faces (every target OS ships one). The call routes put the self-hosted Noto Sans KR
+     (--font-hangul) in front of them; see app/(call)/call.css. Japanese and Chinese get their own
+     system faces through :lang() below, so Han characters never render in Korean glyph forms. */
+  --font-hangul-system: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans CJK KR", "Noto Sans KR";
+  --serif: Iowan Old Style, Baskerville, "Times New Roman", serif;
+  --sans: var(--font-sans), var(--font-display), var(--font-hangul-system), "Hiragino Sans", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+  --display: var(--font-display), var(--font-hangul-system), "Hiragino Sans", "PingFang SC", system-ui, sans-serif;
+  --mono: var(--font-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* Motion */
+  --dur-instant: 90ms;
+  --dur-fast: 180ms;
+  --dur-base: 240ms;
+  --dur-slow: 360ms;
+  --dur-loop: 1400ms;
+  --ease-standard: cubic-bezier(.2, .7, .2, 1);
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-in: cubic-bezier(.4, 0, 1, 1);
+  --ease-linear: linear;
+
+  /* ----- Aliases for the old names (phase 1 keeps every one working) ----- */
+  --paper: var(--bg);
+  --paper-2: var(--surface-2);
+  --ink: var(--text);
+  --ink-2: var(--text-2);
+  --ink-3: var(--text-faint); /* was var(--ink-3): self-reference, invalid */
+  --muted: var(--text-muted);
+  --line: var(--border);
+  --line-strong: var(--border-strong); /* was var(--line-strong): self-reference, invalid in light */
+  --band-ink: var(--band-text);
+  --band-ink-2: var(--band-text-2); /* was var(--band-ink-2): self-reference, invalid */
+  --band-line: var(--band-border);
+  --accent-dark: var(--accent-text);
+  --signal: var(--interp);
+  --shadow-window: var(--elev-3);
+  --motion-fast: var(--dur-fast);
+  --motion-standard: var(--dur-base);
+  --ease-expo: var(--ease-out);
+}
+
+/* Dark: explicit choice, and the no-JS fallback when the init script did not run. */
+html[data-vl-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121516;
+  --surface: #1a1e1f;
+  --surface-2: #1f2425;
+  --surface-elevated: #222829;
+  --text: #ecebe4;
+  --text-2: #aeb1aa;
+  --text-muted: #9a9d96;
+  --text-faint: #7f847d;
+  --border: #2e3435;
+  --border-strong: #3a4142;
+  --border-control: #6b7374;
+  --primary: #ecebe4;
+  --on-primary: #121516;
+  --primary-hover: #ffffff;
+  --accent: #ff7a66;
+  --accent-text: #ff7a66;
+  --focus: #8f9bff;
+  --success: #6fd58f;
+  --success-tint: #173322;
+  --warning: #f2b33d;
+  --warning-tint: #33270f;
+  --danger: #ff8a80;
+  --danger-tint: #3a1d1b;
+  --danger-solid: #c4362b;
+  --id-self: #4fc6bd;
+  --id-self-tint: #163331;
+  --id-other: #e48bbd;
+  --id-other-tint: #3a2030;
+  --id-agent: #aeb1aa;
+  --interp: #d9f455;
+  --interp-ink: #d9f455;
+  --interp-on: #121516;
+  --interp-tint: #2a3110;
+  --state-idle: #6b7374;
+  --state-muted: #9a9d96;
+  --band: #1a1f20;
+  --band-border: #2e3435;
+  --elev-1: 0 1px 2px rgb(0 0 0 / 40%);
+  --elev-2: 0 2px 4px rgb(0 0 0 / 40%), 0 12px 24px -8px rgb(0 0 0 / 55%);
+  --elev-3: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 16px -4px rgb(0 0 0 / 30%), 0 32px 64px -16px rgb(0 0 0 / 60%);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-vl-theme]) {
+    color-scheme: dark;
+    --bg: #121516;
+    --surface: #1a1e1f;
+    --surface-2: #1f2425;
+    --surface-elevated: #222829;
+    --text: #ecebe4;
+    --text-2: #aeb1aa;
+    --text-muted: #9a9d96;
+    --text-faint: #7f847d;
+    --border: #2e3435;
+    --border-strong: #3a4142;
+    --border-control: #6b7374;
+    --primary: #ecebe4;
+    --on-primary: #121516;
+    --primary-hover: #ffffff;
+    --accent: #ff7a66;
+    --accent-text: #ff7a66;
+    --focus: #8f9bff;
+    --success: #6fd58f;
+    --success-tint: #173322;
+    --warning: #f2b33d;
+    --warning-tint: #33270f;
+    --danger: #ff8a80;
+    --danger-tint: #3a1d1b;
+    --danger-solid: #c4362b;
+    --id-self: #4fc6bd;
+    --id-self-tint: #163331;
+    --id-other: #e48bbd;
+    --id-other-tint: #3a2030;
+    --id-agent: #aeb1aa;
+    --interp-ink: #d9f455;
+    --interp-on: #121516;
+    --interp-tint: #2a3110;
+    --state-idle: #6b7374;
+    --state-muted: #9a9d96;
+    --band: #1a1f20;
+    --band-border: #2e3435;
+    --elev-1: 0 1px 2px rgb(0 0 0 / 40%);
+    --elev-2: 0 2px 4px rgb(0 0 0 / 40%), 0 12px 24px -8px rgb(0 0 0 / 55%);
+    --elev-3: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 16px -4px rgb(0 0 0 / 30%), 0 32px 64px -16px rgb(0 0 0 / 60%);
+  }
+}
+
+/* Script-aware text */
+:lang(ko) { word-break: keep-all; line-break: strict; }
+:lang(ja) { font-family: var(--font-display), "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans CJK JP", system-ui, sans-serif; }
+:lang(zh) { font-family: var(--font-display), "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif; }
+:lang(ko), :lang(ja), :lang(zh) { letter-spacing: 0; }
+
+/* Reduced motion: one switch for every app animation. JS meters read the same media query. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-instant: 0ms; --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms; }
+  /* Also covers hard-coded app animations (e.g. workspace palette/fade). GSAP/anime on the landing are
+     JS-driven and keep their own reduced-motion handling. */
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}

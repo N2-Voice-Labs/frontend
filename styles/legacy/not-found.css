@@ -1,0 +1,17 @@
+.lost { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 48px 24px; text-align: center; background: radial-gradient(ellipse 60% 50% at 50% 28%, rgb(255 98 76 / 10%), transparent), var(--paper); }
+body:has(.lost) main:not(.marketing-main) { width: auto; padding: 48px 24px; }
+.lost-orb { position: relative; width: 150px; height: 150px; display: grid; place-items: center; margin-bottom: 14px; }
+.lost-ring { position: absolute; inset: 0; border: 1.5px solid var(--accent); border-radius: 50%; opacity: 0; animation: lost-ripple 3s ease-out infinite; }
+.lost-ring:nth-child(2) { animation-delay: 1.5s; }
+.lost-core { position: relative; width: 92px; height: 92px; display: inline-flex; align-items: center; justify-content: center; color: #fff; background: radial-gradient(circle at 38% 30%, #3a4142, #0d1011 68%); border-radius: 50%; box-shadow: 0 18px 50px rgb(29 32 34 / 28%); font: 600 46px/1 var(--display); letter-spacing: -.12em; }
+.lost-core span { color: var(--accent); }
+.lost-code { margin: 0; color: var(--accent-dark); font: 500 12px var(--mono); letter-spacing: .14em; }
+.lost h1 { margin: 0; font: 500 clamp(40px, 7vw, 68px)/1 var(--display); letter-spacing: -.065em; }
+.lost-copy { max-width: 420px; margin: 4px 0 18px; color: var(--muted); font-size: 15px; line-height: 1.7; }
+.lost-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.lost-primary, .lost-secondary { min-height: 46px; display: inline-flex; align-items: center; padding: 0 20px; border-radius: 3px; font: 600 13px var(--sans); text-decoration: none; transition: transform .3s var(--ease-standard), background .2s ease; }
+.lost-primary { color: var(--paper); background: var(--ink); }
+.lost-secondary { color: var(--ink); border: 1px solid #c9c9c1; }
+.lost-primary:hover, .lost-secondary:hover { transform: translateY(-2px); }
+@keyframes lost-ripple { from { opacity: .5; transform: scale(.65); } to { opacity: 0; transform: scale(1.35); } }
+@media (prefers-reduced-motion: reduce) { .lost-ring { animation: none; opacity: .25; } }

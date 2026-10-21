@@ -1,0 +1,1209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice Labs — From noise to understanding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Noto+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* =========================================================
+   Theme tokens
+   teal = you · plum = the other person · lime = bridge/AI
+   coral = Voice Labs mark accent (orb only)
+   ========================================================= */
+:root{--bg:#FBFAF7;--bg-2:#F3F1EB;--surface:#FFFFFF;--ink:#141617;--muted:#555B5E;--line:#E4E1D9;--teal:#0E7A75;--plum:#8A3A6B;--lime:#B5D130;--coral:#E8553A;--glass:rgba(251,250,247,.78);--shadow:0 1px 2px rgba(20,22,23,.06),0 14px 36px -14px rgba(20,22,23,.16);--dot:rgba(20,22,23,.12)}
+:root[data-theme="dark"]{--bg:#0D1011;--bg-2:#121617;--surface:#161B1C;--ink:#F1EFE9;--muted:#A2A8A6;--line:#262C2E;--teal:#3EC2B6;--plum:#D47DB0;--lime:#C6E34A;--coral:#F06A4E;--glass:rgba(18,22,23,.72);--shadow:0 1px 2px rgba(0,0,0,.4),0 18px 44px -16px rgba(0,0,0,.65);--dot:rgba(241,239,233,.08)}
+
+/* ---------- Base ---------- */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:88px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Manrope','Noto Sans KR',system-ui,sans-serif;overflow-x:clip;transition:background .4s ease,color .4s ease}
+a{color:var(--ink)}
+a:hover{color:var(--teal)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+em{font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-weight:400;letter-spacing:0}
+h1,h2,h3,p{margin:0}
+button{font:inherit}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+.mono{font-family:'DM Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;font-size:12px;color:var(--muted)}
+.mono.sm{font-size:11px}
+.h1{font-size:80px;line-height:1;font-weight:600;letter-spacing:-.035em}
+.h2{font-size:56px;line-height:1.04;font-weight:600;letter-spacing:-.03em}
+.lede{font-size:16px;line-height:1.6;color:var(--muted)}
+.sec{border-top:1px solid var(--line)}
+.alt{background:var(--bg-2)}
+.head-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px}
+.head-col{display:flex;flex-direction:column;gap:16px;max-width:640px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px}
+
+/* Dot-matrix texture + corner brackets (borrowed pattern, our tokens) */
+.dots{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(var(--dot) 1px,transparent 1.3px);background-size:14px 14px;-webkit-mask-image:radial-gradient(ellipse at center,#000 10%,transparent 70%);mask-image:radial-gradient(ellipse at center,#000 10%,transparent 70%)}
+.brackets{position:relative}
+.brackets::before,.brackets::after{content:"";position:absolute;width:14px;height:14px;border:1px solid var(--muted);opacity:.55;pointer-events:none}
+.brackets::before{top:12px;left:12px;border-right:0;border-bottom:0}
+.brackets::after{bottom:12px;right:12px;border-left:0;border-top:0}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 20px;border-radius:999px;font-size:15px;font-weight:600;text-decoration:none;border:0;cursor:pointer;transition:transform .2s ease,border-color .2s ease,background .2s ease}
+.btn-primary,a.btn-primary{background:var(--ink);color:var(--bg)}
+a.btn-primary:hover,.btn-primary:hover{color:var(--bg);transform:translateY(-1px)}
+.btn-ghost,a.btn-ghost{border:1px solid var(--line);color:var(--ink);background:var(--bg)}
+a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
+
+/* ---------- Floating pill nav ---------- */
+.nav{position:sticky;top:12px;z-index:40;padding:0 16px}
+.nav-pill{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px;padding:0 10px 0 18px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);box-shadow:var(--shadow)}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.logo-mark{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+.logo-mark span{color:var(--coral)}
+.logo-word{font-weight:700;font-size:15px;letter-spacing:.04em}
+.links{display:flex;gap:28px;font-size:14px}
+.links a{text-decoration:none;color:var(--muted)}
+.links a:hover{color:var(--ink)}
+.icon-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* ---------- Waveform bars ---------- */
+.bars{display:flex;align-items:center;gap:3px;height:56px}
+.bar{width:3px;border-radius:2px;background:currentColor;transform:scaleY(.22);transition:transform .5s ease}
+[data-on="true"] .bar{animation:talk 1s ease-in-out infinite alternate}
+[data-on="done"] .bar{transform:scaleY(.5)}
+@keyframes talk{0%{transform:scaleY(.2)}100%{transform:scaleY(1)}}
+.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--lime) 55%,transparent)}50%{box-shadow:0 0 0 10px color-mix(in srgb,var(--lime) 0%,transparent)}}
+
+/* =========================================================
+   HERO — headline + the live voice orb
+   ========================================================= */
+.hero{position:relative;margin-top:-72px;padding-top:72px;min-height:860px;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(60% 55% at 72% 40%,color-mix(in srgb,var(--coral) 9%,transparent),transparent 70%)}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hero-grid{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:center;min-height:788px}
+.hero-copy{display:flex;flex-direction:column;gap:24px}
+.badge{display:inline-flex;align-items:center;gap:10px;height:32px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:var(--glass);align-self:flex-start}
+.ldot{width:7px;height:7px;border-radius:50%;background:var(--lime)}
+.hero-sub{max-width:500px;font-size:19px;line-height:1.55;color:var(--muted)}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:4px}
+
+/* Orb stage */
+.orb-col{display:flex;flex-direction:column;align-items:center;gap:22px}
+.orb-stage{--level:0;position:relative;width:min(100%,520px);aspect-ratio:1}
+.orb-stage svg.orbits{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.orbit-dash{transform-origin:260px 260px;animation:spin 48s linear infinite}
+.orbit-tilt{transform-origin:260px 260px;animation:spin 90s linear infinite reverse}
+.orb-stage[data-state="connecting"] .orbit-dash{animation-duration:6s}
+.orb-stage[data-state="speaking"] .orbit-dash{animation-duration:16s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.orb{position:absolute;left:50%;top:50%;width:58%;aspect-ratio:1;transform:translate(-50%,-50%) scale(calc(1 + var(--level) * .035));border-radius:50%;background:radial-gradient(circle at 35% 30%,#343A3A 0%,#1F2425 55%,#181C1D 100%);box-shadow:0 30px 60px -20px rgba(0,0,0,.45),0 0 0 calc(var(--level) * 18px) color-mix(in srgb,var(--lime) 18%,transparent),inset 0 1px 0 rgba(255,255,255,.06);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:box-shadow .12s linear}
+.orb-mark{font-weight:800;font-size:clamp(64px,8vw,104px);line-height:.9;color:#F7F5EF;letter-spacing:-.02em;display:flex;align-items:flex-end}
+.orb-mark i{display:inline-block;width:.2em;height:.2em;background:var(--coral);margin-left:.04em;margin-bottom:.06em}
+.orb-bars{display:flex;align-items:center;gap:5px;height:64px;color:#C6E34A}
+.orb-bars span{width:5px;height:100%;border-radius:3px;background:currentColor;transform:scaleY(.2);transform-origin:center}
+.orb-label{font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.18em;color:#9AA19F;text-transform:uppercase}
+.tag{position:absolute;display:flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:14px;letter-spacing:.06em;color:var(--ink)}
+.tag i{width:9px;height:9px;border-radius:50%}
+.speak-btn{display:inline-flex;align-items:center;gap:12px;min-height:56px;padding:0 26px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:17px;cursor:pointer;box-shadow:var(--shadow);transition:transform .2s ease,background .2s ease,color .2s ease}
+.speak-btn:hover{transform:translateY(-1px)}
+.speak-btn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.speak-btn[disabled]{opacity:.6;cursor:progress}
+.speak-note{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.04em;color:var(--muted);text-align:center;max-width:440px;line-height:1.6}
+.speak-msg{font-size:14px;color:var(--coral);min-height:20px;text-align:center}
+
+/* ---------- Signal band: noise → voice → two lanes + bridge ---------- */
+.signal-inner{display:flex;flex-direction:column;align-items:center;gap:28px;width:100%}
+.signal-words{position:relative;height:72px;width:100%;text-align:center}
+.signal-words span{position:absolute;left:0;right:0;top:0;font-size:56px;line-height:72px;font-weight:600;letter-spacing:-.03em;opacity:0;transform:translateY(12px);transition:opacity .5s ease,transform .5s ease}
+.signal-words span[data-on="true"]{opacity:1;transform:none}
+.signal-canvas{display:block;width:100%;height:300px}
+.signal-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:22px;transition:opacity .5s ease}
+.signal-legend span{display:inline-flex;align-items:center;gap:8px}
+.signal-legend i{width:18px;height:3px;border-radius:2px}
+.signal-cap{margin:0;min-height:30px;max-width:900px;width:100%;text-align:center;font-size:19px;line-height:1.5;font-weight:500;transition:opacity .3s ease}
+.signal-cap.cap-you{color:var(--teal)}
+.signal-cap.cap-agent{color:var(--plum)}
+.signal-cap:empty{opacity:0}
+.signal-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;width:100%;padding-top:20px;border-top:1px solid var(--line)}
+.signal-stats{display:flex;flex-direction:column;gap:4px}
+.signal-stats b{font-family:'Manrope',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.01em;color:var(--ink);text-transform:none}
+.lat-yours{display:inline-flex;align-items:center;gap:10px;align-self:flex-start;padding:10px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:15px}
+.lat-yours[hidden]{display:none}
+
+/* ---------- Pinned sections ---------- */
+.pinsec{position:relative}
+.pin{position:sticky;top:76px;display:flex;align-items:center}
+.pin .wrap{width:100%}
+
+/* ---------- Bridge ---------- */
+.stage-grid{display:grid;grid-template-columns:minmax(0,1fr) 200px minmax(0,1fr);gap:24px;align-items:stretch}
+.lane{padding:24px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:18px;min-height:240px}
+.lane-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.who{display:flex;align-items:center;gap:12px}
+.avatar{width:40px;height:40px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+.who-text{display:flex;flex-direction:column;gap:2px}
+.lane-text{font-size:22px;line-height:1.45;font-weight:500;min-height:64px;transition:opacity .4s ease}
+.lane .bars{margin-top:auto}
+.bridge-col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.bridge-track{position:relative;width:100%;height:4px;border-radius:4px;background:var(--line);overflow:hidden}
+.bridge-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--lime);border-radius:4px}
+.caret{display:inline-block;width:2px;height:1em;background:var(--teal);vertical-align:-.15em;margin-left:3px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line);font-size:13px;color:var(--muted);transition:all .35s ease}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip[data-on="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip[data-on="true"]::before{background:var(--lime)}
+
+/* ---------- Languages ---------- */
+.split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:72px;align-items:center}
+.lang-rows{display:flex;flex-direction:column;gap:14px}
+.lang-row{display:grid;grid-template-columns:56px minmax(0,1fr);gap:20px;align-items:center;padding:22px 24px;border-radius:18px;transition:opacity .5s ease}
+.lang-row[data-active="false"]{opacity:.32}
+.lang-row[data-active="true"] .bar{animation:talk .9s ease-in-out infinite alternate}
+.code{width:56px;height:56px;border-radius:14px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:14px;font-weight:500}
+.lang-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.quote{padding:20px 22px;display:flex;flex-direction:column;gap:12px;border-radius:16px}
+
+/* =========================================================
+   WORKSPACE WINDOW — tabs + panels (app-window pattern)
+   ========================================================= */
+.win{border:1px solid var(--line);border-radius:22px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
+.win-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;height:48px;padding:0 18px;border-bottom:1px solid var(--line)}
+.win-dots{display:flex;gap:7px}
+.win-dots i{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.tabs{display:inline-flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px;background:var(--bg-2);align-self:center}
+.tab{min-height:40px;padding:0 18px;border-radius:999px;border:0;background:transparent;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.panel{padding:28px;animation:fadeUp .45s cubic-bezier(.22,1,.36,1)}
+.panel[hidden]{display:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.agents{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.agent{border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px;background:var(--bg);min-height:200px;transition:border-color .2s ease,transform .2s ease}
+.agent:hover{border-color:var(--muted);transform:translateY(-2px)}
+.agent-top{display:flex;justify-content:space-between;align-items:center}
+.agent h3{font-size:20px;font-weight:600;letter-spacing:-.01em}
+.agent .bars{height:30px;color:var(--muted);margin-top:auto}
+.agent-foot{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.status i{width:7px;height:7px;border-radius:50%;background:var(--teal)}
+.status.draft i{background:var(--line);border:1px solid var(--muted)}
+.agent.new{border-style:dashed;align-items:center;justify-content:center;color:var(--muted);text-decoration:none;font-weight:600}
+.convo{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px 4px;border-bottom:1px solid var(--line)}
+.convo:last-child{border-bottom:0}
+
+/* ---------- Latency ---------- */
+.lat{position:relative}
+.lat-track{position:absolute;left:0;right:0;top:11px;height:2px;background:var(--line)}
+.lat-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--lime)}
+.lat-dot{position:absolute;top:-6px;left:0;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--lime)}
+.lat-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px;position:relative}
+.stage{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
+.node{display:block;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);background:var(--bg);transition:all .35s ease}
+.stage-label{font-weight:600;font-size:16px;color:var(--muted);transition:color .35s ease}
+.stage-val{font-family:'DM Mono',monospace;font-size:13px;color:var(--muted)}
+.stage[data-on="true"] .node{background:var(--lime);border-color:var(--lime);box-shadow:0 0 0 6px color-mix(in srgb,var(--lime) 25%,transparent)}
+.stage[data-on="true"] .stage-label{color:var(--ink)}
+
+/* ---------- Bento (numbered tiles) ---------- */
+.bento{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px}
+.span4{grid-column:span 4}
+.span2{grid-column:span 2}
+.tile{border-radius:22px;padding:28px;display:flex;flex-direction:column;gap:24px;min-height:280px}
+.tile-num{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;color:var(--muted)}
+.tile-title{font-weight:600;font-size:20px}
+.tile-head{display:flex;flex-direction:column;gap:8px}
+.tile-head span:last-child{color:var(--muted);line-height:1.55}
+.tile-body{margin-top:auto;display:flex;flex-direction:column;gap:10px}
+.kv{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pill{padding:6px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+.gloss{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;background:var(--bg-2);font-size:15px}
+.tile.dark{background:var(--ink);color:var(--bg);border:none}
+.tile.dark .tile-head span:last-child,.tile.dark .tile-num{color:inherit;opacity:.7}
+.step{display:flex;align-items:center;gap:10px;font-size:15px}
+.step::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--lime)}
+
+/* ---------- Closing CTA ---------- */
+.final{position:relative;overflow:hidden;padding:180px 0}
+.ripple{position:absolute;left:50%;top:50%;width:560px;height:560px;margin:-280px 0 0 -280px;border-radius:50%;border:1px solid var(--teal);opacity:0;animation:ripple 7.5s linear infinite}
+.ripple.p{border-color:var(--plum)}
+@keyframes ripple{0%{transform:scale(.25);opacity:.55}100%{transform:scale(1.9);opacity:0}}
+.final-inner{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:24px}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;padding-top:32px;padding-bottom:32px;font-size:14px;color:var(--muted)}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1000px){
+  .agents{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:900px){
+  .wrap{padding:0 20px}
+  .links{display:none}
+  .h1{font-size:52px}
+  .h2{font-size:38px}
+  .hero{min-height:0}
+  .hero-grid{grid-template-columns:minmax(0,1fr);padding-top:56px;padding-bottom:72px;min-height:0;text-align:left}
+  .orb-stage{width:min(100%,380px)}
+  .tag{font-size:12px}
+  .signal-words span{font-size:36px}
+  .signal-canvas{height:240px}
+  .stage-grid{grid-template-columns:minmax(0,1fr)}
+  .bridge-col{min-height:90px}
+  .split{grid-template-columns:minmax(0,1fr);gap:40px}
+  .bento{grid-template-columns:minmax(0,1fr)}
+  .span4,.span2{grid-column:auto}
+  .pinsec{height:auto !important}
+  .pin{position:static;height:auto !important;padding:96px 0}
+  .lat-grid{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:28px}
+  .lat-track{display:none}
+  .tabs{overflow-x:auto;max-width:100%}
+  .win-bar .mono{display:none}
+  .convo{grid-template-columns:minmax(0,1fr) auto}
+  .convo .mono:first-child{display:none}
+}
+@media (max-width:560px){
+  .agents{grid-template-columns:minmax(0,1fr)}
+  .nav-pill .btn-primary{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *{animation:none !important;transition:none !important}
+  [data-on="true"] .bar,.lang-row[data-active="true"] .bar{transform:scaleY(.75)}
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-pill">
+    <a href="#top" class="logo"><span class="logo-mark">V<span>.</span></span><span class="logo-word">VOICE LABS</span></a>
+    <nav class="links" aria-label="Main">
+      <a href="#bridge">How it works</a>
+      <a href="#languages">Languages</a>
+      <a href="#workspace">Workspace</a>
+      <a href="#latency">Latency</a>
+    </nav>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button type="button" class="icon-btn" id="themeBtn" aria-label="Switch to dark theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <a href="#top" class="btn btn-primary" data-speak-shortcut>Start a call</a>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- =====================================================
+     HERO — headline + live voice orb ("Speak to it")
+     ===================================================== -->
+<section id="top" class="hero">
+  <div class="hero-bg" aria-hidden="true"></div>
+  <canvas id="heroCanvas" aria-hidden="true"></canvas>
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <div class="mono badge"><span class="ldot pulse"></span>Realtime voice AI</div>
+      <h1 class="h1">Voice AI that speaks your language. <em>Even when you switch.</em></h1>
+      <p class="hero-sub">Voice agents and live translation that follow people across languages — mid-sentence, in real time.</p>
+      <div class="cta-row">
+        <a href="#top" class="btn btn-primary" data-speak-shortcut>Try live voice
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a href="#bridge" class="btn btn-ghost">See how it works</a>
+      </div>
+    </div>
+
+    <div class="orb-col">
+      <div class="orb-stage" id="orbStage" data-state="idle">
+        <svg class="orbits" viewBox="0 0 520 520" aria-hidden="true">
+          <defs>
+            <linearGradient id="orbitGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" style="stop-color:var(--coral)"/>
+              <stop offset="1" style="stop-color:var(--lime)"/>
+            </linearGradient>
+          </defs>
+          <g class="orbit-dash"><circle cx="260" cy="260" r="232" fill="none" stroke="url(#orbitGrad)" stroke-width="3" stroke-dasharray="14 18" stroke-linecap="round" opacity=".85"/></g>
+          <g class="orbit-tilt"><ellipse cx="260" cy="260" rx="250" ry="118" transform="rotate(-32 260 260)" fill="none" style="stroke:var(--muted)" stroke-opacity=".55" stroke-width="1.5"/></g>
+          <circle cx="40" cy="190" r="9" fill="none" style="stroke:var(--coral)" stroke-width="3"/>
+          <circle cx="468" cy="390" r="8" style="fill:var(--lime);stroke:var(--ink)" stroke-width="3"/>
+        </svg>
+        <span class="tag" style="left:2%;top:8%"><i style="background:var(--coral)"></i>EN</span>
+        <span class="tag" style="right:2%;bottom:14%"><i style="background:var(--teal)"></i>RU</span>
+        <div class="orb">
+          <div class="orb-mark">V<i></i></div>
+          <div class="orb-bars" id="orbBars" aria-hidden="true"></div>
+          <div class="orb-label" id="orbLabel">Voice / 01</div>
+        </div>
+      </div>
+      <button type="button" class="speak-btn" id="speakBtn" aria-pressed="false">
+        <svg id="speakIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        <span id="speakText">Speak to it</span>
+      </button>
+      <p class="speak-msg" id="speakMsg" role="status" aria-live="polite"></p>
+      <p class="speak-note">Optional. Uses your microphone to talk to the Voice Labs demo agent while the session is open.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SIGNAL BAND: scroll-scrubbed noise → one voice → two lanes joined by a bridge -->
+<section id="signal" class="sec pinsec" style="height:1800px">
+  <div class="pin" style="height:780px">
+    <div class="wrap signal-inner" style="gap:18px">
+      <div class="mono">The signal</div>
+      <p class="sr-only">Noise becomes a voice, and one voice becomes two voices joined by a bridge. Start a session to see your own voice and the agent's reply drawn live, with the measured response time.</p>
+      <div class="signal-words" aria-hidden="true">
+        <span data-on="true">Noise.</span>
+        <span data-on="false">A <em>voice.</em></span>
+        <span data-on="false">Two voices. <em>One bridge.</em></span>
+        <span data-on="false">Live. <em>Watch your voice cross.</em></span>
+      </div>
+      <p class="signal-cap cap-you" id="capYou" aria-live="polite"></p>
+      <canvas class="signal-canvas" id="signalCanvas" aria-hidden="true"></canvas>
+      <p class="signal-cap cap-agent" id="capAgent" aria-live="polite"></p>
+      <div class="signal-foot">
+        <div class="signal-legend mono sm" id="signalLegend" aria-hidden="true" style="opacity:0">
+          <span><i style="background:var(--teal)"></i>You</span>
+          <span><i style="background:var(--lime)"></i>Voice Labs</span>
+          <span><i style="background:var(--plum)"></i>The agent</span>
+        </div>
+        <div class="signal-stats" role="status" aria-live="polite">
+          <span class="mono sm" id="statLabel">Response time</span>
+          <b id="statValue">—</b>
+          <span class="mono sm" id="statNote">End of your speech → first agent audio, measured in your browser</span>
+        </div>
+        <button type="button" class="btn btn-primary" id="signalBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          <span id="signalBtnText">Talk to it here</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BRIDGE: pinned; Korean in, lime bridge fills, English types out -->
+<section id="bridge" class="sec alt pinsec" style="height:2400px">
+  <div class="pin" style="height:760px">
+    <div class="wrap" style="display:flex;flex-direction:column;gap:48px">
+      <div class="head-row">
+        <div class="head-col">
+          <div class="mono">Two lanes, one bridge</div>
+          <h2 class="h2">Two people. Two languages. <em>One conversation.</em></h2>
+        </div>
+        <p class="lede" style="max-width:340px">Each person speaks naturally. Voice Labs listens, translates and speaks in the other language before the pause gets awkward.</p>
+      </div>
+      <div class="stage-grid">
+        <div class="card lane">
+          <div class="lane-head">
+            <div class="who">
+              <span class="avatar" style="background:var(--plum)">J</span>
+              <div class="who-text"><span style="font-weight:600">Ji-woo</span><span class="mono sm">한국어 · Korean</span></div>
+            </div>
+            <span class="mono sm" style="color:var(--plum)" id="koStatus">Waiting</span>
+          </div>
+          <p class="lane-text" lang="ko" id="koText" style="opacity:.3">내일 오전 10시에 본사에서 만날 수 있을까요?</p>
+          <div class="bars" id="koBars" data-on="false" aria-hidden="true" style="color:var(--plum)"></div>
+        </div>
+        <div class="bridge-col">
+          <span class="mono sm" id="bridgeLabel">Listening</span>
+          <div class="bridge-track"><div class="bridge-fill" id="bridgeFill"></div></div>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--muted)"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+        <div class="card lane">
+          <div class="lane-head">
+            <div class="who">
+              <span class="avatar" style="background:var(--teal)">Y</span>
+              <div class="who-text"><span style="font-weight:600">You</span><span class="mono sm">English</span></div>
+            </div>
+            <span class="mono sm" style="color:var(--teal)" id="enStatus">Listening</span>
+          </div>
+          <p class="lane-text"><span id="enText"></span><span class="caret" id="caret" aria-hidden="true" hidden></span></p>
+          <div class="bars" id="enBars" data-on="false" aria-hidden="true" style="color:var(--teal)"></div>
+        </div>
+      </div>
+      <div class="chips">
+        <span class="chip" data-at="0.1">Heard</span>
+        <span class="chip" data-at="0.3">Understood</span>
+        <span class="chip" data-at="0.56">Translated</span>
+        <span class="chip" data-at="0.8">Spoken</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LANGUAGES: code-switching + three voiceprints -->
+<section id="languages" class="sec" style="padding:160px 0">
+  <div class="wrap split">
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div class="mono">Code-switching</div>
+      <h2 class="h2">Language is fluid. <em>Your agent is too.</em></h2>
+      <p class="lede" style="font-size:17px;max-width:440px">Callers start in one language and finish in another. Voice Labs follows the switch without asking them to choose again.</p>
+      <div class="card quote">
+        <span class="mono sm">One sentence, two languages</span>
+        <p style="font-size:19px;line-height:1.5;font-weight:500"><span lang="ru" style="color:var(--plum)">Мне нужно узнать</span> <span style="color:var(--teal)">what documents I need for my visa.</span></p>
+      </div>
+    </div>
+    <div class="lang-rows">
+      <div class="card lang-row" data-active="true">
+        <span class="code">EN</span>
+        <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+          <div class="lang-top"><span style="font-weight:600">English</span><span style="color:var(--muted);font-size:15px">Could we meet tomorrow?</span></div>
+          <div class="bars" data-seed="1" aria-hidden="true" style="height:40px;overflow:hidden;color:var(--teal)"></div>
+        </div>
+      </div>
+      <div class="card lang-row" data-active="false">
+        <span class="code">RU</span>
+        <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+          <div class="lang-top"><span style="font-weight:600">Русский</span><span lang="ru" style="color:var(--muted);font-size:15px">Можем встретиться завтра?</span></div>
+          <div class="bars" data-seed="5" aria-hidden="true" style="height:40px;overflow:hidden;color:var(--plum)"></div>
+        </div>
+      </div>
+      <div class="card lang-row" data-active="false">
+        <span class="code">KO</span>
+        <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+          <div class="lang-top"><span style="font-weight:600">한국어</span><span lang="ko" style="color:var(--muted);font-size:15px">내일 만날 수 있을까요?</span></div>
+          <div class="bars" data-seed="7" aria-hidden="true" style="height:40px;overflow:hidden;color:var(--ink)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================
+     WORKSPACE WINDOW — tabbed app window
+     ===================================================== -->
+<section id="workspace" class="sec alt" style="position:relative;padding:150px 0;overflow:hidden">
+  <div class="dots" aria-hidden="true"></div>
+  <div class="wrap" style="position:relative;display:flex;flex-direction:column;gap:40px">
+    <div class="head-row">
+      <div class="head-col">
+        <div class="mono">Workspace</div>
+        <h2 class="h2">Set up, test and review <em>in one place.</em></h2>
+      </div>
+      <p class="lede" style="max-width:360px">Configure an agent, talk to it live, then read back exactly what it heard and said.</p>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Workspace areas">
+      <button type="button" class="tab" role="tab" id="tab-agents" aria-controls="panel-agents" aria-selected="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Agents</button>
+      <button type="button" class="tab" role="tab" id="tab-play" aria-controls="panel-play" aria-selected="false" tabindex="-1">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/></svg>Playground</button>
+      <button type="button" class="tab" role="tab" id="tab-convos" aria-controls="panel-convos" aria-selected="false" tabindex="-1">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.5A8 8 0 1 1 21 12z"/></svg>Conversations</button>
+    </div>
+
+    <div class="win">
+      <div class="win-bar">
+        <div class="win-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+        <span class="mono sm" id="winPath">voicelabs / workspace / agents</span>
+        <span class="mono sm">Illustrative</span>
+      </div>
+
+      <div class="panel" role="tabpanel" id="panel-agents" aria-labelledby="tab-agents">
+        <div class="agents">
+          <div class="agent">
+            <div class="agent-top"><span class="mono sm">01</span><span class="status"><i></i>Ready</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><h3>Concierge</h3><span class="mono sm">Travel and stays · EN / RU</span></div>
+            <div class="bars" data-seed="11" data-n="36" data-max="26" aria-hidden="true"></div>
+          </div>
+          <div class="agent">
+            <div class="agent-top"><span class="mono sm">02</span><span class="status"><i></i>Ready</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><h3>Front desk</h3><span class="mono sm">Appointments · EN / RU</span></div>
+            <div class="bars" data-seed="13" data-n="36" data-max="26" aria-hidden="true"></div>
+          </div>
+          <div class="agent">
+            <div class="agent-top"><span class="mono sm">03</span><span class="status draft"><i></i>Draft</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><h3>Studio guide</h3><span class="mono sm">Product walkthrough · EN</span></div>
+            <div class="bars" data-seed="17" data-n="36" data-max="26" aria-hidden="true"></div>
+          </div>
+          <a href="#top" class="agent new" data-speak-shortcut>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            New agent
+          </a>
+        </div>
+      </div>
+
+      <div class="panel" role="tabpanel" id="panel-play" aria-labelledby="tab-play" hidden>
+        <div style="display:flex;flex-direction:column;gap:22px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;flex-direction:column;gap:4px"><span class="mono sm">Voice playground</span><span style="font-size:24px;font-weight:600">Concierge</span></div>
+            <span class="mono sm" style="display:inline-flex;align-items:center;gap:8px"><span class="ldot pulse"></span>Live session</span>
+          </div>
+          <div class="bars" data-seed="21" data-n="56" data-max="44" data-on="true" aria-hidden="true" style="color:var(--teal)"></div>
+          <div style="display:flex;flex-direction:column;gap:14px;font-size:17px">
+            <div style="display:flex;gap:14px;align-items:baseline"><span class="mono sm" style="width:64px;flex-shrink:0">You</span><span><span lang="ru" style="color:var(--plum)">Мне нужно узнать</span> what documents I need for my visa.</span></div>
+            <div style="display:flex;gap:14px;align-items:baseline"><span class="mono sm" style="width:64px;flex-shrink:0">Agent</span><span style="color:var(--teal)"><span lang="ru">Конечно.</span> I can walk you through the requirements.</span></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:16px;border-top:1px solid var(--line)">
+            <span class="mono sm">Listening for the next turn</span>
+            <span class="pill">End session</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" role="tabpanel" id="panel-convos" aria-labelledby="tab-convos" hidden>
+        <div class="convo"><span class="mono sm">Today</span><div style="display:flex;flex-direction:column;gap:4px"><span style="font-weight:600">Visa documents question</span><span class="mono sm">Concierge · EN + RU</span></div><span class="pill">Transcript</span></div>
+        <div class="convo"><span class="mono sm">Today</span><div style="display:flex;flex-direction:column;gap:4px"><span style="font-weight:600">Reschedule an appointment</span><span class="mono sm">Front desk · RU</span></div><span class="pill">Transcript</span></div>
+        <div class="convo"><span class="mono sm">Earlier</span><div style="display:flex;flex-direction:column;gap:4px"><span style="font-weight:600">Hotel late check-in</span><span class="mono sm">Concierge · EN</span></div><span class="pill">Transcript</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LATENCY: pinned; a pulse travels through the NS-01 stages -->
+<section id="latency" class="sec pinsec" style="height:2000px">
+  <div class="pin" style="height:680px">
+    <div class="wrap" style="display:flex;flex-direction:column;gap:64px">
+      <div class="head-row">
+        <div class="head-col">
+          <div class="mono">Measured, not guessed</div>
+          <h2 class="h2">Every millisecond <em>has an address.</em></h2>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;max-width:380px">
+          <p class="lede">Our live benchmark times each stage of a call, from the first syllable to the moment the other person hears the translation.</p>
+          <p class="lat-yours" id="latYours" hidden><span class="ldot pulse"></span><span>Your session: <b id="latYoursVal">—</b> median response, measured in your browser</span></p>
+        </div>
+      </div>
+      <div class="lat">
+        <div class="lat-track" aria-hidden="true"><div class="lat-fill" id="latFill"></div><div class="lat-dot pulse" id="latDot"></div></div>
+        <div class="lat-grid">
+          <!-- TODO: replace [p50 ms] with real NS-01 numbers -->
+          <div class="stage"><span class="node"></span><span class="mono sm">T0</span><span class="stage-label">Speech starts</span><span class="stage-val">0 ms</span></div>
+          <div class="stage"><span class="node"></span><span class="mono sm">T1</span><span class="stage-label">End of turn</span><span class="stage-val">[p50 ms]</span></div>
+          <div class="stage"><span class="node"></span><span class="mono sm">T2</span><span class="stage-label">Transcript</span><span class="stage-val">[p50 ms]</span></div>
+          <div class="stage"><span class="node"></span><span class="mono sm">T3</span><span class="stage-label">Translation</span><span class="stage-val">[p50 ms]</span></div>
+          <div class="stage"><span class="node"></span><span class="mono sm">T4</span><span class="stage-label">First audio</span><span class="stage-val">[p50 ms]</span></div>
+          <div class="stage"><span class="node"></span><span class="mono sm">T5</span><span class="stage-label">Heard</span><span class="stage-val">[p50 ms]</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCT BENTO (numbered tiles) -->
+<section id="features" class="sec alt" style="padding:160px 0 120px">
+  <div class="wrap" style="display:flex;flex-direction:column;gap:56px">
+    <div class="head-row">
+      <div class="head-col">
+        <div class="mono">Product</div>
+        <h2 class="h2">Built for <em>real conversations.</em></h2>
+      </div>
+      <p class="lede" style="max-width:360px">Configure how each agent listens, reasons and speaks, then test it live before it takes a call.</p>
+    </div>
+    <div class="bento">
+      <div class="card tile span4 brackets" style="min-height:300px">
+        <span class="tile-num">01</span>
+        <div class="tile-head"><span class="tile-title">Mixed-language conversations</span><span>English, Russian, and callers who move between the two within a single sentence.</span></div>
+        <div class="tile-body">
+          <div style="display:flex;gap:12px;align-items:baseline"><span class="mono sm" style="width:52px;flex-shrink:0">Caller</span><span style="font-size:17px"><span lang="ru" style="color:var(--plum)">Можно перенести</span> <span style="color:var(--teal)">my appointment to Friday?</span></span></div>
+          <div style="display:flex;gap:12px;align-items:baseline"><span class="mono sm" style="width:52px;flex-shrink:0">Agent</span><span style="font-size:17px;color:var(--muted)"><span lang="ru">Конечно.</span> Friday at 3 p.m. works.</span></div>
+        </div>
+      </div>
+      <div class="card tile span2 brackets" style="min-height:300px">
+        <span class="tile-num">02</span>
+        <div class="tile-head"><span class="tile-title">Interruptions</span><span>Speak over the agent. It stops and listens.</span></div>
+        <div class="tile-body" style="gap:6px">
+          <div class="bars" data-seed="9" data-n="24" data-max="32" data-on="done" aria-hidden="true" style="height:36px;color:var(--muted);opacity:.5"></div>
+          <div class="bars" data-seed="9" data-n="24" data-max="32" data-on="true" aria-hidden="true" style="height:36px;color:var(--teal)"></div>
+        </div>
+      </div>
+      <div class="card tile span2 brackets">
+        <span class="tile-num">03</span>
+        <div class="tile-head"><span class="tile-title">Glossary per agent</span><span>Your terms, translated your way.</span></div>
+        <div class="tile-body" style="gap:8px">
+          <div class="gloss"><span>residence permit</span><span lang="ru" style="color:var(--plum)">вид на жительство</span></div>
+          <div class="gloss"><span>residence permit</span><span lang="ko" style="color:var(--plum)">체류 허가</span></div>
+        </div>
+      </div>
+      <div class="card tile span2 brackets">
+        <span class="tile-num">04</span>
+        <div class="tile-head"><span class="tile-title">Providers per agent</span><span>Choose speech, language and voice separately.</span></div>
+        <div class="tile-body" style="gap:8px">
+          <div class="kv"><span class="mono sm">Speech</span><span class="pill">Deepgram</span></div>
+          <div class="kv"><span class="mono sm">Language</span><span class="pill">OpenAI</span></div>
+          <div class="kv"><span class="mono sm">Voice</span><span class="pill">Cartesia</span></div>
+        </div>
+      </div>
+      <div class="tile dark span2">
+        <span class="tile-num">05</span>
+        <div class="tile-head"><span class="tile-title">One workspace</span><span>Configure an agent, test it live, review the conversation.</span></div>
+        <div class="tile-body"><span class="step">Configure</span><span class="step">Test live</span><span class="step">Review</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CLOSING CTA -->
+<section id="start" class="sec final">
+  <div class="dots" aria-hidden="true"></div>
+  <div aria-hidden="true" style="position:absolute;inset:0">
+    <span class="ripple"></span>
+    <span class="ripple p" style="animation-delay:-1.875s"></span>
+    <span class="ripple" style="animation-delay:-3.75s"></span>
+    <span class="ripple p" style="animation-delay:-5.625s"></span>
+  </div>
+  <div class="wrap final-inner">
+    <h2 class="h2" style="font-size:72px;line-height:1;letter-spacing:-.035em">Hear it <em>for yourself.</em></h2>
+    <p class="lede" style="max-width:480px;font-size:18px">Talk to a live agent in English, Russian, or both — right here in your browser.</p>
+    <div class="cta-row" style="justify-content:center">
+      <a href="#top" class="btn btn-primary" data-speak-shortcut>Speak to it</a>
+      <a href="#workspace" class="btn btn-ghost">Open workspace</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="sec">
+  <div class="wrap">
+    <span style="font-weight:700;letter-spacing:.04em;color:var(--ink)">VOICE LABS</span>
+    <span>Conversation examples are illustrative.</span>
+    <span>© 2026 Voice Labs</span>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   DEMO BACKEND CONFIG
+   ---------------------------------------------------------
+   tokenEndpoint: a backend route that creates/joins a LiveKit
+   room with the demo agent and returns JSON { url, token }.
+   Leave empty to run "mic preview" mode (orb reacts to your
+   voice, nothing is sent anywhere).
+   ========================================================= */
+const DEMO_CONFIG = {
+  tokenEndpoint: '',          // e.g. '/api/demo/session'
+  agentId: 'concierge',       // which agent the demo talks to
+  livekitClientUrl: 'https://cdn.jsdelivr.net/npm/livekit-client@2/+esm'
+};
+
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const clamp = (v) => Math.max(0, Math.min(1, v));
+  const frac = (v) => v - Math.floor(v);
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root = document.documentElement;
+
+  /* ---------- Theme ---------- */
+  const themeBtn = $('#themeBtn');
+  const setTheme = (t) => {
+    root.dataset.theme = t;
+    themeBtn.setAttribute('aria-label', t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+    try { localStorage.setItem('vl-theme', t); } catch (e) {}
+  };
+  let saved = null;
+  try { saved = localStorage.getItem('vl-theme'); } catch (e) {}
+  setTheme(saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  themeBtn.addEventListener('click', () => setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark'));
+
+  /* ---------- Static waveform bars ---------- */
+  const fillBars = (el, n, seed, maxH) => {
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < n; i++) {
+      const env = Math.sin(Math.PI * (i + 0.5) / n);
+      const r = frac(Math.sin(i * 12.9898 + seed * 78.233) * 43758.5453);
+      const span = document.createElement('span');
+      span.className = 'bar';
+      span.style.height = Math.round((0.2 + 0.8 * env * (0.4 + 0.6 * r)) * maxH) + 'px';
+      span.style.animationDelay = (-(r * 1.4)).toFixed(2) + 's';
+      frag.appendChild(span);
+    }
+    el.appendChild(frag);
+  };
+  fillBars($('#koBars'), 32, 3, 52);
+  fillBars($('#enBars'), 32, 3, 52);
+  $$('.bars[data-seed]').forEach((el) => fillBars(el, +(el.dataset.n || 48), +el.dataset.seed, +(el.dataset.max || 38)));
+
+  /* ---------- Workspace tabs ---------- */
+  const tabs = $$('[role="tab"]');
+  const paths = { 'tab-agents': 'agents', 'tab-play': 'playground', 'tab-convos': 'conversations' };
+  const selectTab = (tab, focus) => {
+    tabs.forEach((t) => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      $('#' + t.getAttribute('aria-controls')).hidden = !on;
+    });
+    $('#winPath').textContent = 'voicelabs / workspace / ' + paths[tab.id];
+    if (focus) tab.focus();
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => selectTab(t));
+    t.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') selectTab(tabs[(i + 1) % tabs.length], true);
+      if (e.key === 'ArrowLeft') selectTab(tabs[(i - 1 + tabs.length) % tabs.length], true);
+    });
+  });
+
+  /* =========================================================
+     LIVE VOICE ORB + DEMO SESSION
+     ========================================================= */
+  const ORB_BARS = 13;
+  const orbStage = $('#orbStage'), orbBarsEl = $('#orbBars'), orbLabel = $('#orbLabel');
+  const speakBtn = $('#speakBtn'), speakText = $('#speakText'), speakMsg = $('#speakMsg');
+  const signalBtn = $('#signalBtn'), signalBtnText = $('#signalBtnText');
+  const capYou = $('#capYou'), capAgent = $('#capAgent');
+  const statLabel = $('#statLabel'), statValue = $('#statValue'), statNote = $('#statNote');
+  const latYours = $('#latYours'), latYoursVal = $('#latYoursVal');
+  const orbBars = [];
+  for (let i = 0; i < ORB_BARS; i++) { const s = document.createElement('span'); orbBarsEl.appendChild(s); orbBars.push(s); }
+
+  const LABELS = { idle: 'Voice / 01', connecting: 'Connecting', listening: 'Listening', speaking: 'Speaking', preview: 'Mic preview' };
+  let state = 'idle';
+  const setState = (s) => {
+    state = s;
+    orbStage.dataset.state = s;
+    orbLabel.textContent = LABELS[s];
+    const active = s !== 'idle';
+    speakBtn.setAttribute('aria-pressed', String(active && s !== 'connecting'));
+    speakBtn.disabled = s === 'connecting';
+    speakText.textContent = s === 'idle' ? 'Speak to it' : (s === 'connecting' ? 'Connecting…' : 'End session');
+    signalBtn.disabled = s === 'connecting';
+    signalBtnText.textContent = s === 'idle' ? 'Talk to it here' : (s === 'connecting' ? 'Connecting…' : 'End session');
+    onScroll();
+  };
+  const isLive = () => state === 'listening' || state === 'speaking' || state === 'preview';
+  const setCaption = (who, text) => { (who === 'you' ? capYou : capAgent).textContent = text; };
+
+  let audioCtx = null, micAnalyser = null, agentAnalyser = null, micStream = null, room = null, agentAudioEl = null;
+  let agentSpeaking = false;
+  const makeAnalyser = (stream) => {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const src = audioCtx.createMediaStreamSource(stream);
+    const an = audioCtx.createAnalyser();
+    an.fftSize = 256;
+    an.smoothingTimeConstant = 0.75;
+    src.connect(an);
+    return an;
+  };
+  const freqBuf = new Uint8Array(128);
+  const readBands = (an) => {
+    an.getByteFrequencyData(freqBuf);
+    const out = [];
+    const usable = 64; // voice lives in the lower bins
+    for (let i = 0; i < ORB_BARS; i++) {
+      const a = Math.floor(i * usable / ORB_BARS), b = Math.floor((i + 1) * usable / ORB_BARS);
+      let sum = 0; for (let k = a; k < b; k++) sum += freqBuf[k];
+      out.push(sum / ((b - a) * 255));
+    }
+    return out;
+  };
+
+  async function startLiveKitSession() {
+    const res = await fetch(DEMO_CONFIG.tokenEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agentId: DEMO_CONFIG.agentId })
+    });
+    if (!res.ok) throw new Error('session');
+    const { url, token } = await res.json();
+    const { Room, RoomEvent, Track } = await import(DEMO_CONFIG.livekitClientUrl);
+
+    room = new Room({ adaptiveStream: true, dynacast: true });
+    room.on(RoomEvent.TrackSubscribed, (track) => {
+      if (track.kind !== 'audio') return;
+      agentAudioEl = track.attach();
+      agentAudioEl.style.display = 'none';
+      document.body.appendChild(agentAudioEl);
+      agentAnalyser = makeAnalyser(new MediaStream([track.mediaStreamTrack]));
+    });
+    room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+      agentSpeaking = speakers.some((p) => p !== room.localParticipant);
+      if (state === 'listening' || state === 'speaking') setState(agentSpeaking ? 'speaking' : 'listening');
+    });
+    room.on(RoomEvent.Disconnected, () => stopSession());
+
+    // Live captions — works if the agent publishes LiveKit transcriptions
+    const isMe = (identity) => room && identity === room.localParticipant.identity;
+    if (RoomEvent.TranscriptionReceived) {
+      room.on(RoomEvent.TranscriptionReceived, (segments, participant) => {
+        const text = segments.map((s) => s.text).join(' ').trim();
+        if (text) setCaption(participant && isMe(participant.identity) ? 'you' : 'agent', text);
+      });
+    }
+    if (typeof room.registerTextStreamHandler === 'function') {
+      try {
+        room.registerTextStreamHandler('lk.transcription', async (reader, info) => {
+          const text = (await reader.readAll()).trim();
+          if (text) setCaption(isMe(info.identity) ? 'you' : 'agent', text);
+        });
+      } catch (e) { /* handler already registered */ }
+    }
+
+    await room.connect(url, token);
+    await room.localParticipant.setMicrophoneEnabled(true, { echoCancellation: true, noiseSuppression: true });
+    const pub = room.localParticipant.getTrackPublication(Track.Source.Microphone);
+    if (pub && pub.track) micAnalyser = makeAnalyser(new MediaStream([pub.track.mediaStreamTrack]));
+    setState('listening');
+  }
+
+  async function startPreview() {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    micAnalyser = makeAnalyser(micStream);
+    setState('preview');
+    speakMsg.textContent = 'Mic preview — the demo agent is not connected yet.';
+  }
+
+  async function startSession() {
+    speakMsg.textContent = '';
+    setState('connecting');
+    try {
+      if (audioCtx && audioCtx.state === 'suspended') await audioCtx.resume();
+      if (DEMO_CONFIG.tokenEndpoint) await startLiveKitSession();
+      else await startPreview();
+    } catch (err) {
+      const blocked = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
+      stopSession();
+      speakMsg.textContent = blocked
+        ? 'Microphone is blocked. Allow it in your browser to try the demo.'
+        : 'Could not reach the demo agent. Please try again in a moment.';
+    }
+  }
+
+  function stopSession() {
+    if (room) { const r = room; room = null; r.disconnect(); }
+    if (micStream) { micStream.getTracks().forEach((t) => t.stop()); micStream = null; }
+    if (agentAudioEl) { agentAudioEl.remove(); agentAudioEl = null; }
+    micAnalyser = null; agentAnalyser = null; agentSpeaking = false;
+    userTurnOpen = false;
+    setCaption('you', ''); setCaption('agent', '');
+    setState('idle');
+  }
+
+  const toggleSession = () => (state === 'idle' ? startSession() : stopSession());
+  speakBtn.addEventListener('click', toggleSession);
+  signalBtn.addEventListener('click', toggleSession);
+
+  /* ---------- Live levels, history and turn timing ---------- */
+  const HIST = 120;                       // samples kept per lane
+  const histYou = new Array(HIST).fill(0);
+  const histAgent = new Array(HIST).fill(0);
+  const TH = 0.07;                        // voice-activity threshold (RMS level)
+  const timeBuf = new Uint8Array(256);
+  const levelOf = (an) => {
+    if (!an) return 0;
+    an.getByteTimeDomainData(timeBuf);
+    let s = 0;
+    for (let i = 0; i < timeBuf.length; i++) { const v = (timeBuf[i] - 128) / 128; s += v * v; }
+    return Math.min(1, Math.sqrt(s / timeBuf.length) * 4);
+  };
+  let lastSample = 0, lastStat = 0;
+  let lastUserVoice = 0, lastAgentVoice = 0, userTurnOpen = false, flashAt = 0;
+  const turns = [];
+  const median = (a) => { const s = a.slice().sort((x, y) => x - y); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+  const fmt = (sec) => sec.toFixed(2) + ' s';
+
+  function trackLive(now) {
+    if (!isLive()) return;
+    const micL = levelOf(micAnalyser);
+    const agentL = levelOf(agentAnalyser);
+    if (now - lastSample > 40) {
+      lastSample = now;
+      histYou.push(micL); histYou.shift();
+      histAgent.push(agentL); histAgent.shift();
+    }
+    if (micL > TH && agentL < TH) { lastUserVoice = now; userTurnOpen = true; }
+    if (agentL > TH) {
+      // agent started answering after the user went quiet (not while the agent was already talking)
+      if (userTurnOpen && lastAgentVoice < lastUserVoice && now - lastUserVoice > 120) {
+        turns.push((now - lastUserVoice) / 1000);
+        if (turns.length > 8) turns.shift();
+        flashAt = now;
+        latYours.hidden = false;
+        latYoursVal.textContent = fmt(median(turns));
+      }
+      userTurnOpen = false;
+      lastAgentVoice = now;
+    }
+    if (now - lastStat > 100) {
+      lastStat = now;
+      const waiting = userTurnOpen && now - lastUserVoice > 250;
+      if (state === 'preview') {
+        statLabel.textContent = 'Mic preview';
+        statValue.textContent = micL > TH ? 'Hearing you' : 'Say something';
+        statNote.textContent = 'Connect the demo agent to measure real response time';
+      } else if (waiting) {
+        statLabel.textContent = 'Responding…';
+        statValue.textContent = fmt((now - lastUserVoice) / 1000);
+        statNote.textContent = 'Timing from the end of your speech';
+      } else if (turns.length) {
+        statLabel.textContent = 'Last response';
+        statValue.textContent = fmt(turns[turns.length - 1]) + '  ·  median ' + fmt(median(turns));
+        statNote.textContent = turns.length + (turns.length === 1 ? ' turn' : ' turns') + ' · end of your speech → first agent audio, measured in your browser';
+      } else {
+        statLabel.textContent = 'Response time';
+        statValue.textContent = 'Listening';
+        statNote.textContent = 'Ask it anything — in English, Russian, or both';
+      }
+    }
+  }
+  $$('[data-speak-shortcut]').forEach((a) => a.addEventListener('click', () => {
+    if (state === 'idle') startSession();
+  }));
+
+  let orbLevel = 0;
+  function animateOrb(now) {
+    trackLive(now);
+    const t = now / 1000;
+    let bands;
+    const src = agentSpeaking && agentAnalyser ? agentAnalyser : micAnalyser;
+    if (src) {
+      bands = readBands(src);
+    } else {
+      // idle: slow breathing shape
+      bands = orbBars.map((_, i) => {
+        const env = Math.sin(Math.PI * (i + 0.5) / ORB_BARS);
+        return reduce ? 0.35 * env : env * (0.25 + 0.2 * Math.sin(t * 1.4 + i * 0.6));
+      });
+    }
+    let sum = 0;
+    bands.forEach((v, i) => {
+      const env = 0.55 + 0.45 * Math.sin(Math.PI * (i + 0.5) / ORB_BARS);
+      const s = Math.max(0.12, Math.min(1, v * 1.6 * env + 0.08));
+      orbBars[i].style.transform = 'scaleY(' + s.toFixed(3) + ')';
+      sum += v;
+    });
+    const target = src ? clamp(sum / ORB_BARS * 2.2) : 0;
+    orbLevel += (target - orbLevel) * 0.2;
+    orbStage.style.setProperty('--level', orbLevel.toFixed(3));
+    requestAnimationFrame(animateOrb);
+  }
+  requestAnimationFrame(animateOrb);
+
+  /* ---------- Hero network canvas (reacts to voice level) ---------- */
+  const hero = $('#top');
+  const canvas = $('#heroCanvas');
+  const ctx = canvas.getContext('2d');
+  const NODES = [];
+  for (let i = 0; i < 80; i++) {
+    NODES.push({ x: frac(Math.sin(i * 91.17) * 43758.55), y: frac(Math.sin(i * 47.31) * 12345.67), p: frac(Math.sin(i * 7.7) * 999.1) * 6.28 });
+  }
+  let heroP = 0;
+  function drawNet(now) {
+    if (heroP < 1) {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      if (w && h) {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const cw = Math.round(w * dpr), ch = Math.round(h * dpr);
+        if (canvas.width !== cw || canvas.height !== ch) { canvas.width = cw; canvas.height = ch; }
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+        const cs = getComputedStyle(root);
+        const ink = cs.getPropertyValue('--ink').trim();
+        const coral = cs.getPropertyValue('--coral').trim();
+        const t = reduce ? 0 : now / 1000;
+        const or = orbStage.getBoundingClientRect(), hr = canvas.getBoundingClientRect();
+        const ox = or.left - hr.left + or.width / 2, oy = or.top - hr.top + or.height / 2;
+        const pts = NODES.map((n) => ({ x: n.x * w + Math.sin(t * 0.25 + n.p) * 14, y: n.y * h + Math.cos(t * 0.2 + n.p) * 12 }));
+        const maxD = Math.min(190, w / 6);
+        ctx.lineWidth = 1;
+        for (let i = 0; i < pts.length; i++) {
+          for (let j = i + 1; j < pts.length; j++) {
+            const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
+            const d = Math.hypot(dx, dy);
+            if (d > maxD) continue;
+            const mx = (pts[i].x + pts[j].x) / 2 - ox, my = (pts[i].y + pts[j].y) / 2 - oy;
+            const near = clamp(1 - Math.hypot(mx, my) / 420);
+            const glow = near * orbLevel;
+            ctx.globalAlpha = (1 - d / maxD) * (0.14 + 0.5 * glow);
+            ctx.strokeStyle = glow > 0.08 ? coral : ink;
+            ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke();
+          }
+        }
+        ctx.fillStyle = ink;
+        pts.forEach((p) => { ctx.globalAlpha = 0.28; ctx.beginPath(); ctx.arc(p.x, p.y, 1.8, 0, 6.283); ctx.fill(); });
+        ctx.globalAlpha = 1;
+      }
+    }
+    if (!reduce) requestAnimationFrame(drawNet);
+  }
+
+  /* ---------- Signal band (scroll-scrubbed) ---------- */
+  const signal = $('#signal');
+  const sCanvas = $('#signalCanvas');
+  const sCtx = sCanvas.getContext('2d');
+  const sWords = $$('.signal-words span');
+  const sLegend = $('#signalLegend');
+  let signalP = 0, signalVisible = false;
+  const smooth = (v) => { v = clamp(v); return v * v * (3 - 2 * v); };
+
+  function drawSignal(now) {
+    if (signalVisible || reduce) {
+      const w = sCanvas.clientWidth, h = sCanvas.clientHeight;
+      if (w && h) {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const cw = Math.round(w * dpr), ch = Math.round(h * dpr);
+        if (sCanvas.width !== cw || sCanvas.height !== ch) { sCanvas.width = cw; sCanvas.height = ch; }
+        sCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        sCtx.clearRect(0, 0, w, h);
+        const cs = getComputedStyle(root);
+        const ink = cs.getPropertyValue('--ink').trim();
+        const teal = cs.getPropertyValue('--teal').trim();
+        const plum = cs.getPropertyValue('--plum').trim();
+        const lime = cs.getPropertyValue('--lime').trim();
+        const t = reduce ? 4 : now / 1000;
+        const mid = h / 2;
+        const maxAmp = h * 0.34;
+        sCtx.lineCap = 'round';
+        const line = (x1, y1, x2, y2) => { sCtx.beginPath(); sCtx.moveTo(x1, y1); sCtx.lineTo(x2, y2); sCtx.stroke(); };
+
+        if (isLive()) {
+          /* LIVE: teal = your mic, plum = agent voice, newest on the right */
+          const gapL = w / HIST;
+          const off = h * 0.24;
+          const laneAmp = h * 0.2;
+          sCtx.lineWidth = Math.max(1.5, Math.min(4, gapL * 0.45));
+          for (let i = 0; i < HIST; i++) {
+            const x = (i + 0.5) * gapL;
+            const age = 0.2 + 0.8 * (i / HIST);
+            const a1 = 1.5 + histYou[i] * laneAmp;
+            const a2 = 1.5 + histAgent[i] * laneAmp;
+            sCtx.globalAlpha = age;
+            sCtx.strokeStyle = teal; line(x, mid - off - a1, x, mid - off + a1);
+            sCtx.strokeStyle = plum; line(x, mid + off - a2, x, mid + off + a2);
+          }
+          // the bridge: brightens while waiting for the reply, flashes when it arrives
+          const waiting = state !== 'preview' && userTurnOpen && now - lastUserVoice > 250;
+          const flash = clamp(1 - (now - flashAt) / 700);
+          sCtx.globalAlpha = 0.35 + 0.65 * Math.max(flash, waiting ? 0.6 : 0);
+          sCtx.strokeStyle = lime;
+          sCtx.lineWidth = 2 + 3 * flash;
+          sCtx.beginPath(); sCtx.moveTo(gapL, mid); sCtx.lineTo(w - gapL, mid); sCtx.stroke();
+          if (waiting) {
+            const p = frac((now - lastUserVoice) / 900);
+            const x = gapL + p * (w - 2 * gapL);
+            sCtx.globalAlpha = 1;
+            sCtx.fillStyle = lime;
+            sCtx.beginPath(); sCtx.arc(x, mid, 6, 0, 6.283); sCtx.fill();
+            sCtx.globalAlpha = 0.25;
+            sCtx.beginPath(); sCtx.arc(x, mid, 14, 0, 6.283); sCtx.fill();
+            // connector from your lane down into the bridge
+            sCtx.globalAlpha = 0.5;
+            sCtx.strokeStyle = lime; sCtx.lineWidth = 1.5;
+            line(w - gapL * 2, mid - off, w - gapL * 2, mid);
+          }
+          sCtx.globalAlpha = 1;
+          requestAnimationFrame(drawSignal);
+          return;
+        }
+
+        // 0 → .4: noise organizes into one waveform; .45 → .85: it splits into two lanes + bridge
+        const order = smooth(signalP / 0.4);
+        const split = smooth((signalP - 0.45) / 0.4);
+
+        const N = w < 700 ? 60 : 110;
+        const gap = w / N;
+        sCtx.lineWidth = Math.max(1.5, Math.min(4, gap * 0.4));
+
+        for (let i = 0; i < N; i++) {
+          const x = (i + 0.5) * gap;
+          const r1 = frac(Math.sin(i * 12.9898) * 43758.5453);
+          const r2 = frac(Math.sin(i * 78.233) * 12345.678);
+          const env = Math.pow(Math.sin(Math.PI * (i + 0.5) / N), 1.3);
+          const amp = maxAmp * env * (0.3 + 0.7 * Math.abs(Math.sin(t * 1.6 + i * 0.23 + r1 * 2)));
+          const amp2 = maxAmp * env * (0.3 + 0.7 * Math.abs(Math.sin(t * 1.9 + i * 0.31 + r2 * 3)));
+          const noiseY = h * (0.08 + 0.84 * r2) + Math.sin(t * 2.2 + i) * 4;
+          const half = 1.5 + (amp - 1.5) * order;
+
+          if (split < 1) {
+            const cy = noiseY + (mid - noiseY) * order;
+            sCtx.globalAlpha = (0.35 + 0.55 * order) * (1 - split);
+            sCtx.strokeStyle = ink;
+            line(x, cy - half, x, cy + half);
+          }
+          if (split > 0) {
+            const off = h * 0.24 * split;
+            const k = 1 - 0.55 * split;
+            sCtx.globalAlpha = split;
+            sCtx.strokeStyle = teal;
+            line(x, mid - off - half * k, x, mid - off + half * k);
+            const half2 = 1.5 + (amp2 - 1.5) * order;
+            sCtx.strokeStyle = plum;
+            line(x, mid + off - half2 * k, x, mid + off + half2 * k);
+          }
+        }
+        if (split > 0) {
+          sCtx.globalAlpha = split * 0.9;
+          sCtx.strokeStyle = lime;
+          sCtx.lineWidth = 2;
+          sCtx.beginPath(); sCtx.moveTo(gap, mid); sCtx.lineTo(w - gap, mid); sCtx.stroke();
+          // pulses crossing the bridge in both directions
+          sCtx.fillStyle = lime;
+          sCtx.globalAlpha = split;
+          const p1 = gap + frac(t * 0.18) * (w - 2 * gap);
+          const p2 = w - gap - frac(t * 0.18 + 0.5) * (w - 2 * gap);
+          sCtx.beginPath(); sCtx.arc(p1, mid, 5, 0, 6.283); sCtx.fill();
+          sCtx.beginPath(); sCtx.arc(p2, mid, 5, 0, 6.283); sCtx.fill();
+        }
+        sCtx.globalAlpha = 1;
+      }
+    }
+    // keep looping (cheap when off-screen); live mode needs frames even with reduced motion
+    requestAnimationFrame(drawSignal);
+  }
+
+  /* ---------- Scroll-driven sections ---------- */
+  const bridge = $('#bridge'), langs = $('#languages'), lat = $('#latency');
+  const pinProgress = (el, vh) => {
+    const r = el.getBoundingClientRect();
+    if (r.height > vh * 1.6) return clamp(-r.top / (r.height - vh));
+    return clamp((vh * 0.85 - r.top) / (r.height * 0.9));
+  };
+  const enFull = 'Could we meet at the main office tomorrow at 10 a.m.?';
+  const koStatus = $('#koStatus'), koText = $('#koText'), koBars = $('#koBars');
+  const enStatus = $('#enStatus'), enText = $('#enText'), enBars = $('#enBars'), caret = $('#caret');
+  const bridgeLabel = $('#bridgeLabel'), bridgeFill = $('#bridgeFill');
+  const chips = $$('.chip'), langRows = $$('.lang-row');
+  const latFill = $('#latFill'), latDot = $('#latDot'), stages = $$('.stage');
+
+  const update = () => {
+    const vh = window.innerHeight;
+    const hr = hero.getBoundingClientRect();
+    heroP = clamp(-hr.top / hr.height);
+
+    const sr = signal.getBoundingClientRect();
+    signalVisible = sr.bottom > 0 && sr.top < vh;
+    signalP = pinProgress(signal, vh);
+    const live = isLive();
+    const word = live ? 3 : (signalP < 0.3 ? 0 : (signalP < 0.6 ? 1 : 2));
+    sWords.forEach((s, i) => { s.dataset.on = String(i === word); });
+    sLegend.style.opacity = live ? '1' : String(smooth((signalP - 0.6) / 0.2));
+
+    const b = pinProgress(bridge, vh);
+    koText.style.opacity = 0.3 + 0.7 * clamp(b / 0.08);
+    koBars.dataset.on = b > 0.04 && b < 0.34 ? 'true' : (b >= 0.34 ? 'done' : 'false');
+    koStatus.textContent = b < 0.04 ? 'Waiting' : (b < 0.34 ? 'Speaking' : 'Listening');
+    bridgeFill.style.width = (clamp((b - 0.28) / 0.3) * 100).toFixed(1) + '%';
+    bridgeLabel.textContent = b < 0.3 ? 'Listening' : (b < 0.58 ? 'Translating' : 'Delivered');
+    const typed = clamp((b - 0.52) / 0.36);
+    enText.textContent = enFull.slice(0, Math.round(enFull.length * typed));
+    caret.hidden = !(typed > 0 && typed < 1);
+    enBars.dataset.on = b > 0.52 && b < 0.97 ? 'true' : (b >= 0.97 ? 'done' : 'false');
+    enStatus.textContent = b < 0.52 ? 'Listening' : (b < 0.97 ? 'Hearing it' : 'Heard');
+    chips.forEach((c) => { c.dataset.on = String(b >= +c.dataset.at); });
+
+    const lr = langs.getBoundingClientRect();
+    const idx = Math.min(2, Math.floor(clamp((vh - lr.top) / (lr.height + vh * 0.6)) * 3));
+    langRows.forEach((row, i) => { row.dataset.active = String(i === idx); });
+
+    const l = clamp((pinProgress(lat, vh) - 0.05) / 0.85);
+    const pct = (l * 100).toFixed(2) + '%';
+    latFill.style.width = pct;
+    latDot.style.left = pct;
+    stages.forEach((s, i) => { s.dataset.on = String(l >= (i + 0.5) / 6 - 0.001); });
+
+    if (reduce) drawNet(performance.now());
+  };
+  let ticking = false;
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { ticking = false; update(); });
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  window.addEventListener('pagehide', stopSession);
+
+  update();
+  requestAnimationFrame(drawNet);
+  requestAnimationFrame(drawSignal);
+})();
+</script>
+</body>
+</html>

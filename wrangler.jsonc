@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "frontend-voice-labs",
+  "compatibility_date": "2026-10-06",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "frontend-voice-labs"
+    }
+  ],
+  // Per-IP limit for the public demo route (app/api/demo/session). Shared across isolates,
+  // unlike the in-memory fallback used by `next dev`.
+  "ratelimits": [
+    {
+      "name": "DEMO_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 4, "period": 60 }
+    }
+  ]
+}

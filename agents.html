@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agents — Voice Labs Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Noto+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* ---------- Tokens (same as the landing page) ---------- */
+:root{--bg:#FBFAF7;--bg-2:#F3F1EB;--surface:#FFFFFF;--ink:#141617;--muted:#555B5E;--line:#E4E1D9;--teal:#0E7A75;--plum:#8A3A6B;--lime:#B5D130;--coral:#E8553A;--glass:rgba(251,250,247,.78);--shadow:0 1px 2px rgba(20,22,23,.06),0 14px 36px -14px rgba(20,22,23,.16);--dot:rgba(20,22,23,.12)}
+:root[data-theme="dark"]{--bg:#0D1011;--bg-2:#121617;--surface:#161B1C;--ink:#F1EFE9;--muted:#A2A8A6;--line:#262C2E;--teal:#3EC2B6;--plum:#D47DB0;--lime:#C6E34A;--coral:#F06A4E;--glass:rgba(18,22,23,.72);--shadow:0 1px 2px rgba(0,0,0,.4),0 18px 44px -16px rgba(0,0,0,.65);--dot:rgba(241,239,233,.08)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Manrope','Noto Sans KR',system-ui,sans-serif;overflow-x:clip;transition:background .4s ease,color .4s ease}
+a{color:var(--ink)}
+a:hover{color:var(--teal)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+em{font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-weight:400}
+h1,h2,h3,p{margin:0}
+:lang(ko){word-break:keep-all}
+button{font:inherit}
+.wrap{max-width:1280px;margin:0 auto;padding:0 32px}
+.mono{font-family:'DM Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;font-size:12px;color:var(--muted)}
+.mono.sm{font-size:11px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;font-size:15px;font-weight:600;text-decoration:none;border:1px solid transparent;cursor:pointer;transition:transform .2s ease,border-color .2s ease}
+a.btn-primary,.btn-primary{background:var(--ink);color:var(--bg)}
+a.btn-primary:hover,.btn-primary:hover{color:var(--bg);transform:translateY(-1px)}
+a.btn-ghost,.btn-ghost{border-color:var(--line);color:var(--ink);background:var(--bg)}
+a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
+.icon-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.bars{display:flex;align-items:center;gap:3px}
+.bar{width:3px;border-radius:2px;background:currentColor}
+
+/* ---------- App nav (floating pill) ---------- */
+.nav{position:sticky;top:12px;z-index:40;padding:0 16px}
+.nav-pill{max-width:1240px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;height:60px;padding:0 10px 0 18px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);box-shadow:var(--shadow)}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.logo-mark{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+.logo-mark span{color:var(--coral)}
+.logo-word{font-weight:700;font-size:15px;letter-spacing:.04em}
+.ws-tag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;padding:3px 7px;border:1px solid var(--line);border-radius:6px;color:var(--muted)}
+.links{display:flex;gap:4px;font-size:14px}
+.links a{text-decoration:none;color:var(--muted);padding:8px 12px;border-radius:999px}
+.links a:hover{color:var(--ink)}
+.links a[aria-current="page"]{color:var(--ink);background:var(--bg-2);font-weight:600}
+.nav-right{display:flex;align-items:center;gap:8px}
+.kbd-search{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 10px 0 14px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);cursor:pointer;font-size:14px}
+.kbd-search kbd{font-family:'DM Mono',monospace;font-size:11px;padding:2px 6px;border-radius:6px;background:var(--bg-2);border:1px solid var(--line)}
+
+/* ---------- Page head ---------- */
+.page{position:relative;padding:56px 0 96px}
+.page-bg{position:absolute;inset:0 0 auto 0;height:520px;pointer-events:none;background-image:radial-gradient(var(--dot) 1px,transparent 1.3px);background-size:14px 14px;-webkit-mask-image:radial-gradient(ellipse 70% 80% at 50% 0%,#000,transparent 75%);mask-image:radial-gradient(ellipse 70% 80% at 50% 0%,#000,transparent 75%)}
+.head{position:relative;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:36px}
+.crumb{color:var(--coral)}
+.head h1{font-size:72px;line-height:1;font-weight:600;letter-spacing:-.04em;margin-top:14px}
+.head p{margin-top:14px;font-size:17px;color:var(--muted);max-width:520px;line-height:1.55}
+
+/* Summary strip */
+.stats{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:28px}
+.stat{position:relative;padding:18px 20px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--bg-2),var(--surface))}
+.stat b{display:block;font-size:34px;font-weight:600;letter-spacing:-.03em;margin-top:8px}
+.stat::after{content:"";position:absolute;right:10px;bottom:10px;width:8px;height:8px;border-right:1px solid var(--muted);border-bottom:1px solid var(--muted);opacity:.5}
+
+/* Window (same frame as the landing showcase) */
+.win{position:relative;border:1px solid var(--line);border-radius:24px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
+.win-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:0 20px;border-bottom:1px solid var(--line)}
+.win-left,.win-right{display:flex;align-items:center;gap:10px}
+.win-dots{display:flex;gap:7px}
+.win-dots i{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.win-path{text-transform:none;letter-spacing:.04em;font-size:13px}
+.win-path span{opacity:.5}
+.win-path b{color:var(--ink);font-weight:500}
+.view-toggle{display:inline-flex;padding:3px;border:1px solid var(--line);border-radius:10px;gap:2px}
+.view-toggle button{width:36px;height:32px;border-radius:7px;border:0;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.view-toggle button[aria-pressed="true"]{background:var(--bg-2);color:var(--ink)}
+
+/* Toolbar */
+.tools{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;padding:20px 24px 0}
+.search{display:flex;align-items:center;gap:10px;min-width:280px;height:44px;padding:0 4px;border-bottom:1px solid var(--line);color:var(--muted)}
+.search:focus-within{border-color:var(--teal)}
+.search input{border:0;background:transparent;color:var(--ink);font:inherit;font-size:15px;outline:none;width:100%;min-width:0}
+.tool-right{display:flex;flex-wrap:wrap;align-items:center;gap:18px}
+.filters{display:flex;gap:2px}
+.filter{min-height:40px;padding:0 12px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);font-weight:500;font-size:15px;cursor:pointer}
+.filter:hover{color:var(--ink)}
+.filter[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.chips{display:flex;gap:6px}
+.chip{min-height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.06em;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--ink);color:var(--ink);background:var(--bg-2)}
+
+/* Body: grid + inspector */
+.body{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;padding:22px 24px 24px;align-items:start}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.body[data-view="list"] .grid{grid-template-columns:minmax(0,1fr)}
+.body[data-view="list"] .ag{min-height:0;flex-direction:row;align-items:center;gap:18px}
+.body[data-view="list"] .ag h3{margin-top:0;font-size:20px}
+.body[data-view="list"] .ag-head{order:3;gap:12px}
+.body[data-view="list"] .ag-name{flex:1;min-width:0}
+.body[data-view="list"] .ag-foot{margin-top:0;width:220px;flex-shrink:0}
+.ag{position:relative;display:flex;flex-direction:column;gap:6px;min-height:232px;padding:20px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--bg-2),var(--surface));transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}
+.ag:hover{border-color:color-mix(in srgb,var(--teal) 55%,var(--line));transform:translateY(-2px)}
+.ag[aria-current="true"]{border-color:var(--ink);box-shadow:var(--shadow)}
+.ag::after{content:"";position:absolute;right:10px;bottom:10px;width:9px;height:9px;border-right:1px solid var(--muted);border-bottom:1px solid var(--muted);opacity:.55}
+.ag-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ag-name{display:flex;flex-direction:column;gap:6px}
+.ag h3{margin-top:20px;font-size:24px;font-weight:600;letter-spacing:-.02em}
+.ag-select{all:unset;cursor:pointer}
+.ag-select::before{content:"";position:absolute;inset:0;border-radius:16px}
+.ag-select:focus-visible::before{outline:2px solid var(--teal);outline-offset:2px}
+.round-btn{position:relative;z-index:1;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.round-btn:hover{border-color:var(--ink);color:var(--ink)}
+.ag-foot{margin-top:auto;display:flex;align-items:center;gap:12px}
+.ag-foot .bars{flex:1;height:24px;color:var(--muted);overflow:hidden;min-width:56px}
+.langs{display:flex;gap:4px;flex-shrink:0}
+.langs span{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.06em;padding:3px 6px;border:1px solid var(--line);border-radius:6px;color:var(--muted)}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.status i{width:7px;height:7px;border-radius:50%;background:var(--teal)}
+.status.draft i{background:transparent;border:1px solid var(--muted)}
+.new-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:232px;border:1px dashed var(--line);border-radius:16px;color:var(--muted);text-decoration:none;font-weight:600}
+.new-card:hover{border-color:var(--ink);color:var(--ink)}
+
+/* Inspector */
+.inspector{position:sticky;top:92px;display:flex;flex-direction:column;gap:18px;padding:22px;border:1px solid var(--line);border-radius:18px;background:var(--bg-2)}
+.inspector::before,.inspector::after{content:"";position:absolute;width:12px;height:12px;border:1px solid var(--muted);opacity:.5}
+.inspector::before{top:10px;left:10px;border-right:0;border-bottom:0}
+.inspector::after{bottom:10px;right:10px;border-left:0;border-top:0}
+.insp-head{display:flex;align-items:center;gap:14px}
+.insp-head svg{color:var(--teal);flex-shrink:0}
+.insp-head h2{font-size:26px;font-weight:600;letter-spacing:-.02em}
+.greet{display:flex;flex-direction:column;gap:8px;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.greet p{font-size:20px;line-height:1.45;font-weight:500}
+.kv{display:flex;flex-direction:column;gap:8px}
+.kv div{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px}
+.pill{padding:5px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:13px}
+.player{display:flex;align-items:center;gap:14px}
+.play-btn{width:48px;height:48px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.play-btn[disabled]{opacity:.35;cursor:not-allowed}
+.pbars{flex:1;display:flex;align-items:center;gap:2px;height:40px;min-width:0}
+.pbars span{flex:1;border-radius:2px;background:color-mix(in srgb,var(--muted) 40%,transparent)}
+.pbars span.on{background:var(--teal)}
+.insp-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.insp-actions .btn-primary{grid-column:1/-1}
+
+/* States */
+.state{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:72px 24px;margin:22px 24px 24px;border:1px dashed var(--line);border-radius:18px;background:var(--bg-2)}
+.state h2{font-size:30px;font-weight:600;letter-spacing:-.02em}
+.state p{color:var(--muted);max-width:420px;line-height:1.55}
+.state-orb{width:72px;height:72px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#343A3A,#1B1F20);display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:6px;box-shadow:var(--shadow)}
+.state-orb i{width:4px;border-radius:2px;background:#C6E34A}
+.state-orb.err i{background:var(--coral)}
+.skel{min-height:232px;border-radius:16px;background:linear-gradient(90deg,var(--bg-2) 0%,var(--surface) 50%,var(--bg-2) 100%);background-size:200% 100%;animation:shimmer 1.4s ease-in-out infinite;border:1px solid var(--line)}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+[hidden]{display:none !important}
+
+/* ---------- Compact footer with ASCII field ---------- */
+.foot{position:relative;border-top:1px solid var(--line);overflow:hidden}
+.foot-field{position:relative;height:220px}
+.foot-field canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.foot-mark{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
+.foot-word{font-family:'Instrument Serif',Georgia,serif;font-size:clamp(72px,12vw,170px);line-height:.8;letter-spacing:-.02em;white-space:nowrap;background:linear-gradient(180deg,var(--ink) 30%,color-mix(in srgb,var(--ink) 25%,transparent));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:-.1em}
+.foot-bottom{position:relative;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding-top:20px;padding-bottom:24px;border-top:1px solid var(--line);font-size:14px;color:var(--muted);background:var(--bg)}
+.foot-bottom nav{display:flex;gap:18px}
+.foot-bottom a{text-decoration:none;color:var(--muted)}
+.foot-bottom a:hover{color:var(--ink)}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1180px){
+  .body{grid-template-columns:minmax(0,1fr)}
+  .inspector{position:static}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:900px){
+  .wrap{padding:0 20px}
+  .links,.kbd-search span{display:none}
+  .head h1{font-size:52px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tools,.body{padding-left:16px;padding-right:16px}
+  .body[data-view="list"] .ag{flex-wrap:wrap}
+  .body[data-view="list"] .ag-foot{width:100%}
+}
+@media (max-width:600px){
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .nav-pill .btn-primary{display:none}
+  .search{min-width:0;width:100%}
+  .win-bar .view-toggle{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-pill">
+    <div style="display:flex;align-items:center;gap:10px">
+      <a href="/" class="logo"><span class="logo-mark">V<span>.</span></span><span class="logo-word">VOICE LABS</span></a>
+      <span class="ws-tag">WORKSPACE</span>
+    </div>
+    <nav class="links" aria-label="Workspace">
+      <a href="/call">Call</a>
+      <a href="/conversations">Conversations</a>
+      <a href="/agents" aria-current="page">Agents</a>
+      <a href="/voices">Voices</a>
+      <a href="/usage">Usage</a>
+    </nav>
+    <div class="nav-right">
+      <button type="button" class="kbd-search" id="kbdSearch" aria-label="Search agents (Ctrl or Command + K)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <span>Search</span><kbd>⌘K</kbd>
+      </button>
+      <button type="button" class="icon-btn" id="themeBtn" aria-label="Switch to dark theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <a href="/call" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>
+        Start a call</a>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <div class="page-bg" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="head">
+      <div>
+        <div class="mono crumb">Workspace / Agents</div>
+        <h1>Agents</h1>
+        <p>Create, test and tune the voice agents that answer your calls — in English, Russian, Korean, or all of them at once.</p>
+      </div>
+      <a href="/agents/new" class="btn btn-primary">New agent
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="color:var(--lime)"><path d="M12 5v14M5 12h14"/></svg>
+      </a>
+    </div>
+
+    <div class="stats" id="stats" aria-label="Summary">
+      <div class="stat"><span class="mono sm">Agents</span><b id="stTotal">—</b></div>
+      <div class="stat"><span class="mono sm">Ready</span><b id="stReady">—</b></div>
+      <div class="stat"><span class="mono sm">Drafts</span><b id="stDraft">—</b></div>
+      <div class="stat"><span class="mono sm">Languages</span><b id="stLangs">—</b></div>
+    </div>
+
+    <section class="win" aria-labelledby="listTitle">
+      <div class="win-bar">
+        <div class="win-left">
+          <span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <h2 class="mono sm win-path" id="listTitle">workspace <span aria-hidden="true">/</span> <b id="winPath">agents</b></h2>
+        </div>
+        <div class="win-right">
+          <div class="view-toggle" role="group" aria-label="View">
+            <button type="button" data-view="grid" aria-pressed="true" aria-label="Grid view">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            </button>
+            <button type="button" data-view="list" aria-pressed="false" aria-label="List view">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tools" id="tools">
+        <label class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input type="search" id="search" placeholder="Search agents…" aria-label="Search agents" autocomplete="off">
+        </label>
+        <div class="tool-right">
+          <div class="filters" role="group" aria-label="Status">
+            <button type="button" class="filter" data-status="all" aria-pressed="true">All</button>
+            <button type="button" class="filter" data-status="ready" aria-pressed="false">Ready</button>
+            <button type="button" class="filter" data-status="draft" aria-pressed="false">Drafts</button>
+          </div>
+          <div class="chips" role="group" aria-label="Languages">
+            <button type="button" class="chip" data-lang="EN" aria-pressed="false">EN</button>
+            <button type="button" class="chip" data-lang="RU" aria-pressed="false">RU</button>
+            <button type="button" class="chip" data-lang="KO" aria-pressed="false">KO</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="body" id="loading" aria-busy="true">
+        <div class="grid"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+      </div>
+
+      <!-- Error (platform API unreachable) -->
+      <div class="state" id="errorState" role="alert" hidden>
+        <div class="state-orb err" aria-hidden="true"><i style="height:14px"></i><i style="height:26px"></i><i style="height:18px"></i><i style="height:30px"></i><i style="height:12px"></i></div>
+        <h2>Can’t reach the platform</h2>
+        <p>The Platform API is unavailable. Check that it’s running, then try again.</p>
+        <button type="button" class="btn btn-primary" id="retry">Try again</button>
+      </div>
+
+      <!-- Empty -->
+      <div class="state" id="emptyState" hidden>
+        <div class="state-orb" aria-hidden="true"><i style="height:14px"></i><i style="height:26px"></i><i style="height:18px"></i><i style="height:30px"></i><i style="height:12px"></i></div>
+        <h2>No agents yet</h2>
+        <p>Give an agent a purpose, its languages and a voice — then talk to it in the playground before it takes a call.</p>
+        <a href="/agents/new" class="btn btn-primary">Create your first agent</a>
+      </div>
+
+      <!-- Loaded -->
+      <div class="body" id="content" data-view="grid" hidden>
+        <div>
+          <div class="grid" id="grid"></div>
+          <p class="mono sm" id="count" style="margin-top:18px"></p>
+        </div>
+
+        <aside class="inspector" id="inspector" aria-label="Agent details">
+          <div class="insp-head">
+            <svg width="52" height="52" viewBox="0 0 48 48" aria-hidden="true" id="inspIcon"></svg>
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+              <h2 id="inspName"></h2>
+              <span class="status" id="inspStatus"><i></i><span></span></span>
+            </div>
+          </div>
+          <span class="mono sm" id="inspPurpose"></span>
+          <div class="greet">
+            <span class="mono sm">First message</span>
+            <p id="inspGreeting"></p>
+          </div>
+          <div class="player">
+            <button type="button" class="play-btn" id="inspPlay" aria-label="Play voice preview">
+              <svg id="inspPlayIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <div class="pbars" id="inspBars" aria-hidden="true"></div>
+          </div>
+          <span class="mono sm" id="inspVoice"></span>
+          <div class="kv">
+            <div><span class="mono sm">Speech</span><span class="pill" id="pvSpeech"></span></div>
+            <div><span class="mono sm">Language</span><span class="pill" id="pvLang"></span></div>
+            <div><span class="mono sm">Voice</span><span class="pill" id="pvVoice"></span></div>
+            <div><span class="mono sm">Mode</span><span class="pill" id="pvMode"></span></div>
+            <div><span class="mono sm">Glossary</span><span class="pill" id="pvGloss"></span></div>
+          </div>
+          <div class="insp-actions">
+            <a class="btn btn-primary" id="actTest" href="#">Test in playground</a>
+            <a class="btn btn-ghost" id="actCall" href="#">Start a call</a>
+            <a class="btn btn-ghost" id="actEdit" href="#">Edit</a>
+          </div>
+          <span class="mono sm" id="inspUpdated"></span>
+        </aside>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="foot-field">
+    <canvas class="ascii" aria-hidden="true"></canvas>
+    <div class="foot-mark" aria-hidden="true"><span class="foot-word">Voice <em>Labs</em></span></div>
+  </div>
+  <div class="wrap foot-bottom">
+    <span>Voice Labs · Voice agent workspace</span>
+    <nav aria-label="Footer">
+      <a href="/">Home</a>
+      <a href="/usage">Usage</a>
+      <a href="#">Docs</a>
+      <a href="#">Support</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   DATA
+   Replace API.listAgents() with the real Platform API call.
+   Preview other states with ?state=loading | error | empty
+   ========================================================= */
+const MOCK_AGENTS = [
+  { id: 'concierge', name: 'Concierge', purpose: 'Travel and stays', status: 'ready', langs: ['EN', 'RU'],
+    greeting: 'Hi, this is the concierge desk. How can I help with your stay?', voice: 'Warm · calm', mode: 'Step-by-step · Balanced',
+    providers: { speech: 'Deepgram', language: 'OpenAI', voice: 'Cartesia' }, glossary: 12, updated: '2 days ago', sample: '' },
+  { id: 'interpreter', name: 'Interpreter', purpose: 'Two-way live translation', status: 'ready', langs: ['KO', 'EN', 'RU'],
+    greeting: 'I’ll translate for both of you. Go ahead whenever you’re ready.', voice: 'Neutral · clear', mode: 'Realtime · Instant',
+    providers: { speech: 'Deepgram', language: 'OpenAI', voice: 'Cartesia' }, glossary: 34, updated: 'Today', sample: '' },
+  { id: 'front-desk', name: 'Front desk', purpose: 'Appointments', status: 'ready', langs: ['EN', 'RU'],
+    greeting: 'Hello! Would you like to book, move or cancel an appointment?', voice: 'Friendly · upbeat', mode: 'Step-by-step · Balanced',
+    providers: { speech: 'Deepgram', language: 'OpenAI', voice: 'Cartesia' }, glossary: 6, updated: '5 days ago', sample: '' },
+  { id: 'visa-desk', name: 'Visa desk', purpose: 'Document questions', status: 'ready', langs: ['KO', 'EN'],
+    greeting: '안녕하세요. 비자 서류에 대해 무엇이든 물어보세요.', voice: 'Measured · formal', mode: 'Step-by-step · Accurate',
+    providers: { speech: 'Deepgram', language: 'OpenAI', voice: 'Cartesia' }, glossary: 41, updated: 'Yesterday', sample: '' },
+  { id: 'clinic-intake', name: 'Clinic intake', purpose: 'Patient check-in', status: 'draft', langs: ['RU', 'EN'],
+    greeting: 'Здравствуйте! Давайте проверим вашу запись.', voice: 'Gentle · slow', mode: 'Step-by-step · Accurate',
+    providers: { speech: 'Deepgram', language: 'OpenAI', voice: 'Cartesia' }, glossary: 18, updated: '1 week ago', sample: '' },
+  { id: 'studio-guide', name: 'Studio guide', purpose: 'Product walkthrough', status: 'draft', langs: ['EN'],
+    greeting: 'Welcome to the studio. Want a quick tour of what’s new?', voice: 'Bright · conversational', mode: 'Realtime · Instant',
+    providers: { speech: 'Deepgram', language: 'OpenAI', voice: 'Cartesia' }, glossary: 0, updated: '3 weeks ago', sample: '' }
+];
+const API = {
+  async listAgents() {
+    const forced = new URLSearchParams(location.search).get('state');
+    await new Promise((r) => setTimeout(r, forced === 'loading' ? 1e9 : 450));
+    if (forced === 'error') throw new Error('Platform API is unavailable');
+    if (forced === 'empty') return [];
+    return MOCK_AGENTS; // TODO: return (await fetch('/api/agents')).json()
+  }
+};
+
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const frac = (v) => v - Math.floor(v);
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root = document.documentElement;
+
+  /* Theme */
+  const themeBtn = $('#themeBtn');
+  const setTheme = (t) => {
+    root.dataset.theme = t;
+    themeBtn.setAttribute('aria-label', t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+    try { localStorage.setItem('vl-theme', t); } catch (e) {}
+  };
+  let saved = null;
+  try { saved = localStorage.getItem('vl-theme'); } catch (e) {}
+  setTheme(saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  themeBtn.addEventListener('click', () => setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark'));
+
+  /* Search shortcut */
+  const search = $('#search');
+  $('#kbdSearch').addEventListener('click', () => search.focus());
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); search.focus(); }
+  });
+
+  /* Helpers */
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fillBars = (el, n, seed, maxH) => {
+    for (let i = 0; i < n; i++) {
+      const env = Math.sin(Math.PI * (i + 0.5) / n);
+      const r = frac(Math.sin(i * 12.9898 + seed * 78.233) * 43758.5453);
+      const b = document.createElement('span');
+      b.className = 'bar';
+      b.style.height = Math.round((0.2 + 0.8 * env * (0.4 + 0.6 * r)) * maxH) + 'px';
+      el.appendChild(b);
+    }
+  };
+  const tickIcon = (letter) => {
+    let t = '';
+    for (let i = 0; i < 24; i++) {
+      const a = i / 24 * Math.PI * 2, r1 = 16, r2 = i % 2 ? 19 : 21;
+      t += '<line x1="' + (24 + Math.cos(a) * r1).toFixed(1) + '" y1="' + (24 + Math.sin(a) * r1).toFixed(1) + '" x2="' + (24 + Math.cos(a) * r2).toFixed(1) + '" y2="' + (24 + Math.sin(a) * r2).toFixed(1) + '"/>';
+    }
+    return '<g stroke="currentColor" stroke-width="1.2" stroke-linecap="round">' + t + '</g>' +
+      '<circle cx="24" cy="24" r="12" style="fill:var(--surface)" stroke="currentColor" stroke-opacity=".45"/>' +
+      '<text x="24" y="28.5" text-anchor="middle" font-family="DM Mono, monospace" font-size="12" fill="currentColor">' + esc(letter) + '</text>';
+  };
+  const PLAY = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+
+  /* State */
+  let agents = [], selectedId = null, status = 'all';
+  const langs = new Set();
+  const show = (id) => ['loading', 'errorState', 'emptyState', 'content'].forEach((k) => { $('#' + k).hidden = k !== id; });
+
+  function renderStats() {
+    $('#stTotal').textContent = agents.length;
+    $('#stReady').textContent = agents.filter((a) => a.status === 'ready').length;
+    $('#stDraft').textContent = agents.filter((a) => a.status === 'draft').length;
+    $('#stLangs').textContent = new Set(agents.flatMap((a) => a.langs)).size;
+  }
+
+  function filtered() {
+    const q = search.value.trim().toLowerCase();
+    return agents.filter((a) =>
+      (status === 'all' || a.status === status) &&
+      [...langs].every((l) => a.langs.includes(l)) &&
+      (!q || (a.name + ' ' + a.purpose + ' ' + a.langs.join(' ')).toLowerCase().includes(q)));
+  }
+
+  function renderGrid() {
+    const grid = $('#grid');
+    const list = filtered();
+    grid.textContent = '';
+    list.forEach((a) => {
+      const n = agents.indexOf(a) + 1;
+      const card = document.createElement('article');
+      card.className = 'ag';
+      card.setAttribute('aria-current', String(a.id === selectedId));
+      card.innerHTML =
+        '<div class="ag-head"><span class="mono sm">' + String(n).padStart(2, '0') + '</span>' +
+        '<span style="display:flex;align-items:center;gap:10px"><span class="status' + (a.status === 'draft' ? ' draft' : '') + '"><i></i>' + (a.status === 'draft' ? 'Draft' : 'Ready') + '</span>' +
+        '<a class="round-btn" href="/playground?agent=' + encodeURIComponent(a.id) + '" aria-label="Test ' + esc(a.name) + ' in the playground">' + PLAY + '</a></span></div>' +
+        '<div class="ag-name"><h3><button type="button" class="ag-select">' + esc(a.name) + '</button></h3>' +
+        '<span class="mono sm">' + esc(a.purpose) + '</span></div>' +
+        '<div class="ag-foot"><div class="bars" aria-hidden="true"></div><span class="langs">' + a.langs.map((l) => '<span>' + esc(l) + '</span>').join('') + '</span></div>';
+      fillBars(card.querySelector('.bars'), 40, n * 7, 22);
+      card.querySelector('.ag-select').addEventListener('click', () => select(a.id));
+      grid.appendChild(card);
+    });
+    const add = document.createElement('a');
+    add.className = 'new-card';
+    add.href = '/agents/new';
+    add.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>New agent';
+    grid.appendChild(add);
+    $('#count').textContent = list.length + ' of ' + agents.length + ' agents';
+    if (list.length && !list.some((a) => a.id === selectedId)) select(list[0].id);
+    $('#inspector').hidden = !list.length;
+  }
+
+  /* Inspector + voice preview */
+  const inspBars = $('#inspBars');
+  const P_N = 48;
+  for (let i = 0; i < P_N; i++) {
+    const s = document.createElement('span');
+    const r = frac(Math.sin(i * 7.31 + 1.7) * 43758.5453);
+    s.style.height = Math.round(6 + (0.25 + 0.75 * r) * Math.sin(Math.PI * (i + 0.5) / P_N) * 34) + 'px';
+    inspBars.appendChild(s);
+  }
+  let audio = null;
+  const stopAudio = () => {
+    if (audio) { audio.pause(); audio = null; }
+    $('#inspPlayIcon').innerHTML = '<path d="M8 5v14l11-7z"/>';
+    $$('span', inspBars).forEach((b) => b.classList.remove('on'));
+  };
+
+  function select(id) {
+    stopAudio();
+    selectedId = id;
+    const a = agents.find((x) => x.id === id);
+    if (!a) return;
+    $$('#grid .ag').forEach((c) => c.setAttribute('aria-current', String(c.querySelector('.ag-select').textContent === a.name)));
+    $('#inspIcon').innerHTML = tickIcon(a.name[0]);
+    $('#inspName').textContent = a.name;
+    const st = $('#inspStatus');
+    st.className = 'status' + (a.status === 'draft' ? ' draft' : '');
+    st.querySelector('span').textContent = a.status === 'draft' ? 'Draft' : 'Ready';
+    $('#inspPurpose').textContent = a.purpose + ' / ' + a.langs.join(' · ');
+    $('#inspGreeting').textContent = '“' + a.greeting + '”';
+    $('#inspVoice').textContent = 'Voice / ' + a.voice;
+    $('#pvSpeech').textContent = a.providers.speech;
+    $('#pvLang').textContent = a.providers.language;
+    $('#pvVoice').textContent = a.providers.voice;
+    $('#pvMode').textContent = a.mode;
+    $('#pvGloss').textContent = a.glossary ? a.glossary + ' terms' : 'None';
+    $('#inspUpdated').textContent = 'Updated ' + a.updated;
+    $('#actTest').href = '/playground?agent=' + encodeURIComponent(a.id);
+    $('#actCall').href = '/call?agent=' + encodeURIComponent(a.id);
+    $('#actEdit').href = '/agents/' + encodeURIComponent(a.id);
+    $('#winPath').textContent = 'agents / ' + a.id;
+    const play = $('#inspPlay');
+    play.disabled = !a.sample;
+    play.title = a.sample ? 'Play the first message' : 'No voice preview yet';
+  }
+  $('#inspPlay').addEventListener('click', () => {
+    const a = agents.find((x) => x.id === selectedId);
+    if (!a || !a.sample) return;
+    if (audio) { stopAudio(); return; }
+    audio = new Audio(a.sample);
+    $('#inspPlayIcon').innerHTML = '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>';
+    const bars = $$('span', inspBars);
+    audio.addEventListener('timeupdate', () => {
+      const p = audio.currentTime / (audio.duration || 1);
+      bars.forEach((b, i) => b.classList.toggle('on', i < Math.round(p * P_N)));
+    });
+    audio.addEventListener('ended', stopAudio);
+    audio.play().catch(stopAudio);
+  });
+
+  /* Toolbar */
+  search.addEventListener('input', renderGrid);
+  $$('.filter').forEach((b) => b.addEventListener('click', () => {
+    status = b.dataset.status;
+    $$('.filter').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    renderGrid();
+  }));
+  $$('.chip').forEach((b) => b.addEventListener('click', () => {
+    const l = b.dataset.lang;
+    if (langs.has(l)) langs.delete(l); else langs.add(l);
+    b.setAttribute('aria-pressed', String(langs.has(l)));
+    renderGrid();
+  }));
+  $$('.view-toggle button').forEach((b) => b.addEventListener('click', () => {
+    $('#content').dataset.view = b.dataset.view;
+    $$('.view-toggle button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+
+  /* Load */
+  async function load() {
+    show('loading');
+    $('#tools').hidden = true;
+    try {
+      agents = await API.listAgents();
+      renderStats();
+      if (!agents.length) { show('emptyState'); return; }
+      $('#tools').hidden = false;
+      show('content');
+      renderGrid();
+    } catch (e) {
+      ['stTotal', 'stReady', 'stDraft', 'stLangs'].forEach((k) => { $('#' + k).textContent = '—'; });
+      show('errorState');
+    }
+  }
+  $('#retry').addEventListener('click', load);
+  load();
+
+  /* Footer ASCII "noise" field */
+  function asciiField(canvas) {
+    const ctx = canvas.getContext('2d');
+    const CHARS = ' .:-=+*#';
+    const CW = 10, CH = 16;
+    let visible = false, last = 0;
+    if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(canvas);
+    else visible = true;
+    function frame(now) {
+      if ((visible && now - last > 60) || (reduce && !last)) {
+        last = now || 1;
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        if (w && h) {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          const cw = Math.round(w * dpr), ch = Math.round(h * dpr);
+          if (canvas.width !== cw || canvas.height !== ch) { canvas.width = cw; canvas.height = ch; }
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          ctx.clearRect(0, 0, w, h);
+          const cs = getComputedStyle(root);
+          const muted = cs.getPropertyValue('--muted').trim();
+          const lime = cs.getPropertyValue('--lime').trim();
+          ctx.font = '12px "DM Mono", ui-monospace, monospace';
+          ctx.textBaseline = 'top';
+          const t = reduce ? 0 : now / 1000;
+          const cols = Math.ceil(w / CW), rows = Math.ceil(h / CH);
+          for (let r = 0; r < rows; r++) {
+            const band = Math.sin(Math.PI * (r + 0.5) / rows);
+            for (let c = 0; c < cols; c++) {
+              let v = Math.sin(c * 0.16 + t * 0.9) + Math.sin(r * 0.45 - t * 0.6) + Math.sin((c + r) * 0.08 + t * 0.35) + Math.sin(Math.hypot(c - cols / 2, (r - rows) * 2.2) * 0.22 - t * 1.1);
+              v = (v + 4) / 8;
+              const idx = Math.min(CHARS.length - 1, Math.floor(v * v * CHARS.length * band * 1.35));
+              if (idx <= 0) continue;
+              ctx.fillStyle = v > 0.9 ? lime : muted;
+              ctx.globalAlpha = 0.18 + 0.5 * v * band;
+              ctx.fillText(CHARS[idx], c * CW, r * CH);
+            }
+          }
+          ctx.globalAlpha = 1;
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  $$('canvas.ascii').forEach(asciiField);
+})();
+</script>
+</body>
+</html>

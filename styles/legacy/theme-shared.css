@@ -1,0 +1,24 @@
+/* Shared by the marketing site and the workspace: header theme switch, circular reveal, 404 colours. */
+
+/* Header toggle (both themes) */
+.header-actions { display: flex; align-items: center; justify-self: end; gap: 12px; }
+.theme-toggle { position: relative; width: 40px; height: 40px; display: inline-grid; place-items: center; padding: 0; color: var(--ink); background: transparent; border: 1px solid #c9c9c1; border-radius: 3px; cursor: pointer; transition: background .25s ease, border-color .25s ease, transform .3s var(--ease-expo); }
+.theme-toggle:hover { background: rgb(29 32 34 / 5%); transform: translateY(-1px); }
+.theme-icon { grid-area: 1 / 1; width: 18px; height: 18px; fill: none; stroke: currentcolor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; transition: opacity .3s ease, transform .5s var(--ease-expo); }
+.theme-icon-moon { opacity: 0; transform: rotate(-60deg) scale(.6); }
+html[data-vl-theme="dark"] .theme-icon-sun { opacity: 0; transform: rotate(60deg) scale(.6); }
+html[data-vl-theme="dark"] .theme-icon-moon { opacity: 1; transform: none; }
+.theme-transition, .theme-transition *, .theme-transition *::before, .theme-transition *::after { transition: background-color .45s ease, color .45s ease, border-color .45s ease, fill .45s ease, stroke .45s ease !important; }
+
+/* Circular theme reveal: the browser cross-fades by default; we replace that with a clip-path
+   animation driven from ThemeToggle. Scoped to .theme-vt so other view transitions are unaffected. */
+html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.theme-vt::view-transition-old(root) { z-index: 1; }
+html.theme-vt::view-transition-new(root) { z-index: 2; }
+
+/* The 404 page lives outside both layouts, so it carries its own dark tokens. */
+html[data-vl-theme="dark"]:has(.lost) { color-scheme: dark; }
+html[data-vl-theme="dark"] body:has(.lost) { color: #ecebe4; background: #121516; }
+html[data-vl-theme="dark"] .lost { --paper: #121516; --ink: #ecebe4; --muted: #9a9d96; --accent-dark: #ff6a55; }
+html[data-vl-theme="dark"] .lost-secondary { border-color: #3a4142; }
+html[data-vl-theme="dark"] .lost-core { background: radial-gradient(circle at 38% 30%, #3a4142, #0d1011 68%); }

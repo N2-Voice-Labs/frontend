@@ -1,0 +1,26 @@
+# Dependencies and generated Next.js output
+node_modules/
+.next/
+.next-dev/
+.open-next/
+.wrangler/
+out/
+build/
+dist/
+*.tsbuildinfo
+
+# Local environment files; keep the safe template in version control
+.env*
+!.env.example
+
+# Test reports, coverage, and generated screenshots
+coverage/
+playwright-report/
+test-results/
+playwright/.cache/
+artifacts/screenshots/
+
+# Local operating-system and editor files
+.DS_Store
+Thumbs.db
+.idea/

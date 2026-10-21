@@ -1,0 +1,44 @@
+/* =========================================================
+   Voice Labs tokens and base, shared by the landing page and the workspace.
+   teal = you · plum = the other person · lime = bridge/translation · coral = the mark.
+   The theme attribute is data-vl-theme (lib/theme.ts).
+   ========================================================= */
+:root{--bg:#FBFAF7;--bg-2:#F3F1EB;--surface:#FFFFFF;--ink:#141617;--muted:#555B5E;--line:#E4E1D9;--teal:#0E7A75;--plum:#8A3A6B;--lime:#B5D130;--coral:#E8553A;--glass:rgba(251,250,247,.78);--shadow:0 1px 2px rgba(20,22,23,.06),0 14px 36px -14px rgba(20,22,23,.16);--dot:rgba(20,22,23,.12);
+  /* Text-only coral: --coral is 3.5:1 on --bg in light, below AA for the 14px status line. */
+  --coral-text:#BF4129;
+  --font-ui:var(--font-manrope),var(--font-kr),system-ui,sans-serif;
+  --font-code:var(--font-dm-mono),ui-monospace,monospace;
+  --font-serif:var(--font-instrument),Georgia,serif;
+  color-scheme:light}
+:root[data-vl-theme="dark"]{--bg:#0D1011;--bg-2:#121617;--surface:#161B1C;--ink:#F1EFE9;--muted:#A2A8A6;--line:#262C2E;--teal:#3EC2B6;--plum:#D47DB0;--lime:#C6E34A;--coral:#F06A4E;--glass:rgba(18,22,23,.72);--shadow:0 1px 2px rgba(0,0,0,.4),0 18px 44px -16px rgba(0,0,0,.65);--dot:rgba(241,239,233,.08);--coral-text:#F06A4E;color-scheme:dark}
+
+/* ---------- Base ---------- */
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);overflow-x:clip;transition:background .4s ease,color .4s ease}
+:lang(ko){font-family:var(--font-ui);word-break:keep-all}
+a{color:var(--ink)}
+a:hover{color:var(--teal)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+em{font-family:var(--font-serif);font-style:italic;font-weight:400;letter-spacing:0}
+h1,h2,h3,p{margin:0}
+button{font:inherit}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mono{font-family:var(--font-code);letter-spacing:.08em;text-transform:uppercase;font-size:12px;color:var(--muted)}
+.mono.sm{font-size:11px}
+
+/* ---------- Shared nav pieces (landing + workspace) ---------- */
+.theme-sun{display:none}
+:root[data-vl-theme="dark"] .theme-sun{display:block}
+:root[data-vl-theme="dark"] .theme-moon{display:none}
+.nav-pill{position:relative}
+.menu{display:none}
+.menu-sheet{position:absolute;top:calc(100% + 8px);left:0;right:0;display:flex;flex-direction:column;gap:14px;padding:12px;border:1px solid var(--line);border-radius:22px;background:var(--surface);box-shadow:var(--shadow)}
+.menu-sheet[hidden]{display:none}
+.menu-sheet nav{display:flex;flex-direction:column}
+.menu-sheet nav a{display:flex;align-items:center;min-height:48px;padding:0 14px;border-radius:12px;text-decoration:none;font-size:17px;font-weight:500;color:var(--ink)}
+.menu-sheet nav a:hover,.menu-sheet nav a[aria-current="page"]{background:var(--bg-2);color:var(--ink)}
+.menu-action{display:flex;padding:0 2px 2px}
+.menu-action .btn{flex:1;justify-content:center;display:inline-flex}
+@media (max-width:900px){
+  .menu{display:block}
+}

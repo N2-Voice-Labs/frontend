@@ -1,0 +1,57 @@
+/* Workspace navigation (UX spec §3): Call first, "Start a call" as the one primary header button,
+   More ▾ for agent-builder tools, and a native <dialog> menu sheet below 1024 px. Tokens only, so both
+   themes work; imported after dashboard.css / workspace.css so these rules win. */
+
+.dash-more { position: relative; }
+.dash-more > summary { display: inline-flex; align-items: center; gap: 4px; list-style: none; cursor: pointer; }
+.dash-more > summary::-webkit-details-marker { display: none; }
+.dash-more > summary span { font-size: 10px; transition: transform var(--dur-fast) var(--ease-out); }
+.dash-more[open] > summary span { transform: rotate(180deg); }
+.dash-more > summary[aria-current="true"] { color: var(--text); }
+.dash-more-menu { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; min-width: 180px; display: flex; flex-direction: column; padding: 6px; background: var(--surface-elevated); border: 1px solid var(--border); border-radius: var(--radius-window); box-shadow: var(--elev-2); }
+.dash-more-link { padding: 9px 12px; color: var(--text-2); border-radius: var(--radius-control); font-size: 13px; font-weight: 600; text-decoration: none; }
+.dash-more-link:hover, .dash-more-link[aria-current="page"] { color: var(--text); background: var(--surface-2); }
+
+.dash-start { min-height: 38px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; color: var(--on-primary); background: var(--primary); border-radius: var(--radius-control); font: 600 13px var(--display); text-decoration: none; white-space: nowrap; transition: background var(--dur-fast) var(--ease-standard); }
+.dash-start:hover { background: var(--primary-hover); }
+.dash-start svg, .dash-menu-button svg, .dash-menu-close svg { width: 16px; height: 16px; fill: none; stroke: currentcolor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.dash-menu-button { display: none; min-height: 38px; align-items: center; gap: 6px; padding: 0 12px; color: var(--text); background: transparent; border: 1px solid var(--border-strong); border-radius: var(--radius-control); font: 600 13px var(--display); cursor: pointer; }
+.dash-menu-button:hover { background: var(--surface-2); }
+
+.dash-menu-sheet { width: 100%; max-width: 100vw; max-height: 100dvh; margin: 0 0 auto; padding: 0; color: var(--text); background: var(--surface-elevated); border: 0; border-bottom: 1px solid var(--border); border-radius: 0 0 var(--radius-window) var(--radius-window); box-shadow: var(--elev-3); }
+.dash-menu-sheet::backdrop { background: rgb(18 21 22 / 48%); }
+.dash-menu-sheet[open] { animation: menu-sheet-in var(--dur-base) var(--ease-out) both; }
+.dash-menu-panel { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4) var(--space-5) var(--space-6); }
+.dash-menu-head { display: flex; align-items: center; justify-content: space-between; }
+.dash-menu-title { font: 600 16px var(--display); }
+.dash-menu-close { width: 44px; height: 44px; display: grid; place-items: center; color: var(--text); background: transparent; border: 0; border-radius: var(--radius-control); cursor: pointer; }
+.dash-menu-close:hover { background: var(--surface-2); }
+.dash-menu-sheet nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-5); }
+.dash-menu-group { display: flex; flex-direction: column; gap: 2px; }
+.dash-menu-group-title { margin: 0 0 var(--space-1); color: var(--text-2); font: 500 12px/16px var(--mono); }
+.dash-menu-link { min-height: 44px; display: flex; align-items: center; padding: 0 var(--space-3); color: var(--text); border-radius: var(--radius-control); font: 600 15px var(--display); text-decoration: none; }
+.dash-menu-link:hover, .dash-menu-link[aria-current="page"] { background: var(--surface-2); }
+.dash-menu-link[aria-current="page"] { box-shadow: inset 3px 0 0 var(--accent); }
+@keyframes menu-sheet-in { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+
+/* Workspace focus: visible outline everywhere (the old box-shadow-only focus is not enough). */
+.dash-root :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+@media (width < 1024px) {
+  .dash-header { grid-template-columns: auto 1fr auto; gap: 12px; }
+  .dash-nav { display: none; }
+  .dash-menu-button { display: inline-flex; }
+  .dash-actions { gap: 8px; }
+}
+@media (width < 640px) {
+  .dash-start { width: 38px; padding: 0; justify-content: center; }
+  .dash-start span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .dash-menu-button span { display: none; }
+  .dash-menu-button { width: 38px; padding: 0; justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dash-menu-sheet[open] { animation: none; }
+  .dash-more > summary span { transition: none; }
+}
+.dash-root .dash-content:focus-visible { outline: none; }
