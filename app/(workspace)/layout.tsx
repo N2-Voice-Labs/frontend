@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DotSpotlight } from "@/components/shared/dot-spotlight";
 import { RootHtml } from "@/components/shared/root-html";
 import { WorkspaceFooter } from "@/components/workspace/workspace-footer";
 import { WorkspaceNav } from "@/components/workspace/workspace-nav";
@@ -17,6 +18,8 @@ export default function WorkspaceLayout({ children }: Readonly<{ children: React
       <WorkspaceNav />
       {children}
       <WorkspaceFooter />
+      {/* The agents page texture fades out sideways, so it lights up anywhere along its rows. */}
+      <DotSpotlight selector=".page-bg" rows />
     </RootHtml>
   );
 }

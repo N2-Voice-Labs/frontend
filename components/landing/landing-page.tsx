@@ -4,6 +4,7 @@ import { DemoSessionProvider } from "./demo-session";
 import { HeroVoice } from "./hero-voice";
 import { LanguageFluid } from "./language-fluid";
 import { LatencyTimeline } from "./latency-timeline";
+import { DotSpotlight } from "@/components/shared/dot-spotlight";
 import { Nav } from "./nav";
 import { OffscreenPause } from "./offscreen-pause";
 import { ProductShowcase } from "./product-showcase";
@@ -25,6 +26,7 @@ export function LandingPage() {
       </main>
       <SiteFooter />
       <OffscreenPause />
+      <DotSpotlight selector=".dots" />
     </DemoSessionProvider>
   );
 }

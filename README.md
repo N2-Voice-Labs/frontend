@@ -2,9 +2,9 @@
 
 Next.js App Router, plain CSS, no animation libraries.
 
-- `/` is the public landing page, ported from the approved reference `index2.html`
+- `/` is the public landing page, ported from the approved reference `index3.html`
   (`app/(marketing)`, `components/landing`). Only the live demo needs a backend.
-- `/agents` is the workspace Agents page, ported from `agents.html` (`app/(workspace)`,
+- `/agents` is the workspace Agents page, ported from `agents2.html` (`app/(workspace)`,
   `components/workspace`). It reads the Platform API from the browser at `NEXT_PUBLIC_PLATFORM_URL`.
   Preview its other states with `/agents?state=loading`, `?state=error` and `?state=empty`.
 
@@ -67,6 +67,13 @@ The orb and the signal band share one demo session (`lib/demo/session-store.ts`)
   duration needs Platform/runtime support.
 - **Transcripts.** The Platform stores a Conversation and transcript for every session, so the note under
   the orb says that demo transcripts are stored. Change `DEMO_CONFIG.storesTranscripts` if that changes.
+
+## Cursor-interactive backgrounds
+
+"The cursor is a voice": one shared pointer tracker (`lib/landing/pointer.ts`, mouse and pen only, so touch
+never hijacks scrolling) drives the hero network (lean, ripples, orb echo), the signal band bump, the footer
+ASCII field (heat and click rings) and the teal dot spotlights (`lib/landing/spotlight.ts`). All of it is
+off under prefers-reduced-motion, and the canvases stop drawing when off screen.
 
 ## Agents page data
 

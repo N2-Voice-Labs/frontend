@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CommandPalette } from "@/components/features/agents/command-palette";
+import { DotSpotlight } from "@/components/shared/dot-spotlight";
 import { RootHtml } from "@/components/shared/root-html";
 import { WorkspaceFooter } from "@/components/workspace/workspace-footer";
 import { WorkspaceNav } from "@/components/workspace/workspace-nav";
@@ -35,6 +36,7 @@ export default function DashboardLayout({ children }: Readonly<{ children: React
         <div id="main-content" tabIndex={-1} className="dash-content">{children}</div>
       </div>
       <WorkspaceFooter />
+      <DotSpotlight selector=".dash-content" />
     </RootHtml>
   );
 }

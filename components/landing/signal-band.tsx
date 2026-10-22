@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { HISTORY } from "@/lib/demo/config";
 import { clamp, frac, smooth } from "@/lib/landing/math";
+import { pointer, pointerActive, trackPointer } from "@/lib/landing/pointer";
 import { useReducedMotion, useScrollEffect, useScrollProgress } from "@/lib/landing/scroll";
 import { canvasTokens, fitCanvas } from "@/lib/landing/tokens";
 import { useElementSize } from "@/lib/landing/use-size";
@@ -35,10 +36,17 @@ export function SignalBand() {
   const needsDraw = useRef(true);
   const size = useElementSize(canvasRef, () => { needsDraw.current = true; });
 
+  /** Canvas rect in viewport space, refreshed in the shared scroll frame (never read per draw frame). */
+  const canvasRect = useRef({ left: 0, right: 0, top: 0, bottom: 0 });
+
   useScrollEffect((vh) => {
     const r = sectionRef.current?.getBoundingClientRect();
     visible.current = !!r && r.bottom > 0 && r.top < vh;
+    const c = canvasRef.current?.getBoundingClientRect();
+    if (c) canvasRect.current = { left: c.left, right: c.right, top: c.top, bottom: c.bottom };
   });
+
+  useEffect(() => { trackPointer(); }, []);
 
   useEffect(() => {
     progressRef.current = progress;
@@ -56,6 +64,8 @@ export function SignalBand() {
     const ctx = canvas?.getContext("2d") ?? null;
     if (!canvas || !ctx) return;
     let frame = 0;
+    /** 0–1: how strongly the bars swell under the cursor (eased in and out). */
+    let bump = 0;
 
     const line = (x1: number, y1: number, x2: number, y2: number) => { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); };
 
@@ -96,6 +106,11 @@ export function SignalBand() {
 
     const drawScroll = (now: number, w: number, h: number) => {
       const { ink, teal, plum, lime } = canvasTokens();
+      // The cursor is a voice: bars swell under it (Gaussian bump). Off with reduced motion.
+      const cr = canvasRect.current;
+      const inBand = !reduce && pointerActive() && pointer.x >= cr.left && pointer.x <= cr.right && pointer.y >= cr.top - 140 && pointer.y <= cr.bottom + 140;
+      bump = reduce ? 0 : bump + ((inBand ? 1 : 0) - bump) * 0.08;
+      const px = pointer.x - cr.left;
       const p = progressRef.current;
       const t = reduce ? 4 : now / 1000;
       const mid = h / 2, maxAmp = h * 0.34;
@@ -114,7 +129,8 @@ export function SignalBand() {
         const amp = maxAmp * env * (0.3 + 0.7 * Math.abs(Math.sin(t * 1.6 + i * 0.23 + r1 * 2)));
         const amp2 = maxAmp * env * (0.3 + 0.7 * Math.abs(Math.sin(t * 1.9 + i * 0.31 + r2 * 3)));
         const noiseY = h * (0.08 + 0.84 * r2) + Math.sin(t * 2.2 + i) * 4;
-        const half = 1.5 + (amp - 1.5) * order;
+        const swell = bump > 0.001 ? 1 + bump * 0.85 * Math.exp(-(((x - px) / 90) ** 2)) : 1;
+        const half = 1.5 + (amp * swell - 1.5) * order;
         if (split < 1) {
           const cy = noiseY + (mid - noiseY) * order;
           ctx.globalAlpha = (0.35 + 0.55 * order) * (1 - split);
@@ -127,7 +143,7 @@ export function SignalBand() {
           ctx.globalAlpha = split;
           ctx.strokeStyle = teal;
           line(x, mid - off - half * k, x, mid - off + half * k);
-          const half2 = 1.5 + (amp2 - 1.5) * order;
+          const half2 = 1.5 + (amp2 * swell - 1.5) * order;
           ctx.strokeStyle = plum;
           line(x, mid + off - half2 * k, x, mid + off + half2 * k);
         }

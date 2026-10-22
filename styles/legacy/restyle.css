@@ -82,6 +82,8 @@ html[data-vl-theme="dark"] body:has(.lost) { background: var(--bg); color: var(-
 /* ---------- Page frame (same column and texture as /agents) ---------- */
 .dash-content { position: relative; }
 .dash-content::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 520px; pointer-events: none; background-image: radial-gradient(var(--dot) 1px, transparent 1.3px); background-size: 14px 14px; -webkit-mask-image: radial-gradient(ellipse 70% 80% at 50% 0%, #000, transparent 75%); mask-image: radial-gradient(ellipse 70% 80% at 50% 0%, #000, transparent 75%); }
+/* Cursor spotlight over the same texture (same box and fade as ::before) */
+.dash-content::after { content: ""; position: absolute; inset: 0 0 auto 0; height: 520px; pointer-events: none; background-image: radial-gradient(var(--teal) 1.3px, transparent 1.6px); background-size: 14px 14px; opacity: var(--spot, 0); transition: opacity .4s ease; -webkit-mask-image: radial-gradient(170px circle at var(--mx, -999px) var(--my, -999px), #000, transparent 72%), radial-gradient(ellipse 70% 80% at 50% 0%, #000, transparent 75%); -webkit-mask-composite: source-in; mask-image: radial-gradient(170px circle at var(--mx, -999px) var(--my, -999px), #000, transparent 72%), radial-gradient(ellipse 70% 80% at 50% 0%, #000, transparent 75%); mask-composite: intersect; }
 .dash-root main.page-shell.dash-main { position: relative; width: min(100% - 64px, 1216px); padding: 56px 0 96px; }
 
 /* ---------- Page head ---------- */
