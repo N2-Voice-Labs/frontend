@@ -1,9 +1,17 @@
 # Voice Labs site and workspace
 
-Next.js App Router, plain CSS, no animation libraries.
+Next.js App Router, plain CSS. The landing film uses GSAP (ScrollTrigger) and Lenis; nothing else animates with a library.
 
-- `/` is the public landing page, ported from the approved reference `index3.html`
-  (`app/(marketing)`, `components/landing`). Only the live demo needs a backend.
+- `/` is the public landing page: a short film in eight chapters (`app/(marketing)/cinematic.css`,
+  `components/cinematic`, `components/scenes`, `lib/cinematic`). One fixed canvas (`components/cinematic/stage.tsx`)
+  draws every chapter with a single particle set and morphs it from one chapter into the next; each chapter folder
+  in `components/scenes/<name>/` holds its canvas visual (`visual.ts`) and its text layer (`<name>-scene.tsx`, a
+  scroll-scrubbed GSAP timeline), so a chapter can be polished on its own. Chapter order and scroll lengths live in
+  `lib/cinematic/chapters.ts`. Under `prefers-reduced-motion` (or without JS) the page is a plain readable document.
+  Chapter 07 talks to the same demo agent as before (`lib/demo`, mic preview without a token endpoint) and plays a
+  scripted, illustrative call otherwise. Latency numbers come from `LATENCY_STAGES` in `lib/landing/config.ts`.
+  The previous landing (`components/landing`, `app/(marketing)/landing.css`, reference `index3.html`) is no longer
+  routed; its components are kept for now (and still tested) because the demo session lives there.
 - `/agents` is the workspace Agents page, ported from `agents2.html` (`app/(workspace)`,
   `components/workspace`). It reads the Platform API from the browser at `NEXT_PUBLIC_PLATFORM_URL`.
   Preview its other states with `/agents?state=loading`, `?state=error` and `?state=empty`.

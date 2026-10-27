@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { ORB_BARS, readBands } from "@/lib/demo/audio";
-import { DEMO_CONFIG } from "@/lib/demo/config";
+import { speakNote } from "@/lib/demo/config";
 import type { SessionState } from "@/lib/demo/session-store";
 import { clamp, frac } from "@/lib/landing/math";
 import { onBackgroundClick, pointer, pointerActive, rippleRadius, trackPointer } from "@/lib/landing/pointer";
@@ -54,12 +54,6 @@ const IDLE_VARS = ENVELOPE.map((env, i) => ({
   "--mid": barScale(i, env * 0.35).toFixed(3),
   "--d": `${(-(i * 0.6) / 1.4).toFixed(2)}s`,
 }) as React.CSSProperties);
-
-function speakNote(hasAgent: boolean) {
-  if (!hasAgent) return "Optional. Mic preview only: your voice is drawn on this page and is not sent anywhere.";
-  const note = "Optional. Uses your microphone to talk to the Voice Labs demo agent while the session is open.";
-  return DEMO_CONFIG.storesTranscripts ? `${note} Transcripts of demo conversations are stored.` : note;
-}
 
 export function HeroVoice() {
   const session = useDemoSession();
