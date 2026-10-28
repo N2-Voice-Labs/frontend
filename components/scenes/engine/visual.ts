@@ -1,6 +1,7 @@
-import { frac } from "@/lib/landing/math";
-import { LATENCY_STAGES } from "@/lib/landing/config";
-import { BRIDGE, DIM, EN, INK, KO, PALETTE, label, lerp, range, rnd, type Frame, type SceneVisual } from "@/lib/cinematic/visual";
+import { clamp } from "@/lib/landing/math";
+import { worldVisual } from "@/components/scenes/world/visual";
+import { BRIDGE, DIM, EN, INK, KO, lerp, range, rnd, type Frame, type Point, type SceneVisual } from "@/lib/cinematic/visual";
+import { BEATS } from "./beats";
 
 /** The runtime, in signal order. `stage` links a node to its NS-01 latency stage; `swap` marks provider slots. */
 export const ENGINE_NODES = [
@@ -12,124 +13,181 @@ export const ENGINE_NODES = [
   { name: "VOICE OUT", stage: 5, swap: false },
 ] as const;
 
-const AGENT = 3;
-const N = ENGINE_NODES.length;
+/*
+ * 05 — the SVG (system/) draws the runtime through a travelling camera; the canvas is only atmosphere
+ * and depth around it.
+ * p = 0: chapter 04's wave as a thin, calm haze line at h/2 (cyan, a few magenta/gold) plus dim dust
+ *   (same seeds and drift as chapters 03/04, so the seam barely moves it).
+ * enter/dive: the line streams past the camera and spreads into depth: near particles accelerate
+ *   off-screen and grow, far ones settle into a sparse dust field.
+ * vad → tts: very sparse dust with parallax; the camera drifts left (vad), up (stt), back (understand),
+ *   orbits (reason), zooms out and back (act), drifts again (respond/tts).
+ * runtime → capabilities: pull back; the field compresses toward the centre band, a faint field with depth.
+ * exit: dust streams outward from the centre. multiply: every particle eases (staggered) into
+ *   chapter 06's first frame (exact at p = 1).
+ */
 
-/** Node positions in world space plus the tools satellite, and the camera for progress p. */
-function engineLayout(f: Frame) {
-  const { w, h, portrait, u } = f;
-  const node = (k: number) => portrait
-    ? { x: w * 0.42, y: lerp(h * 0.2, h * 0.72, k / (N - 1)) }
-    : { x: lerp(w * 0.1, w * 0.9, k / (N - 1)), y: h * 0.42 };
-  const agent = node(AGENT);
-  const tools = portrait ? { x: w * 0.82, y: agent.y } : { x: agent.x, y: h * 0.62 };
-  // The camera starts close on the incoming voice and pulls back to the whole engine.
-  const pull = range(f.p, 0.02, 0.42);
-  const zoom = lerp(2.4, 1, pull);
-  const focus = { x: lerp(node(0).x, w / 2, pull), y: lerp(node(0).y, h / 2, pull) };
-  const cam = (p: { x: number; y: number }) => ({ x: w / 2 + (p.x - focus.x) * zoom, y: h / 2 + (p.y - focus.y) * zoom });
-  const radius = (k: number) => u * (k === AGENT ? 0.06 : 0.032) * zoom;
-  return { node, tools, cam, radius, zoom };
+const [, DIVE_END] = BEATS.dive;
+const [VAD_START, VAD_END] = BEATS.vad;
+const [STT_START, STT_END] = BEATS.stt;
+const [UND_START, UND_END] = BEATS.understand;
+const [REASON_START, REASON_END] = BEATS.reason;
+const [ACT_START, ACT_END] = BEATS.act;
+const [RESPOND_START] = BEATS.respond;
+const [, TTS_END] = BEATS.tts;
+const [RUNTIME_START] = BEATS.runtime;
+const [EXIT_START] = BEATS.exit;
+const [MULTIPLY_START, MULTIPLY_END] = BEATS.multiply;
+
+// ---------------------------------------------------------------- per-particle statics
+
+let LINE = new Uint8Array(0), COL = new Uint8Array(0);
+/** Field position (fractions of the viewport around its centre), depth (0 far – 1 near), lit (0–1). */
+let FX = new Float64Array(0), FY = new Float64Array(0), Z = new Float64Array(0), LIT = new Float64Array(0);
+/** Line position, line jitter, phase, stagger, conversation dust alpha and size. */
+let U = new Float64Array(0), JIT = new Float64Array(0), PH = new Float64Array(0), SE = new Float64Array(0);
+let DA = new Float64Array(0), DS = new Float64Array(0);
+
+function statics(n: number) {
+  LINE = new Uint8Array(n); COL = new Uint8Array(n);
+  FX = new Float64Array(n); FY = new Float64Array(n); Z = new Float64Array(n); LIT = new Float64Array(n);
+  U = new Float64Array(n); JIT = new Float64Array(n); PH = new Float64Array(n); SE = new Float64Array(n);
+  DA = new Float64Array(n); DS = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const line = rnd(i, 101) < 0.42;
+    LINE[i] = line ? 1 : 0;
+    Z[i] = rnd(i, 104);
+    LIT[i] = rnd(i, 105);
+    SE[i] = rnd(i, 84);
+    // Same phase seed as chapter 04's dust, so its drift carries straight on.
+    PH[i] = rnd(i, 83) * Math.PI * 2;
+    if (line) {
+      U[i] = rnd(i, 80);
+      JIT[i] = rnd(i, 81) + rnd(i, 82) - 1;
+      // Wider than the viewport, so camera drift never shows an empty edge.
+      FX[i] = rnd(i, 102) * 1.3 - 0.65;
+      FY[i] = rnd(i, 103) * 1.3 - 0.65;
+      const c = rnd(i, 106);
+      COL[i] = c < 0.8 ? KO : c < 0.92 ? EN : BRIDGE;
+      DA[i] = 0; DS[i] = 1;
+    } else {
+      // Dust sits where chapters 03/04 left it (same seeds).
+      FX[i] = rnd(i, 62) - 0.5;
+      FY[i] = rnd(i, 63) - 0.5;
+      const lit = rnd(i, 89);
+      DA[i] = lit < 0.45 ? 0.025 + 0.05 * (lit / 0.45) : 0;
+      DS[i] = 0.7 + 0.4 * rnd(i, 90);
+      COL[i] = rnd(i, 68) < 0.35 ? INK : DIM;
+    }
+  }
 }
 
-/** Node k fades in as the camera passes it. */
-const reveal = (p: number, k: number) => range(p, 0.02 + k * 0.06, 0.08 + k * 0.06);
+// ---------------------------------------------------------------- per-frame cache
 
-function pointOnChain(L: ReturnType<typeof engineLayout>, u: number) {
-  const s = u * (N - 1), k = Math.min(Math.floor(s), N - 2), t = s - k;
-  const a = L.node(k), b = L.node(k + 1);
-  return { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t), seg: k };
+let cp = NaN, ct = NaN, cw = NaN, ch = NaN, cn = -1, cport = false;
+/** Chapter 06's first frame (p = 0, same t). Reused, never reallocated. */
+const W0: Frame = { w: 0, h: 0, t: 0, p: 0, n: 0, portrait: false, u: 1 };
+const T: Point = { x: 0, y: 0, a: 0, c: 0, s: 1 };
+/** Camera offset (fractions of the viewport), dive zoom, act zoom, pull-back, exit, close-up, multiply. */
+let camX = 0, camY = 0, diveZ = 0, actZ = 0, pull = 0, exit = 0, close = 0, multiply = 0, twinkleT = 0;
+
+function update(f: Frame) {
+  if (f.p === cp && f.t === ct && f.w === cw && f.h === ch && f.n === cn && f.portrait === cport) return;
+  if (f.n !== cn) statics(f.n);
+  cp = f.p; ct = f.t; cw = f.w; ch = f.h; cn = f.n; cport = f.portrait;
+  const p = f.p;
+  W0.w = f.w; W0.h = f.h; W0.t = f.t; W0.p = 0; W0.n = f.n; W0.portrait = f.portrait; W0.u = f.u;
+  // The camera's travel, driven by scroll; each beat adds its own direction.
+  const orbit = range(p, REASON_START, REASON_END) * Math.PI * 2;
+  const wander = range(p, 0.02, DIVE_END);
+  camX = -0.06 * range(p, VAD_START, VAD_END)
+    + 0.035 * range(p, UND_START, UND_END)
+    + 0.04 * Math.sin(orbit)
+    + 0.03 * range(p, RESPOND_START, TTS_END)
+    + wander * 0.006 * Math.sin(f.t * 0.07);
+  camY = -0.05 * range(p, STT_START, STT_END)
+    + 0.03 * (1 - Math.cos(orbit))
+    + 0.02 * range(p, RESPOND_START, TTS_END)
+    + wander * 0.005 * Math.sin(f.t * 0.05 + 1);
+  diveZ = range(p, 0.02, DIVE_END);
+  actZ = Math.sin(Math.PI * range(p, ACT_START, ACT_END));
+  close = range(p, 0.03, 0.14);
+  pull = range(p, RUNTIME_START, RUNTIME_START + 0.08);
+  exit = range(p, EXIT_START - 0.01, MULTIPLY_END - 0.02);
+  multiply = clamp((p - MULTIPLY_START) / (MULTIPLY_END - MULTIPLY_START));
+  twinkleT = f.t * 0.6;
 }
 
-/** 05 — the runtime under the conversation: signals flow through every stage, the agent calls out to tools. */
+// ---------------------------------------------------------------- formations
+
+/** The p = 0 haze line: chapter 04's wave, calm, cyan-dominant. */
+function placeLine(i: number, f: Frame, o: Point) {
+  const u = U[i];
+  o.x = lerp(f.w * 0.02, f.w * 0.98, u);
+  o.y = f.h / 2 + JIT[i] * f.u * 0.006 + Math.sin(f.t * 0.11 + PH[i]) * 1.2;
+  o.a = 0.12 * Math.sin(Math.PI * u) ** 0.5;
+  o.c = COL[i];
+  o.s = 1;
+}
+
+/** The dust field seen through the camera at this frame. */
+function placeField(i: number, f: Frame, o: Point) {
+  const z = Z[i], par = 0.25 + 0.75 * z;
+  const bx = FX[i] + Math.sin(f.t * 0.035 + PH[i]) * 0.012 - camX * par;
+  const by = FY[i] + Math.cos(f.t * 0.028 + PH[i] * 1.3) * 0.01 - camY * par;
+  // Inside the voice the near dust is a little closer; act zooms out and back; the pull-back compresses
+  // the field toward the centre band (far dust most); exit streams it outward, near dust fastest.
+  let k = (1 + 0.25 * z * diveZ) * (1 - 0.14 * actZ * par);
+  const ex = exit * exit * (0.4 + 2.6 * z * z);
+  k *= 1 + ex;
+  const kx = k * lerp(1, 0.78 + 0.12 * z, pull), ky = k * lerp(1, 0.42 + 0.2 * z, pull);
+  o.x = f.w / 2 + bx * f.w * kx;
+  o.y = f.h / 2 + by * f.h * ky;
+  const tw = 0.8 + 0.2 * Math.sin(twinkleT + PH[i] * 3);
+  const near = LIT[i] < 0.28 ? (0.02 + 0.07 * z) * tw : 0;
+  const far = LIT[i] < 0.55 ? (0.03 + 0.08 * z) * tw : 0;
+  let a = lerp(LINE[i] ? near : lerp(DA[i] * tw, near, close), far, pull);
+  a *= 1 - 0.45 * exit;
+  o.a = a;
+  o.c = COL[i];
+  const s = 0.7 + 0.6 * z;
+  o.s = (LINE[i] ? s : lerp(DS[i], s, close)) * (1 + 0.5 * exit * z);
+}
+
+/** Enter/dive: the line streams past the camera and spreads into depth, then settles into the field. */
+function placeDive(i: number, f: Frame, o: Point) {
+  const e = range(f.p, 0.004 + SE[i] * 0.03, DIVE_END - 0.03 + SE[i] * 0.03);
+  if (e <= 0) { placeLine(i, f, o); return; }
+  placeField(i, f, o);
+  if (e >= 1) return;
+  const fx = o.x, fy = o.y, fa = o.a, fs = o.s;
+  placeLine(i, f, o);
+  const z = Z[i];
+  const k = 1 + e * e * (0.2 + 3.5 * z * z);
+  const dx = f.w / 2 + (o.x - f.w / 2) * k;
+  const dy = f.h / 2 + (o.y - f.h / 2 + e * FY[i] * f.h * 0.35) * k;
+  // Near particles fly off and fade before they rejoin the field.
+  const da = o.a * (1 - range(e, 0.25, 0.7) * range(z, 0.4, 0.8));
+  const g = range(e, 0.55, 1);
+  o.x = lerp(dx, fx, g); o.y = lerp(dy, fy, g);
+  o.a = lerp(da, fa * g * g, g);
+  o.s = lerp(1 + 0.8 * z * e, fs, g);
+}
+
+/** 05 — atmosphere and depth around the runtime the SVG draws. */
 export const engineVisual: SceneVisual = {
   morph: 0, // chapter 04 (conversation/visual.ts) ends exactly on this chapter's first frame.
   place(i, f, o) {
-    const L = engineLayout(f);
-    const r1 = rnd(i, 1), r2 = rnd(i, 2), r3 = rnd(i, 3);
-    o.s = 1;
-    if (r1 < 0.34) {
-      // Rings: one per node, the agent gets more particles; the tools node is the last slot.
-      const slot = Math.min(Math.floor(r2 * (N + 2)), N + 1);
-      const k = slot >= N ? (slot === N ? AGENT : -1) : slot;
-      const centre = k === -1 ? L.tools : L.node(k);
-      const R = k === -1 ? L.radius(0) : L.radius(k);
-      const ang = r3 * Math.PI * 2 + f.t * (k === AGENT ? 0.5 : 0.25) * ((i & 1) ? 1 : -1);
-      const c = L.cam(centre);
-      const breathe = 1 + 0.06 * Math.sin(f.t * 2 + (k + 1) * 1.3);
-      o.x = c.x + Math.cos(ang) * R * breathe;
-      o.y = c.y + Math.sin(ang) * R * breathe;
-      o.c = k === AGENT || k === -1 ? BRIDGE : k < AGENT ? KO : EN;
-      o.a = (k === -1 ? range(f.p, 0.42, 0.52) : reveal(f.p, k)) * 0.85;
-      return;
-    }
-    if (r1 < 0.46) {
-      // Tool calls: the agent sends a request down to the tools and gets an answer back.
-      const s = frac(f.t * 0.22 + r2);
-      const a = L.node(AGENT), b = L.tools;
-      const q = s < 0.5 ? s * 2 : 2 - s * 2;
-      const c = L.cam({ x: lerp(a.x, b.x, q) + (r3 - 0.5) * 6, y: lerp(a.y, b.y, q) + (r3 - 0.5) * 6 });
-      o.x = c.x; o.y = c.y;
-      o.c = BRIDGE;
-      o.a = range(f.p, 0.45, 0.55) * 0.8;
-      return;
-    }
-    // Packets streaming through the chain: a wave until STT, tokens through the agent, a wave again after TTS.
-    const u = frac(f.t * (0.045 + r3 * 0.02) + r2);
-    const pt = pointOnChain(L, u);
-    const wave = Math.sin(u * 160 + f.t * 6) * f.u * 0.018;
-    const isToken = pt.seg >= 2 && pt.seg < 4;
-    const off = isToken ? (r3 - 0.5) * 4 : wave * (0.5 + r3 * 0.5);
-    const c = L.cam(f.portrait ? { x: pt.x + off, y: pt.y } : { x: pt.x, y: pt.y + off });
-    o.x = c.x; o.y = c.y;
-    o.c = pt.seg < 2 ? KO : pt.seg < 4 ? BRIDGE : EN;
-    o.a = reveal(f.p, pt.seg + 1) * (isToken ? 0.95 : 0.75);
-    o.s = isToken ? 1.5 : 1;
-  },
-  draw(ctx, f, a0) {
-    // No stage crossfade into this chapter (morph: 0), so the wires and labels fade in themselves.
-    const alpha = a0 * range(f.p, 0, 0.04);
-    const L = engineLayout(f);
-    // Wires
-    for (let k = 0; k < N - 1; k++) {
-      const a = L.cam(L.node(k)), b = L.cam(L.node(k + 1));
-      ctx.globalAlpha = alpha * reveal(f.p, k + 1) * 0.18;
-      ctx.strokeStyle = PALETTE[INK];
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-    }
-    const tA = alpha * range(f.p, 0.42, 0.52);
-    const ag = L.cam(L.node(AGENT)), tl = L.cam(L.tools);
-    ctx.globalAlpha = tA * 0.25;
-    ctx.setLineDash([3, 5]);
-    ctx.beginPath(); ctx.moveTo(ag.x, ag.y); ctx.lineTo(tl.x, tl.y); ctx.stroke();
-    ctx.setLineDash([]);
-    const below = (k: number) => L.radius(k) + 22;
-    label(ctx, f.portrait ? "TOOLS" : "TOOLS · KNOWLEDGE · INTEGRATIONS", tl.x, tl.y + L.radius(0) + 22, tA * 0.8, PALETTE[BRIDGE], "center", f.portrait ? 9 : 11);
-    // Labels, latency stage, provider slots
-    ENGINE_NODES.forEach((n, k) => {
-      const a = alpha * reveal(f.p, k);
-      if (a <= 0.01) return;
-      const c = L.cam(L.node(k));
-      // Labels sit under the nodes; the agent's go above it, since the tools wire runs down from it.
-      const side = f.portrait
-        ? { x: c.x - L.radius(k) - 14, y: c.y + 4, align: "right" as const }
-        : { x: c.x, y: k === AGENT ? c.y - L.radius(k) - 52 : c.y + below(k), align: "center" as const };
-      label(ctx, n.name, side.x, side.y, a * 0.9, PALETTE[INK], side.align, f.portrait ? 9 : 11);
-      const st = LATENCY_STAGES[n.stage];
-      const ms = st.p50Ms === null ? "p50 —" : `${st.p50Ms} ms`;
-      label(ctx, `${st.id} · ${ms}`, side.x, side.y + 15, a * 0.5 * range(f.p, 0.5, 0.6), PALETTE[DIM], side.align, 10);
-      if (n.swap) {
-        const on = Math.floor(f.t / 1.8 + k) % 3;
-        const sa = a * range(f.p, 0.6, 0.7);
-        for (let s = 0; s < 3; s++) {
-          ctx.globalAlpha = sa * (s === on ? 0.9 : 0.25);
-          ctx.fillStyle = PALETTE[s === on ? BRIDGE : INK];
-          const bx = f.portrait ? side.x - 26 + s * 9 : side.x - 13 + s * 9;
-          ctx.fillRect(bx, side.y + 24, 6, 6);
-        }
-      }
-    });
-    ctx.globalAlpha = 1;
+    update(f);
+    if (LINE[i]) placeDive(i, f, o);
+    else placeField(i, f, o);
+    // Multiply: every particle eases (staggered) into chapter 06's opening; exact at p = 1.
+    if (multiply <= 0) return;
+    const m = range(multiply * 1.5 - SE[i] * 0.5, 0, 1);
+    if (m <= 0) return;
+    worldVisual.place(i, W0, T);
+    if (m >= 1) { o.x = T.x; o.y = T.y; o.a = T.a; o.c = T.c; o.s = T.s; return; }
+    o.x = lerp(o.x, T.x, m); o.y = lerp(o.y, T.y, m); o.a = lerp(o.a, T.a, m); o.s = lerp(o.s, T.s, m);
+    if (m >= 0.5) o.c = T.c;
   },
 };

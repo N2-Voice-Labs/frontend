@@ -1,0 +1,5 @@
+/* Chapter 08's own pieces; strokes, labels and the film/plain switch reuse chapter 05's classes (engine-system.module.css). */
+/* Plain document: the figure is the globe with its few foreground connections. */
+:global(html:not(.cine-js)) .figure{height:70vh}
+/* Only in the still figure (plain document / reduced motion, where the canvas does not draw the globe). */
+:global(html.cine-js) .stillOnly{display:none}

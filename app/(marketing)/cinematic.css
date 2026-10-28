@@ -90,39 +90,11 @@ main{position:relative;z-index:1}
 .frame-center{text-align:center;display:flex;flex-direction:column;align-items:center}
 .stack>*+*{margin-top:6vh}
 .silence-cue{display:none}
-.principles{list-style:none;margin:0 auto;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 40px;max-width:1100px}
-.principles b{display:block;font-family:var(--font-code);font-weight:400;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--c-bridge);margin-bottom:6px}
-.principles span{display:block;font-size:14px;line-height:1.5;color:var(--c-muted)}
-.world-note{text-align:center;margin-top:3vh}
-.future-foot{display:flex;flex-wrap:wrap;gap:10px 28px;justify-content:space-between;padding-top:8vh}
-.future-foot a{text-decoration:none;color:var(--c-muted)}
-.future-foot a:hover{color:var(--c-ink)}
 .future-ctas,.reality-actions{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:clamp(24px,5vh,48px)}
 .reality-actions{flex-direction:column;align-items:center}
 .reality-note{max-width:52ch;text-align:center;font-size:12.5px;line-height:1.5;color:var(--c-dim)}
 
-/* Reality: the call */
-.call{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,auto) minmax(0,1fr);gap:clamp(18px,4vw,64px);align-items:start;max-width:1180px;margin:0 auto}
-.person{transition:opacity .5s}
-.person[data-active="false"]{opacity:.5}
-.person[data-side="en"]{text-align:right}
-.person-name{font-size:clamp(20px,2vw,30px);font-weight:700;letter-spacing:-.01em}
-.person-name span{display:block;font-family:var(--font-code);font-weight:400;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--c-muted);margin-top:6px}
-.person-lang{margin-top:22px}
-.person[data-side="ko"] .person-lang{color:var(--c-ko)}
-.person[data-side="en"] .person-lang{color:var(--c-en)}
-.person-line{margin-top:14px;min-height:3.6em;font-size:clamp(18px,1.9vw,28px);line-height:1.3;font-weight:500}
-.person[data-active="true"] .person-line{color:var(--c-ink)}
-.call-core{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding-top:6px}
-.call-core>.mono:first-child{color:var(--c-bridge);letter-spacing:.3em}
-.call-stages{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-family:var(--font-code);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--c-dim)}
-.call-stages li{transition:color .3s}
-.call-stages li[data-on="true"]{color:var(--c-ink)}
-.call-stages li[data-on="true"]::before{content:"● ";color:var(--c-bridge)}
-.call-tag{color:var(--c-bridge);opacity:0;transition:opacity .3s}
-.call-tag[data-on="true"]{opacity:1}
-.call-note{font-size:10px;color:var(--c-dim);max-width:24ch;line-height:1.5}
-.call-value{font-size:clamp(18px,1.8vw,26px);font-weight:600}
+/* Reality: the call as a transcript (plain document; screen readers in film mode) */
 .transcript{display:grid;grid-template-columns:none;gap:20px;list-style:none;padding:0;max-width:760px}
 .transcript p+p{margin-top:4px}
 .transcript-heard{color:var(--c-bridge)}
@@ -222,26 +194,124 @@ html:not(.cine-js) #bridge .scene-layer{display:flex;flex-direction:column}
 .cine-js .conv-stop{opacity:0;margin-left:-.2em}
 
 /* 05 */
-.cine-js .engine-head{align-items:flex-start;text-align:left;padding-top:11vh}
-.cine-js .principles{position:absolute;left:clamp(20px,8vw,140px);right:clamp(20px,8vw,140px);bottom:6vh;margin:0;max-width:none;gap:16px 40px}
-.cine-js .principles span{font-size:13px}
+/* Plain document: statement and tagline, the figure, the stages, the capabilities, the closing line. */
+html:not(.cine-js) #engine .scene-layer{display:flex;flex-direction:column}
+.engine-head{order:-1}
+.engine-head .lede{text-align:center;margin-left:auto;margin-right:auto}
+/* Large but never wider than 360px allows; the runtime stays visible in the centre band. */
+.engine-title{font-size:clamp(30px,min(6.6vw,11vh),118px);text-align:center}
+.engine-title .ct-line+.ct-line{margin-top:.06em}
+.engine-many{font-size:clamp(30px,min(6.2vw,12vh),112px);text-align:center}
+.engine-many .ct-line+.ct-line{margin-top:.06em}
+.engine-captions{display:none}
+.engine-caps{list-style:none;margin:0 auto 6vh;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 22px}
+.engine-cap{color:var(--c-dim)}
+.cine-js .engine-head{padding-top:11vh}
+/* The runtime runs through the middle; the tagline sits under it rather than on the agent's label. */
+.cine-js .engine-tag{position:absolute;left:0;right:0;bottom:22vh;margin:0 auto;padding:0 20px}
+.cine-js .engine-captions{display:block;position:absolute;left:0;right:0;bottom:12vh;margin:0;padding:0 20px;list-style:none;pointer-events:none}
+.cine-js .engine-caption{position:absolute;left:0;right:0;bottom:0;opacity:0;text-align:center;white-space:nowrap;font-size:clamp(15px,1.15vw,18px);line-height:1.4;letter-spacing:.01em;color:rgba(236,231,220,.75)}
+.cine-js .engine-caps{position:absolute;inset:0;margin:0;display:block;pointer-events:none}
+.cine-js .engine-cap{position:absolute;opacity:0;white-space:nowrap}
+/* A rotating walk around the edges, away from the statement (top centre) and the runtime (centre band). */
+.cine-js .engine-cap:nth-child(1){left:max(16vw,220px);top:24vh}
+.cine-js .engine-cap:nth-child(2){right:6vw;bottom:16vh;color:var(--c-dim)}
+.cine-js .engine-cap:nth-child(3){right:6vw;top:24vh;color:var(--c-dim)}
+.cine-js .engine-cap:nth-child(4){left:max(16vw,220px);bottom:16vh}
+.cine-js .engine-cap:nth-child(5){left:50%;bottom:7vh;transform:translateX(-50%);color:var(--c-dim)}
+.cine-js .engine-cap:nth-child(6){right:6vw;top:32vh}
+.cine-js .engine-cap:nth-child(7){left:max(16vw,220px);bottom:30vh;color:var(--c-dim)}
 
 /* 06 */
-.cine-js .world-foot{padding-bottom:7vh}
-.cine-js .world-note{margin-top:14px}
+/* Plain document: the statement, the figure (the runtime and its worlds), the second statement, the next conversation. */
+html:not(.cine-js) #world .scene-layer{display:flex;flex-direction:column}
+.world-head{order:-1}
+.world-title{font-size:clamp(32px,min(7vw,12vh),128px);text-align:center}
+.world-title .ct-line+.ct-line{margin-top:.06em}
+.world-many,.world-same{font-size:clamp(26px,min(4.6vw,8vh),84px);text-align:center}
+.world-many{margin-top:.35em}
+.world-note{text-align:center;margin-left:auto;margin-right:auto}
+.world-ends{display:flex;justify-content:space-between;gap:16px;width:100%;max-width:1200px;margin:0 auto}
+.world-end-a{color:var(--c-ko)}
+.world-end-b{color:var(--c-en)}
+/* Film: on the selected conversation's line, at its two ends (endSpan in system/geometry.ts). */
+.cine-js .world-ends{position:absolute;left:max(17vw,240px);right:max(17vw,240px);width:auto;max-width:none;top:calc(50% - 32px);margin:0;pointer-events:none}
+.cine-js .world-end{opacity:0}
+/* The runtime sits between the two lines: the title above it, the note below. */
+.cine-js .world-under .world-note{margin-top:max(118px,16vh)}
 
 /* 07 */
-.cine-js .reality-head{padding-top:12vh}
-.cine-js .reality-body{justify-content:center;padding-top:16vh}
+/* Plain document: the title, the two people and the signal, who they are, the call as a transcript, the thesis, the brand. */
+html:not(.cine-js) #reality .rl{display:flex;flex-direction:column}
+.rl-open{order:-1}
+.rl-title,.rl-thesis{font-size:clamp(30px,min(6vw,11vh),108px);text-align:center}
+.rl-title .ct-line+.ct-line,.rl-thesis .ct-line+.ct-line{margin-top:.06em}
+.rl-natural{font-size:clamp(26px,min(4.4vw,8vh),78px);text-align:center}
+.rl-brand-name{font-size:clamp(34px,min(5.4vw,9vh),96px);font-weight:800;letter-spacing:.06em;text-align:center}
+.rl-brand .lede{text-align:center;margin-left:auto;margin-right:auto}
+.rl-people{display:flex;justify-content:space-between;gap:16px;width:100%;max-width:1200px;margin:2vh auto 4vh}
+.rl-person{display:flex;flex-direction:column;gap:6px}
+.rl-person[data-who="daniel"]{text-align:right}
+.rl-name{color:var(--c-muted);transition:color .4s}
+.rl-person[data-active] .rl-name{color:var(--c-ink)}
+.rl-person[data-who="minji"] .rl-lang{color:var(--c-ko)}
+.rl-person[data-who="daniel"] .rl-lang{color:var(--c-en)}
+.rl-place{color:var(--c-dim);font-size:10px}
+.rl-words{list-style:none;padding:0;margin:4vh auto;display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:center}
+.rl-word{color:var(--c-ink);letter-spacing:.3em}
+.rl-lines{display:none}
+.rl-transcript li[data-source="voice"] p:last-child{color:var(--c-muted)}
+/* Film: everything sits on the stage at the positions the layout writes (system/layout.ts). */
+.cine-js .rl{position:absolute;inset:0}
+.cine-js .rl-transcript{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0;padding:0}
+.cine-js .rl-people{position:absolute;inset:0;margin:0;max-width:none;display:block;pointer-events:none}
+.cine-js .rl-person{position:absolute;opacity:0;white-space:nowrap;align-items:center}
+.cine-js .rl-person[data-who="minji"]{left:var(--rl-m-x);top:var(--rl-m-y);transform:translateX(var(--rl-m-a))}
+.cine-js .rl-person[data-who="daniel"]{left:var(--rl-d-x);top:var(--rl-d-y);transform:translateX(var(--rl-d-a))}
+.cine-js .rl-lines{display:block;position:absolute;inset:0;pointer-events:none}
+.cine-js .rl-line,.cine-js .rl-live{position:absolute;margin:0;opacity:0;max-width:var(--rl-lw);font-size:clamp(16px,1.25vw,20px);line-height:1.35;color:var(--c-ink);text-wrap:balance}
+.cine-js .rl-line[data-source="voice"]{color:var(--c-muted)}
+.cine-js .rl-line[data-side="minji"],.cine-js .rl-live[data-side="minji"]{left:var(--rl-ml-x);top:var(--rl-ml-y);transform:translateY(var(--rl-ml-t));text-align:left}
+.cine-js .rl-line[data-side="daniel"],.cine-js .rl-live[data-side="daniel"]{right:var(--rl-dl-x);top:var(--rl-dl-y);transform:translateY(var(--rl-dl-t));text-align:right}
+.cine-js .rl-live{opacity:1}
+.rl-line[data-cut]{text-decoration:line-through;text-decoration-color:rgba(236,231,220,.45);text-decoration-thickness:1px}
+.rl-part{transition:color .25s}
+.rl-part[lang="en"]{color:var(--c-en)}
+.rl-part[data-on]{text-shadow:0 0 12px rgba(236,231,220,.25)}
+/* The five words: one at a time, around the middle of the signal. */
+.cine-js .rl-words{position:absolute;inset:0;margin:0;display:block;pointer-events:none}
+.cine-js .rl-word{position:absolute;opacity:0;left:var(--rl-c-x);top:var(--rl-c-y);transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy)));font-size:12px}
+.rl-word[data-i="0"]{--dx:0px;--dy:-120px}
+.rl-word[data-i="1"]{--dx:-170px;--dy:-52px}
+.rl-word[data-i="2"]{--dx:180px;--dy:56px}
+.rl-word[data-i="3"]{--dx:-150px;--dy:96px}
+.rl-word[data-i="4"]{--dx:150px;--dy:-86px}
+.cine-js .rl-brand{padding-bottom:7vh}
+.cine-js .rl-brand .lede{margin-top:10px}
+.cine-js .rl-actions{margin-top:clamp(16px,3vh,28px)}
 
-/* 08 */
-.future-end .lede{text-align:center}
+/* 08 — ever sparser type: warm white on black, huge negative space, no glow behind the last words. */
+.future-say .ct-w{overflow:visible}
+.future-world,.future-hear{font-size:clamp(30px,min(5.4vw,10vh),92px);line-height:1.08;text-align:center}
+/* Very large, but clear of the chapter list on the left. */
+.future-line{font-size:clamp(36px,min(6.4vw,13vh),124px);line-height:1.02;text-align:center}
+/* The brand: large and simple, with room around it (smaller than chapter 03's first naming). */
+.future-brand{font-size:clamp(48px,min(9vw,16vh),150px)}
+.future-end .lede{text-align:center;margin-left:auto;margin-right:auto}
+.future-ctas{flex-direction:column;align-items:center;gap:14px;margin-top:clamp(32px,7vh,72px)}
+.future-door{display:inline-flex;align-items:center;min-height:44px;padding:0 2px;color:var(--c-ink);font-size:12px;letter-spacing:.22em;text-decoration:none;border-bottom:1px solid var(--c-line);transition:border-color .3s}
+.future-door:hover{color:var(--c-ink);border-color:var(--c-ink)}
+.future-links{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 28px}
+.future-link{display:inline-flex;align-items:center;min-height:36px;color:var(--c-dim);font-size:10.5px;text-decoration:none;transition:color .3s}
+.future-link:hover{color:var(--c-ink)}
+.future-foot{display:flex;flex-wrap:wrap;gap:8px 28px;justify-content:space-between;padding-top:8vh;font-size:10px;color:var(--c-dim)}
+.future-foot-name{color:var(--c-muted)}
+/* Film: each statement is tweened as one element, so its words are not hidden one by one. */
+.cine-js .future-say .ct-i{opacity:1}
+.cine-js .future-say,.cine-js .future-tag,.cine-js .future-ctas,.cine-js .future-foot{opacity:0}
 .cine-js .future-foot{position:absolute;left:clamp(16px,3.4vw,48px);right:clamp(16px,3.4vw,48px);bottom:22px;padding:0}
 
 /* ---------- Small screens: own composition, shorter chapters ---------- */
-@media (max-width:900px){
-  .principles{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
 @media (max-width:720px){
   :root{--len-scale:.75}
   .topbar{padding:16px}
@@ -256,17 +326,22 @@ html:not(.cine-js) #bridge .scene-layer{display:flex;flex-direction:column}
   .cine-js .conv-words-in{gap:6px 16px;font-size:10.5px;letter-spacing:.2em}
   .cine-js .conv-words{transform:translate(-50%,calc(-50% + var(--lift) * var(--rail-lift,0px))) scale(calc(1 + var(--lift) * .1))}
   .conv-name{font-size:13px}
-  .principles{grid-template-columns:1fr}
-  .cine-js .principles{left:20px;right:20px;bottom:64px;display:flex;flex-wrap:wrap;gap:8px 16px}
-  .cine-js .principles span{display:none}
-  .cine-js .principles b{margin:0}
-  .call{grid-template-columns:1fr 1fr;gap:20px 16px}
-  .call-core{grid-column:1/-1;grid-row:1;flex-direction:row;flex-wrap:wrap;justify-content:center;gap:8px 14px}
-  .call-stages{grid-auto-flow:column;gap:12px;font-size:9.5px}
-  .call-note{max-width:none}
-  .person-line{font-size:16px;min-height:5.2em}
-  .cine-js .reality-body{padding-top:10vh}
-  .cine-js .future-foot{bottom:52px;justify-content:center;font-size:9.5px}
+  /* Portrait: captions and capabilities share one band just above the chapter counter. */
+  .cine-js .engine-captions{bottom:56px}
+  .cine-js .engine-caption{white-space:normal;text-wrap:balance}
+  .cine-js .engine-cap:nth-child(n){left:50%;right:auto;top:auto;bottom:60px;transform:translateX(-50%)}
+  .cine-js .world-ends{left:6vw;right:6vw}
+  .cine-js .rl-person{align-items:flex-start}
+  .cine-js .rl-person[data-who="daniel"]{align-items:flex-end}
+  .cine-js .rl-line,.cine-js .rl-live{font-size:15px}
+  .rl-word[data-i="0"]{--dx:0px;--dy:-90px}
+  .rl-word[data-i="1"]{--dx:-80px;--dy:-40px}
+  .rl-word[data-i="2"]{--dx:90px;--dy:44px}
+  .rl-word[data-i="3"]{--dx:-70px;--dy:84px}
+  .rl-word[data-i="4"]{--dx:80px;--dy:-60px}
+  .cine-js .rl-brand{padding-bottom:64px}
+  .cine-js .future-foot{bottom:52px;flex-direction:column;align-items:center;gap:3px;text-align:center;font-size:9.5px}
+  .cine-js .future-ctas{margin-top:clamp(24px,5vh,40px)}
   /* The vertical runtime fills the screen on phones; the metadata would cross it. */
   .cine-js .bridge-micro li{display:none}
   /* Keep the two labels on the side away from the statement. */
@@ -275,5 +350,5 @@ html:not(.cine-js) #bridge .scene-layer{display:flex;flex-direction:column}
 /* Reduced motion: still frames, no grain or looping decoration. */
 @media (prefers-reduced-motion:reduce){
   .grain,.cue-line,.topbar-eq i{animation:none!important}
-  .chapters-label,.person,.call-tag,.call-stages li{transition:none}
+  .chapters-label{transition:none}
 }

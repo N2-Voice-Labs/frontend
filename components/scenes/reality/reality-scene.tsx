@@ -1,60 +1,74 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { CinematicText } from "@/components/cinematic/cinematic-text";
 import { Scene, type SceneTimeline } from "@/components/cinematic/scene";
 import { useDemoSession, useDemoSnapshot } from "@/components/landing/demo-session";
-import { director, isCinematic, subscribeDirector } from "@/lib/cinematic/director";
-import { fadeIn, revealWords } from "@/lib/cinematic/gsap";
-import { syllables } from "@/lib/cinematic/visual";
+import { director } from "@/lib/cinematic/director";
 import { HISTORY, speakNote } from "@/lib/demo/config";
-import { BEATS, BEAT_SECONDS, PEOPLE, SPEAK_END, phaseAt, type Beat, type Phase } from "./reality-script";
+import { BEATS, WORDS } from "./beats";
+import { PEOPLE, SCRIPT, type Speaker, type Utterance } from "./conversation-events";
+import { RealitySystem, realitySystemTimeline } from "./system/reality-system";
+import { realityLayout } from "./system/layout";
 
 const INDEX = 6;
+type Span = readonly [number, number];
+const span = ([a, b]: Span) => b - a;
+
+/** Word-by-word realization: opacity with a tiny settle of y, scale and blur. No bounce. */
+const realize = (tl: Parameters<SceneTimeline>[0], words: Element[], at: number, dur: number, stagger: number) =>
+  tl.fromTo(
+    words,
+    { opacity: 0, y: "0.15em", scale: 0.985, filter: "blur(6px)" },
+    { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: dur, ease: "power2.out", stagger },
+    at,
+  );
+const fade = (tl: Parameters<SceneTimeline>[0], el: Element[], at: number, dur: number, to = 0) =>
+  tl.to(el, { opacity: to, filter: to ? "blur(0px)" : "blur(4px)", duration: dur, ease: "power1.in" }, at);
 
 const timeline: SceneTimeline = (tl, q) => {
-  revealWords(tl, q(".reality-title .ct-i"), 0.02, 0.1);
-  fadeIn(tl, q(".call-wrap"), 0.12, 0.06, { y: 24 });
-  fadeIn(tl, q(".reality-actions"), 0.18, 0.05);
+  // The people and the signal between them are the main actor; the type follows.
+  realitySystemTimeline(tl, q);
+
+  // TWO LANGUAGES. / One conversation. — over almost nothing.
+  const [t0, t1] = BEATS.title;
+  const t = span(BEATS.title);
+  q(".rl-title .ct-line").forEach((line, i) => realize(tl, [...line.querySelectorAll(".ct-i")], t0 + i * t * 0.3, t * 0.3, t * 0.05));
+  fade(tl, q(".rl-open"), t1 - t * 0.12, t * 0.14);
+
+  // Who they are, as the portraits draw in; gone in the silence after the goodbye.
+  const [p0, p1] = BEATS.portraits;
+  tl.fromTo(q(".rl-person"), { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: p1 - p0, stagger: 0.012, ease: "power2.out" }, p0 + 0.02);
+  tl.fromTo(q(".rl-lines"), { opacity: 0 }, { opacity: 1, duration: 0.01 }, BEATS.talk[0]);
+  fade(tl, q(".rl-lines"), BEATS.silence[0] + 0.01, 0.02);
+  fade(tl, q(".rl-person"), BEATS.silence[0] + 0.015, 0.025);
+
+  // CONVERSATION IS MORE THAN TRANSLATION.
+  const [h0, h1] = BEATS.thesis;
+  const h = span(BEATS.thesis);
+  q(".rl-thesis .ct-line").forEach((line, i) => realize(tl, [...line.querySelectorAll(".ct-i")], h0 + i * h * 0.3, h * 0.3, h * 0.04));
+  fade(tl, q(".rl-head"), h1 - h * 0.05, h * 0.2);
+
+  // TIMING. CONTEXT. INTERRUPTION. INTENT. VOICE. — one at a time, around the signal.
+  const [w0, w1] = BEATS.words;
+  const ws = (w1 - w0) / WORDS.length;
+  q(".rl-word").forEach((el, i) => {
+    tl.fromTo(el, { opacity: 0, filter: "blur(4px)" }, { opacity: 1, filter: "blur(0px)", duration: ws * 0.4, ease: "power2.out" }, w0 + i * ws);
+    tl.to(el, { opacity: 0, filter: "blur(4px)", duration: ws * 0.4, ease: "power1.in" }, w0 + i * ws + ws * 0.9);
+  });
+  const [n0, n1] = BEATS.natural;
+  realize(tl, q(".rl-natural .ct-i"), n0, (n1 - n0) * 0.4, (n1 - n0) * 0.08);
+  fade(tl, q(".rl-natural"), n1 - 0.005, 0.015);
+
+  // VOICE LABS — the voices connect; the real thing is one click away.
+  const [b0, b1] = BEATS.brand;
+  const b = span(BEATS.brand);
+  realize(tl, q(".rl-brand-name .ct-i"), b0 + b * 0.15, b * 0.25, b * 0.05);
+  tl.fromTo(q(".rl-brand .lede, .rl-actions"), { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: b * 0.25, stagger: b * 0.15, ease: "power2.out" }, b0 + b * 0.4);
+  fade(tl, q(".rl-brand"), b1 + 0.02, 0.03);
 };
 
-type Sim = { beat: number; phase: Phase; chars: number };
-
-/** Plays the scripted call while chapter 07 is on screen, and feeds its voices to the canvas horizon. */
-function useSimulation(enabled: boolean): Sim | null {
-  const [sim, setSim] = useState<Sim>({ beat: 0, phase: "speaking", chars: 0 });
-  useEffect(() => {
-    if (!enabled) return;
-    let raf = 0, start = 0, playing = false;
-    const step = (now: number) => {
-      raf = requestAnimationFrame(step);
-      // rAF timestamps can be a little older than performance.now() at start.
-      const t = Math.max(0, now - start) / 1000;
-      const beat = Math.floor(t / BEAT_SECONDS) % BEATS.length;
-      const f = (t % BEAT_SECONDS) / BEAT_SECONDS;
-      const b = BEATS[beat];
-      const phase = phaseAt(f);
-      const chars = Math.min(b.said.length, Math.ceil((f / SPEAK_END) * b.said.length));
-      // Left half of the horizon is the guest, right half the desk; whoever hears the voice lights up.
-      const speakerLevel = phase === "speaking" ? syllables(t, 1) : 0;
-      const voiceLevel = phase === "voice" ? syllables(t, 3) * 0.8 : 0;
-      director.level.you = b.who === "ko" ? speakerLevel : voiceLevel;
-      director.level.agent = b.who === "en" ? speakerLevel : voiceLevel;
-      setSim((prev) => (prev.beat === beat && prev.phase === phase && prev.chars === chars ? prev : { beat, phase, chars }));
-    };
-    const unsubscribe = subscribeDirector((_, chapter) => {
-      const on = chapter === INDEX;
-      if (on === playing) return;
-      playing = on;
-      if (on) { start = performance.now(); raf = requestAnimationFrame(step); }
-      else { cancelAnimationFrame(raf); director.level.you = director.level.agent = 0; }
-    });
-    return () => { unsubscribe(); cancelAnimationFrame(raf); };
-  }, [enabled]);
-  return enabled ? sim : null;
-}
-
-/** While a live session runs, the canvas follows the real microphone and agent levels. */
+/** While a live session runs, the stage follows the real microphone and agent levels. */
 function useLiveLevels(live: boolean) {
   const session = useDemoSession();
   useEffect(() => {
@@ -70,106 +84,105 @@ function useLiveLevels(live: boolean) {
   }, [live, session]);
 }
 
-const STAGES: { phase: Phase; label: string }[] = [
-  { phase: "speaking", label: "Listening" },
-  { phase: "turn", label: "End of turn" },
-  { phase: "voice", label: "Speaking" },
-];
+const who = (u: Utterance) => (u.source === "voice" ? `Voice Labs → ${PEOPLE[u.side].name}` : PEOPLE[u.side].name);
 
-function Person({ side, beat, sim }: { side: "ko" | "en"; beat: Beat; sim: Sim }) {
-  const p = PEOPLE[side];
-  const speaking = beat.who === side && sim.phase === "speaking";
-  const hearing = beat.who !== side && sim.phase === "voice";
-  const switched = beat.tag === "CODE-SWITCH" && beat.who === side && speaking;
+/** One line of the call, near its speaker's voice: what they said, or what they heard. */
+function Line({ u }: { u: Utterance }) {
   return (
-    <div className="person" data-side={side} data-active={speaking || hearing}>
-      <p className="person-name">{p.name}<span>{p.place}</span></p>
-      <p className="person-lang mono">{switched ? `${p.lang} + EN` : p.lang} · {speaking ? "speaking" : hearing ? "hearing Voice Labs" : "listening"}</p>
-      <p className="person-line" lang={beat.who === side ? beat.saidLang : beat.heardLang}>
-        {beat.who === side ? beat.said.slice(0, sim.chars) : sim.phase === "voice" ? beat.heard : " "}
-      </p>
-    </div>
+    <p className="rl-line" data-id={u.id} data-side={u.side} data-source={u.source} lang={u.lang}>
+      {u.parts
+        ? u.parts.map((p, k) => <span key={k} className="rl-part" lang={p.lang}>{p.text}</span>)
+        : u.text}
+    </p>
   );
 }
 
-/** The scripted call, playing. */
-function SimulatedCall({ sim }: { sim: Sim }) {
-  const beat = BEATS[sim.beat];
-  return (
-    <div className="call" data-mode="sim">
-      <Person side="ko" beat={beat} sim={sim} />
-      <div className="call-core">
-        <p className="mono">Voice Labs</p>
-        <ol className="call-stages">
-          {STAGES.map((s) => <li key={s.phase} data-on={s.phase === sim.phase}>{s.label}</li>)}
-        </ol>
-        <p className="call-tag mono" data-on={Boolean(beat.tag) && sim.phase !== "speaking"}>{beat.tag ?? " "}</p>
-        <p className="call-note mono">Simulated call · timing illustrative</p>
-      </div>
-      <Person side="en" beat={beat} sim={sim} />
-    </div>
-  );
-}
-
-/** The scripted call as a transcript, for reduced motion and the plain-document layout. */
+/** The call as a transcript: the plain-document and reduced-motion version. */
 function Transcript() {
   return (
-    <ol className="call transcript" data-mode="static">
-      {BEATS.map((b, i) => (
-        <li key={i}>
-          <p className="mono">{PEOPLE[b.who].name} · {PEOPLE[b.who].lang}{b.tag ? ` · ${b.tag.toLowerCase()}` : ""}</p>
-          <p lang={b.saidLang}>{b.said}</p>
-          <p className="transcript-heard" lang={b.heardLang}>→ {b.heard}</p>
+    <ol className="transcript rl-transcript" aria-label="The conversation">
+      {SCRIPT.map((u) => (
+        <li key={u.id} data-source={u.source}>
+          <p className="mono">{who(u)} · {u.lang.toUpperCase()}{u.parts ? " · code-switch" : ""}{u.cut ? " · interrupted" : ""}{u.context ? " · context" : ""}</p>
+          <p lang={u.lang}>{u.text}</p>
         </li>
       ))}
     </ol>
   );
 }
 
-/** A real session with the demo agent (or mic preview), through the page's DemoSession. */
-function LiveCall() {
-  const { state, captions, stats, message } = useDemoSnapshot();
-  return (
-    <div className="call" data-mode="live" aria-live="polite">
-      <div className="person" data-side="ko" data-active={state === "listening" || state === "preview"}>
-        <p className="person-name">You<span>your microphone</span></p>
-        <p className="person-line">{captions.you || " "}</p>
-      </div>
-      <div className="call-core">
-        <p className="mono">{state === "connecting" ? "Connecting…" : stats.label}</p>
-        <p className="call-value">{state === "connecting" ? "—" : stats.value}</p>
-        <p className="call-note mono">{message || stats.note}</p>
-      </div>
-      <div className="person" data-side="en" data-active={state === "speaking"}>
-        <p className="person-name">Voice Labs<span>demo agent</span></p>
-        <p className="person-line">{captions.agent || " "}</p>
-      </div>
-    </div>
-  );
-}
+const PERSON: Record<Speaker, { label: string; lang: string }> = {
+  minji: { label: "MINJI", lang: "KO" },
+  daniel: { label: "DANIEL", lang: "EN" },
+};
 
-/** 07 — enough talking: a call playing, and the real thing one click away. */
+/** 07 — the proof: two languages, one conversation. */
 export function RealityScene() {
   const session = useDemoSession();
-  const { state, message } = useDemoSnapshot();
-  const [film, setFilm] = useState(false);
-  useEffect(() => setFilm(isCinematic()), []);
+  const { state, message, captions } = useDemoSnapshot();
   const live = state !== "idle";
-  const sim = useSimulation(film && !live);
   useLiveLevels(live);
+  const [vars, setVars] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const place = () => setVars(realityLayout(window.innerWidth, window.innerHeight).vars);
+    place();
+    window.addEventListener("resize", place);
+    return () => window.removeEventListener("resize", place);
+  }, []);
 
   return (
-    <Scene index={INDEX} timeline={timeline}>
-      <div className="frame frame-top reality-head">
-        <CinematicText as="h2" className="title-md reality-title" lines={["Enough talking.", { em: "Listen." }]} />
-      </div>
-      <div className="frame reality-body">
-        <div className="call-wrap">{live ? <LiveCall /> : sim ? <SimulatedCall sim={sim} /> : <Transcript />}</div>
-        <div className="reality-actions">
-          <button type="button" className="cta cta-primary" onClick={session.toggle} aria-pressed={live}>
-            {state === "connecting" ? "Connecting…" : live ? "End conversation" : "Speak to it"}
-          </button>
-          <p className="reality-note">{!live && message ? message : speakNote(session.hasAgent)}</p>
+    <Scene index={INDEX} timeline={timeline} fadeIn={0.001} fadeOutAt={0.97}>
+      <div className="rl" style={vars as CSSProperties} data-live={live || undefined}>
+        <RealitySystem live={live} />
+
+        <div className="frame frame-center rl-open">
+          <CinematicText as="h2" className="rl-title" lines={["Two languages.", { em: "One conversation." }]} />
+        </div>
+
+        <div className="rl-people">
+          {(["minji", "daniel"] as const).map((s) => (
+            <div key={s} className="rl-person" data-who={s}>
+              <span className="rl-name mono">
+                {live ? (s === "minji" ? "YOU" : "VOICE LABS") : `${PERSON[s].label} · `}
+                {!live && <span className={`rl-lang rl-lang-${s}`}>{PERSON[s].lang}</span>}
+              </span>
+              <span className="rl-place mono">{live ? (s === "minji" ? "your microphone" : "demo agent") : PEOPLE[s].place}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Film only (hidden in the plain document, where the transcript reads instead). */}
+        <div className="rl-lines" aria-hidden="true">
+          {SCRIPT.map((u) => <Line key={u.id} u={u} />)}
+          {live && (
+            <>
+              <p className="rl-live" data-side="minji">{captions.you}</p>
+              <p className="rl-live" data-side="daniel">{captions.agent}</p>
+            </>
+          )}
+        </div>
+        <Transcript />
+
+        <div className="frame frame-center rl-head">
+          <CinematicText as="h2" className="rl-thesis" lines={["Conversation is more", { em: "than translation." }]} />
+        </div>
+        <ul className="rl-words" aria-label="What a conversation is made of">
+          {WORDS.map((w, i) => <li key={w} className="rl-word mono" data-i={i}>{w}</li>)}
+        </ul>
+        <div className="frame frame-center rl-end">
+          <CinematicText className="rl-natural" lines={[{ em: "Natural conversation." }]} />
+        </div>
+
+        <div className="frame frame-bottom rl-brand">
+          <CinematicText as="h2" className="rl-brand-name" lines={["Voice Labs"]} />
+          <p className="lede">Real-time voice infrastructure for a multilingual world.</p>
+          <div className="reality-actions rl-actions">
+            <button type="button" className="cta cta-primary" onClick={session.toggle} aria-pressed={live}>
+              {state === "connecting" ? "Connecting…" : live ? "End conversation" : "Speak to it"}
+            </button>
+            <p className="reality-note">{!live && message ? message : speakNote(session.hasAgent)}</p>
+          </div>
         </div>
       </div>
     </Scene>

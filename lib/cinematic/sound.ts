@@ -2,9 +2,14 @@ import { BEATS as BRIDGE, STAGES } from "@/components/scenes/bridge/beats";
 import { BEATS as CONVERSATION } from "@/components/scenes/conversation/beats";
 import { EVENTS, UTTERANCES, type Speaker } from "@/components/scenes/conversation/conversation-data";
 import { BEATS as DISTANCE } from "@/components/scenes/distance/beats";
+import { BEATS as ENGINE } from "@/components/scenes/engine/beats";
+import { BEATS as FUTURE } from "@/components/scenes/future/beats";
 import { BEATS } from "@/components/scenes/silence/beats";
+import { BEATS as WORLD, WORLDS } from "@/components/scenes/world/beats";
 import { subscribeDirector } from "./director";
-import { CONVERSATION_VOICES, DISTANCE_VOICES, SILENCE_VOICES, VoicePlayer, type VoiceCue } from "./voice-cues";
+import { BEATS as REALITY, progressAt } from "@/components/scenes/reality/beats";
+import { SCRIPT } from "@/components/scenes/reality/conversation-events";
+import { CONVERSATION_VOICES, DISTANCE_VOICES, REALITY_VOICES, SILENCE_VOICES, VoicePlayer, type VoiceCue } from "./voice-cues";
 
 /** A tonal signal: sines (relative gains) under one envelope, optionally through a rising lowpass. */
 type Signal = {
@@ -16,6 +21,28 @@ type Signal = {
   /** Lowpass cutoff sweep [from, to] over the attack, Hz. */
   sweep?: readonly [number, number];
 };
+
+/**
+ * A filtered-noise gesture: white noise through a bandpass sweeping `band` over `sweep` s, rising to `peak`
+ * over `attack`, held until `hold`, gone by `end` (all seconds from the start). One source per pan path
+ * ([from, to] over `sweep`), sharing the peak, so a pair of mirrored paths widens the sound.
+ */
+type Noise = {
+  band: readonly [number, number];
+  q: number;
+  sweep: number;
+  peak: number;
+  attack: number;
+  hold: number;
+  end: number;
+  pans: readonly (readonly [number, number])[];
+};
+
+/** Chapter 03's signal crossing the screen: bandpass rising 600 → 2400 Hz, panned left → right over 1.6 s. */
+const PASSBY: Noise = { band: [600, 2400], q: 2.5, sweep: 1.6, peak: 0.011, attack: 0.6, hold: 0.9, end: 1.8, pans: [[-0.8, 0.8]] };
+
+/** Chapter 04's thinking: ~0.5 s through a narrow, slowly rising bandpass (a warm, gold shimmer). */
+const SHIMMER: Noise = { band: [2200, 3300], q: 6, sweep: 0.5, peak: 0.005, attack: 0.15, hold: 0.25, end: 0.5, pans: [[0, 0]] };
 
 /** A short blip's voice: frequency (Hz), peak gain, length (s). */
 type Blip = { freq: number; peak: number; dur: number };
@@ -34,6 +61,8 @@ type Cue = { id: string; chapter: number; at: number; until: number } & (
   | { kind: "cut" }
   /** Chapter 04's "thinking": a short soft gold shimmer of filtered noise. */
   | { kind: "shimmer"; pan: number }
+  /** Any other filtered-noise gesture (chapter 05). */
+  | { kind: "noise"; noise: Noise }
 );
 
 /** Chapter 02 progress → film position. */
@@ -120,6 +149,231 @@ const CONVERSATION_DUCK = 0.6;
 const FIRST_LINK = DISTANCE.firstLink[0] + 0.6 * (DISTANCE.firstLink[1] - DISTANCE.firstLink[0]);
 const LINKS_LEN = DISTANCE.links[1] - DISTANCE.links[0];
 
+/** Chapter 05 progress → film position. */
+const e = (p: number) => 4 + p;
+
+/** Chapter 05's VAD: three soft ticks at speech/silence boundaries, then a slightly lower one as the turn ends. */
+const VAD_CUES: Cue[] = (() => {
+  const [a, z] = ENGINE.vad;
+  const len = z - a;
+  const marks = [0.12, 0.34, 0.56, 0.8].map((f) => a + f * len);
+  return marks.map((at, i) => ({
+    id: i < 3 ? `vad-${i}` : "vad-turn",
+    chapter: 4,
+    at: e(at),
+    until: e(marks[i + 1] ?? z),
+    kind: "pulse" as const,
+    pan: 0,
+    blip: i < 3 ? { freq: 1318.51, peak: 0.005, dur: 0.045 } : { freq: 987.77, peak: 0.006, dur: 0.07 },
+  }));
+})();
+
+/** Chapter 05's tool call: a blip out (right), then its return (left) 0.02 later. */
+const ACT_OUT = ENGINE.act[0] + 0.01;
+const ACT_BACK = ACT_OUT + 0.02;
+
+/** STT's glassy shimmer: a narrow, high bandpass rising. TTS plays it in reverse. */
+const GLASS: Noise = { band: [2600, 4400], q: 9, sweep: 0.9, peak: 0.005, attack: 0.3, hold: 0.5, end: 1.1, pans: [[0, 0]] };
+
+const ENGINE_CUES: readonly Cue[] = [
+  // Inside the signal: filtered noise opening 400 → 1600 Hz over 2 s.
+  {
+    id: "dive",
+    chapter: 4,
+    at: e(ENGINE.dive[0]),
+    until: e(ENGINE.dive[1]),
+    kind: "noise",
+    noise: { band: [400, 1600], q: 1.8, sweep: 2, peak: 0.01, attack: 1, hold: 1.6, end: 3, pans: [[0, 0]] },
+  },
+  ...VAD_CUES,
+  { id: "stt", chapter: 4, at: e(ENGINE.stt[0]), until: e(ENGINE.stt[1]), kind: "noise", noise: GLASS },
+  // Reasoning: a low warm dyad (D2 + A2), like chapter 03's title tone, quieter.
+  {
+    id: "reason",
+    chapter: 4,
+    at: e(ENGINE.reason[0]),
+    until: e(ENGINE.reason[1]),
+    kind: "signal",
+    signal: { freqs: [[73.42, 0.6], [110, 0.4]], peak: 0.01, attack: 1.2, hold: 0.8, release: 4.5, sweep: [200, 700] },
+  },
+  { id: "act-out", chapter: 4, at: e(ACT_OUT), until: e(ACT_BACK), kind: "pulse", pan: 0.6, blip: { freq: 1174.66, peak: 0.006, dur: 0.06 } },
+  { id: "act-back", chapter: 4, at: e(ACT_BACK), until: e(ENGINE.act[1]), kind: "pulse", pan: -0.6, blip: { freq: 880, peak: 0.006, dur: 0.06 } },
+  { id: "tts", chapter: 4, at: e(ENGINE.tts[0]), until: e(ENGINE.tts[1]), kind: "noise", noise: { ...GLASS, band: [GLASS.band[1], GLASS.band[0]] } },
+  // The system revealed: a slow, soft D major chord opening through a lowpass.
+  {
+    id: "runtime",
+    chapter: 4,
+    at: e(ENGINE.runtime[0]),
+    until: e(ENGINE.runtime[1]),
+    kind: "signal",
+    signal: { freqs: [[146.83, 0.35], [220, 0.3], [293.66, 0.2], [369.99, 0.15]], peak: 0.012, attack: 2, hold: 1.2, release: 5, sweep: [300, 1400] },
+  },
+  // ONE RUNTIME. MANY CONVERSATIONS.: a soft shimmer splitting from the centre to both sides.
+  {
+    id: "many",
+    chapter: 4,
+    at: e(ENGINE.many[0]),
+    until: e(ENGINE.many[1]),
+    kind: "noise",
+    noise: { band: [1400, 3200], q: 4, sweep: 2.2, peak: 0.008, attack: 0.7, hold: 1.3, end: 2.8, pans: [[0, -0.85], [0, 0.85]] },
+  },
+];
+
+/** Chapter 06 progress → film position. */
+const wp = (p: number) => 5 + p;
+
+/** Chapter 06's worlds: one soft blip each as it appears, pitched on a pentatonic, panned where it sits (desktop layout). */
+const WORLD_PANS = [-0.42, -0.52, 0.54, -0.28, 0.44, 0.32, 0] as const;
+const WORLD_NOTES = [659.25, 587.33, 783.99, 523.25, 880, 440, 987.77] as const;
+const WORLD_STEP = (WORLD.worlds[1] - WORLD.worlds[0]) / WORLDS.length;
+
+const WORLD_CUES: readonly Cue[] = [
+  // One signal becomes many: a shimmer widening from the centre to both sides, lower than chapter 05's.
+  {
+    id: "world-many",
+    chapter: 5,
+    at: wp(WORLD.many[0] + 0.02),
+    until: wp(WORLD.many[1]),
+    kind: "noise",
+    noise: { band: [900, 2400], q: 3, sweep: 2.4, peak: 0.007, attack: 0.8, hold: 1.4, end: 3, pans: [[0, -0.9], [0, 0.9]] },
+  },
+  // The runtime at the centre: chapter 05's chord, quieter and further away.
+  {
+    id: "world-runtime",
+    chapter: 5,
+    at: wp(WORLD.runtime[0]),
+    until: wp(WORLD.runtime[1]),
+    kind: "signal",
+    signal: { freqs: [[146.83, 0.4], [220, 0.35], [293.66, 0.25]], peak: 0.007, attack: 1.6, hold: 0.8, release: 4, sweep: [250, 900] },
+  },
+  ...WORLDS.map((wd, i): Cue => ({
+    id: `world-${wd.id}`,
+    chapter: 5,
+    at: wp(WORLD.worlds[0] + i * WORLD_STEP + WORLD_STEP * 0.4),
+    until: wp(WORLD.worlds[0] + (i + 1) * WORLD_STEP + WORLD_STEP * 0.4),
+    kind: "pulse",
+    pan: WORLD_PANS[i],
+    blip: { freq: WORLD_NOTES[i], peak: 0.005, dur: 0.09 },
+  })),
+  // Languages: a glassy shimmer, as in chapter 05's STT.
+  { id: "world-languages", chapter: 5, at: wp(WORLD.languages[0] + 0.01), until: wp(WORLD.languages[1]), kind: "noise", noise: GLASS },
+  // ONE VOICE INFRASTRUCTURE.: the low warm dyad (D2 + A2).
+  {
+    id: "world-statement",
+    chapter: 5,
+    at: wp(WORLD.statement[0]),
+    until: wp(WORLD.statement[1]),
+    kind: "signal",
+    signal: { freqs: [[73.42, 0.6], [110, 0.4]], peak: 0.011, attack: 1.4, hold: 1, release: 5, sweep: [200, 800] },
+  },
+  // The world scale: a wide, low wash opening to both sides.
+  {
+    id: "world-global",
+    chapter: 5,
+    at: wp(WORLD.global[0] + 0.01),
+    until: wp(WORLD.global[1]),
+    kind: "noise",
+    noise: { band: [300, 1200], q: 1.4, sweep: 3, peak: 0.009, attack: 1.4, hold: 2, end: 4, pans: [[-0.2, -0.9], [0.2, 0.9]] },
+  },
+  // One conversation brightens: a soft fifth (A4 + E5) opening through a lowpass as the camera goes in.
+  {
+    id: "world-select",
+    chapter: 5,
+    at: wp(WORLD.select[0] + 0.01),
+    until: wp(WORLD.select[1]),
+    kind: "signal",
+    signal: { freqs: [[440, 0.55], [659.25, 0.45]], peak: 0.008, attack: 1.8, hold: 0.6, release: 3.5, sweep: [400, 2200] },
+  },
+  // The two ends of the conversation: Seoul (left), then Toronto (right). Nobody speaks yet.
+  { id: "world-ko", chapter: 5, at: wp(WORLD.setup[0] + 0.03), until: wp(WORLD.setup[0] + 0.04), kind: "pulse", pan: -0.7, blip: { freq: 1046.5, peak: 0.005, dur: 0.07 } },
+  { id: "world-en", chapter: 5, at: wp(WORLD.setup[0] + 0.04), until: wp(WORLD.setup[1]), kind: "pulse", pan: 0.7, blip: { freq: 1046.5, peak: 0.005, dur: 0.07 } },
+];
+
+/** Chapter 07 progress → film position. */
+const rp = (p: number) => 6 + p;
+
+/**
+ * Chapter 07: the call itself is the soundtrack. Each utterance plays as the scroll reaches it (on the
+ * call's own player); a barge-in silences whatever is being spoken over. Then a low swell under the thesis,
+ * the runtime chord when the voices connect, and a widening shimmer as they become the network.
+ */
+const REALITY_CUES: readonly Cue[] = [
+  ...SCRIPT.flatMap((u, i): Cue[] => {
+    const voice = REALITY_VOICES.find((v) => v.id === u.id)!;
+    const next = SCRIPT[i + 1];
+    const cues: Cue[] = [{ id: `reality-${u.id}`, chapter: 6, at: rp(progressAt(u.start)), until: rp(progressAt(next ? next.start : u.end + 1)), kind: "speech", voice }];
+    if (u.cut && u.source === "human") cues.push({ id: `reality-cut-${u.id}`, chapter: 6, at: rp(progressAt(u.end)), until: rp(progressAt(u.end + 1)), kind: "cut" });
+    return cues;
+  }),
+  {
+    id: "reality-thesis",
+    chapter: 6,
+    at: rp(REALITY.thesis[0]),
+    until: rp(REALITY.thesis[1]),
+    kind: "signal",
+    signal: { freqs: [[73.42, 0.6], [110, 0.4]], peak: 0.011, attack: 1.4, hold: 1, release: 5, sweep: [200, 800] },
+  },
+  {
+    id: "reality-brand",
+    chapter: 6,
+    at: rp(REALITY.brand[0]),
+    until: rp(REALITY.brand[1]),
+    kind: "signal",
+    signal: { freqs: [[146.83, 0.35], [220, 0.3], [293.66, 0.2], [369.99, 0.15]], peak: 0.012, attack: 2, hold: 1.2, release: 5, sweep: [300, 1400] },
+  },
+  {
+    id: "reality-exit",
+    chapter: 6,
+    at: rp(REALITY.exit[0] + 0.02),
+    until: rp(REALITY.exit[1]),
+    kind: "noise",
+    noise: { band: [1400, 3200], q: 4, sweep: 2.2, peak: 0.008, attack: 0.7, hold: 1.3, end: 2.8, pans: [[0, -0.85], [0, 0.85]] },
+  },
+];
+
+/** Chapter 08 progress → film position. */
+const fp = (p: number) => 7 + p;
+
+/**
+ * Chapter 08: the ending gets quieter. A few tiny far-away blips as the point joins others (voices
+ * connecting, panned apart), one slow low swell as the globe forms, a faint pulse → response while it
+ * breathes, and one last, barely audible breath as the single waveform appears. Nothing after that:
+ * no cue at the line, the brand or the doorway. The silence is the sound.
+ */
+const FUTURE_JOIN = [
+  { at: 0.4, pan: -0.55, freq: 783.99 },
+  { at: 0.62, pan: 0.5, freq: 659.25 },
+  { at: 0.84, pan: -0.15, freq: 587.33 },
+] as const;
+const FUTURE_JOIN_LEN = FUTURE.many[1] - FUTURE.many[0];
+const FUTURE_BREATHE = FUTURE.breathe[0] + 0.3 * (FUTURE.breathe[1] - FUTURE.breathe[0]);
+
+const FUTURE_CUES: readonly Cue[] = [
+  ...FUTURE_JOIN.map(({ at, pan, freq }, i, all): Cue => ({
+    id: `future-join-${i}`,
+    chapter: 7,
+    at: fp(FUTURE.many[0] + at * FUTURE_JOIN_LEN),
+    until: fp(FUTURE.many[0] + (all[i + 1]?.at ?? 1) * FUTURE_JOIN_LEN),
+    kind: "pulse",
+    pan,
+    blip: { freq, peak: 0.0025, dur: 0.12 },
+  })),
+  // The network wraps into a globe: the low dyad (D2 + A2), very quiet, barely opening, long release.
+  {
+    id: "future-globe",
+    chapter: 7,
+    at: fp(FUTURE.form[1] - 0.02),
+    until: fp(FUTURE.globe[1]),
+    kind: "signal",
+    signal: { freqs: [[73.42, 0.6], [110, 0.4]], peak: 0.006, attack: 2.4, hold: 0.8, release: 6, sweep: [150, 450] },
+  },
+  // The globe breathes: one faint pulse (left), then its response (right), lower.
+  { id: "future-pulse", chapter: 7, at: fp(FUTURE_BREATHE), until: fp(FUTURE_BREATHE + 0.03), kind: "pulse", pan: -0.35, blip: { freq: 880, peak: 0.002, dur: 0.14 } },
+  { id: "future-response", chapter: 7, at: fp(FUTURE_BREATHE + 0.03), until: fp(FUTURE.breathe[1]), kind: "pulse", pan: 0.35, blip: { freq: 659.25, peak: 0.0018, dur: 0.16 } },
+  // The last breath: one tiny centred blip as the final waveform appears. Then nothing.
+  { id: "future-breath", chapter: 7, at: fp(FUTURE.focus[1]), until: fp(FUTURE.silence[1]), kind: "pulse", pan: 0, blip: { freq: 587.33, peak: 0.0015, dur: 0.18 } },
+];
+
 /** One-shot cues: each fires on a forward crossing of `at`, in its chapter, while still before `until`. */
 const CUES: readonly Cue[] = [
   { id: "koSignal", chapter: 0, at: BEATS.koSignal[0], until: BEATS.koSignal[1], kind: "pulse", pan: -0.7 },
@@ -198,6 +452,10 @@ const CUES: readonly Cue[] = [
     kind: "signal",
     signal: { freqs: [[73.42, 0.6], [110, 0.4]], peak: 0.011, attack: 1, hold: 0.8, release: 5, sweep: [200, 700] },
   },
+  ...ENGINE_CUES,
+  ...WORLD_CUES,
+  ...REALITY_CUES,
+  ...FUTURE_CUES,
 ];
 
 /** Chapter 01 progress ranges where the bed falls almost silent. */
@@ -224,6 +482,21 @@ function murmurLevel(p: number) {
   const fall = 1 - 0.85 * ramp(p, DISTANCE.slow[0], DISTANCE.slow[1]);
   const tail = 1 - ramp(p, DISTANCE.slow[1], DISTANCE.thesis[0]);
   return rise * fall * tail;
+}
+
+/**
+ * Chapter 08's bed (0–1 of BED_GAIN) over chapter progress: distant through point/many/form, a very subtle
+ * ambient tone through globe/breathe, almost nothing through far/world/hear, gone by the end of focus and
+ * silent from there to the end of the film.
+ */
+function futureLevel(p: number) {
+  return (
+    1 -
+    0.45 * ramp(p, FUTURE.many[0], FUTURE.form[1]) -
+    0.25 * ramp(p, FUTURE.form[1], FUTURE.breathe[1]) -
+    0.22 * ramp(p, FUTURE.breathe[1], FUTURE.hear[1]) -
+    0.08 * ramp(p, FUTURE.hear[1], FUTURE.focus[1])
+  );
 }
 
 const BED_GAIN = 0.05;
@@ -354,7 +627,7 @@ export class FilmSound {
     }
     try {
       this.conversation = new VoicePlayer(ctx, this.master);
-      this.conversation.preload(CONVERSATION_VOICES);
+      this.conversation.preload([...CONVERSATION_VOICES, ...REALITY_VOICES]);
     } catch {
       // Chapter 04's voices are optional.
     }
@@ -423,14 +696,17 @@ export class FilmSound {
     if (!ctx || !this.filter || !this.master) return;
     try {
       const now = ctx.currentTime;
-      // Opens from a muffled 180 Hz to ~900 Hz through the engine, then closes; the last beat is silence.
-      const open = Math.sin(Math.min(1, position / 6) * Math.PI) * 700 + 180;
+      const progress = position - chapter;
+      // Chapter 08: the bed recedes (quieter and darker) to nothing; see futureLevel.
+      const future = chapter === 7 ? futureLevel(progress) : 1;
+      // Opens from a muffled 180 Hz to ~900 Hz through the engine, then closes; chapter 08 darkens it to ~80 Hz.
+      const open = Math.sin(Math.min(1, position / 6) * Math.PI) * 700 + 180 - (chapter === 7 ? 100 * (1 - future) : 0);
       this.filter.frequency.setTargetAtTime(open, now, 0.3);
-      const ending = Math.max(0, Math.min(1, (position - 7.5) / 0.25));
+      // The last beats are silence: master closes over the held silence (after the last breath), before the line.
+      const ending = ramp(position, fp((FUTURE.silence[0] + FUTURE.silence[1]) / 2), fp(FUTURE.line[0]));
       this.master.gain.setTargetAtTime(1 - ending, now, 0.4);
       // Chapter 01's silences: the bed (drone + room tone) drops almost to nothing; voices are unaffected.
       // Chapter 02's hush: the thesis and the moment before the first link.
-      const progress = position - chapter;
       const silent =
         (chapter === 0 && SILENCES.some(([a, b]) => position >= a && position < b)) ||
         (chapter === 1 && DISTANCE_SILENCES.some(([a, b]) => progress >= a && progress < b));
@@ -439,13 +715,13 @@ export class FilmSound {
       // Chapter 04: the bed dips slightly in the silence after the barge-in.
       const hush = chapter === 3 && CONVERSATION_SILENCES.some(([a, b]) => progress >= a && progress < b);
       const duck = silent ? SILENCE_DUCK : clear ? CLARITY_DUCK : hush ? CONVERSATION_DUCK : 1;
-      this.bed?.gain.setTargetAtTime(BED_GAIN * duck, now, duck < 1 ? 0.35 : 0.6);
+      this.bed?.gain.setTargetAtTime(BED_GAIN * duck * future, now, duck < 1 ? 0.35 : 0.6);
       this.murmur?.gain.setTargetAtTime(chapter === 1 ? MURMUR_GAIN * murmurLevel(progress) : 0, now, 0.5);
       if (chapter !== this.chapter) {
         if (this.chapter !== -1) this.tone(chapter);
         if (this.chapter === 0) this.voices?.stop();
         if (this.chapter === 1) this.distant?.stop();
-        if (this.chapter === 3) this.conversation?.stop();
+        if (this.chapter === 3 || this.chapter === 6) this.conversation?.stop();
         this.chapter = chapter;
       }
       this.cues(position, chapter);
@@ -470,11 +746,12 @@ export class FilmSound {
       if (cue.kind === "voice") this.voices?.play(cue.voice);
       else if (cue.kind === "distant") this.distant?.play(cue.voice);
       else if (cue.kind === "pulse") this.pulse(cue.pan, cue.blip);
-      else if (cue.kind === "passby") this.passby();
+      else if (cue.kind === "passby") this.noise(PASSBY);
       else if (cue.kind === "signal") this.signal(cue.signal);
       else if (cue.kind === "speech") this.conversation?.play(cue.voice);
       else if (cue.kind === "cut") this.pulse(0, { freq: 520, peak: 0.005, dur: 0.018 });
-      else if (cue.kind === "shimmer") this.shimmer(cue.pan);
+      else if (cue.kind === "shimmer") this.noise({ ...SHIMMER, pans: [[cue.pan * 0.5, cue.pan * 0.5]] });
+      else if (cue.kind === "noise") this.noise(cue.noise);
       else this.swell();
     }
   }
@@ -508,72 +785,41 @@ export class FilmSound {
     }
   }
 
-  /** One signal crossing the screen: filtered noise, bandpass rising 600 → 2400 Hz, panned left → right over 1.6 s. */
-  private passby() {
+  /** A filtered-noise gesture (pass-by, shimmer, chapter 05's sweeps): see `Noise`. */
+  private noise({ band, q, sweep, peak, attack, hold, end, pans }: Noise) {
     const ctx = this.ctx;
-    if (!ctx || !this.master) return;
+    if (!ctx || !this.master || pans.length === 0) return;
     try {
       const t = ctx.currentTime;
-      const span = 1.6;
-      const src = ctx.createBufferSource();
-      src.buffer = this.whiteNoise(ctx);
-      src.loop = true;
-      const bp = ctx.createBiquadFilter();
-      bp.type = "bandpass";
-      bp.Q.value = 2.5;
-      bp.frequency.setValueAtTime(600, t);
-      bp.frequency.exponentialRampToValueAtTime(2400, t + span);
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.011, t + 0.6);
-      g.gain.setValueAtTime(0.011, t + 0.9);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + span + 0.2);
-      let tail: AudioNode = src.connect(bp).connect(g);
-      if (typeof ctx.createStereoPanner === "function") {
-        const panner = ctx.createStereoPanner();
-        panner.pan.setValueAtTime(-0.8, t);
-        panner.pan.linearRampToValueAtTime(0.8, t + span);
-        tail = tail.connect(panner);
-      }
-      tail.connect(this.master);
-      src.start(t, Math.random() * 2);
-      src.stop(t + span + 0.3);
+      const level = peak / pans.length;
+      pans.forEach(([from, to]) => {
+        const src = ctx.createBufferSource();
+        src.buffer = this.whiteNoise(ctx);
+        src.loop = true;
+        const bp = ctx.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.Q.value = q;
+        bp.frequency.setValueAtTime(band[0], t);
+        bp.frequency.exponentialRampToValueAtTime(band[1], t + sweep);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(level, t + attack);
+        g.gain.setValueAtTime(level, t + hold);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + end);
+        let tail: AudioNode = src.connect(bp).connect(g);
+        if (typeof ctx.createStereoPanner === "function") {
+          const panner = ctx.createStereoPanner();
+          panner.pan.setValueAtTime(from, t);
+          if (to !== from) panner.pan.linearRampToValueAtTime(to, t + sweep);
+          tail = tail.connect(panner);
+        }
+        tail.connect(this.master!);
+        // Random offsets into the shared buffer keep paired sources uncorrelated.
+        src.start(t, Math.random() * 2);
+        src.stop(t + end + 0.1);
+      });
     } catch {
-      // No pass-by.
-    }
-  }
-
-  /** Thinking: ~0.5 s of white noise through a narrow, slowly rising bandpass (a warm, gold shimmer), very quiet. */
-  private shimmer(pan: number) {
-    const ctx = this.ctx;
-    if (!ctx || !this.master) return;
-    try {
-      const t = ctx.currentTime;
-      const span = 0.5;
-      const src = ctx.createBufferSource();
-      src.buffer = this.whiteNoise(ctx);
-      src.loop = true;
-      const bp = ctx.createBiquadFilter();
-      bp.type = "bandpass";
-      bp.Q.value = 6;
-      bp.frequency.setValueAtTime(2200, t);
-      bp.frequency.exponentialRampToValueAtTime(3300, t + span);
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.005, t + 0.15);
-      g.gain.setValueAtTime(0.005, t + 0.25);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + span);
-      let tail: AudioNode = src.connect(bp).connect(g);
-      if (typeof ctx.createStereoPanner === "function") {
-        const panner = ctx.createStereoPanner();
-        panner.pan.value = pan * 0.5;
-        tail = tail.connect(panner);
-      }
-      tail.connect(this.master);
-      src.start(t, Math.random() * 2);
-      src.stop(t + span + 0.05);
-    } catch {
-      // No shimmer.
+      // No noise.
     }
   }
 
@@ -642,15 +888,16 @@ export class FilmSound {
     }
   }
 
-  /** A short soft tone, pitched by chapter. */
+  /** A short soft tone, pitched by chapter. Chapter 08's is a distant breath (lower, slower, much quieter) so the quiet holds. */
   private tone(chapter: number) {
     const ctx = this.ctx!;
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
     osc.type = "sine";
     osc.frequency.value = [440, 392, 523.25, 587.33, 659.25, 523.25, 698.46, 392][chapter] ?? 440;
+    const far = chapter === 7;
     g.gain.setValueAtTime(0, ctx.currentTime);
-    g.gain.linearRampToValueAtTime(0.025, ctx.currentTime + 0.02);
+    g.gain.linearRampToValueAtTime(far ? 0.008 : 0.025, ctx.currentTime + (far ? 0.25 : 0.02));
     g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.6);
     osc.connect(g).connect(this.master!);
     osc.start();

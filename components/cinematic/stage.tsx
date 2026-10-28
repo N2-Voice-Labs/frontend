@@ -10,6 +10,7 @@ import { realityVisual } from "@/components/scenes/reality/visual";
 import { silenceVisual } from "@/components/scenes/silence/visual";
 import { worldVisual } from "@/components/scenes/world/visual";
 import { director } from "@/lib/cinematic/director";
+import { gsap } from "@/lib/cinematic/gsap";
 import { PALETTE, range, rnd, type Frame, type Point, type SceneVisual } from "@/lib/cinematic/visual";
 import { fitCanvas } from "@/lib/landing/tokens";
 
@@ -51,17 +52,17 @@ export function Stage() {
 
     const A: Point = { x: 0, y: 0, a: 0, c: 0, s: 1 }, B: Point = { x: 0, y: 0, a: 0, c: 0, s: 1 };
     const frame = (p: number, t: number): Frame => ({ w, h, t, p, n, portrait: h > w * 1.15, u: Math.min(w, h) });
-    const start = performance.now();
     let shown = director.position, drawn = -1, raf = 0;
 
-    const draw = (now: number) => {
+    const draw = () => {
       raf = requestAnimationFrame(draw);
       const target = director.position;
       shown = reduced || Math.abs(target - shown) < 1e-4 ? target : shown + (target - shown) * 0.09;
       if (reduced && shown === drawn && !dirty) return;
       drawn = shown; dirty = false;
       if (!fitCanvas(canvas, ctx, w, h)) return;
-      const t = reduced ? 6 : (now - start) / 1000;
+      // GSAP's clock: the same seconds the SVG systems' painters use, so canvas and SVG stay in step.
+      const t = reduced ? 6 : gsap.ticker.time;
       const k = Math.min(Math.floor(shown), VISUALS.length - 1);
       const cur = VISUALS[k], prev = k > 0 ? VISUALS[k - 1] : null;
       const fc = frame(Math.min(1, shown - k), t), fp = frame(1, t);

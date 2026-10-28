@@ -1,0 +1,7 @@
+/* Chapter 07's stage; strokes, labels and the film/plain switch reuse chapter 05's classes. */
+/* Plain document: the figure is the two people and the signal between them. */
+:global(html:not(.cine-js)) .figure{height:70vh}
+/* The brief pull toward the centre (scroll var --cam), around the middle of the signal. */
+.stage{transform-box:view-box;transform-origin:var(--cx-px) var(--cy-px);transform:scale(var(--cam,1))}
+/* Phones: the people step back while the brand is on screen (--pd, scroll). */
+.figure[data-portrait] .person{opacity:calc(1 - var(--pd, 0) * .8)}

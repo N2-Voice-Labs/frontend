@@ -4,6 +4,7 @@
  * Never touches the microphone.
  */
 import { UTTERANCES } from "@/components/scenes/conversation/conversation-data";
+import { SCRIPT } from "@/components/scenes/reality/conversation-events";
 
 export type VoiceCue = {
   id: string;
@@ -56,6 +57,19 @@ export const CONVERSATION_VOICES: readonly VoiceCue[] = UTTERANCES.map((u) => ({
   src: `/audio/conversation-${u.id}.mp3`,
   pan: u.speaker === "minji" ? -0.6 : 0.6,
   volume: u.source === "human" ? 0.6 : 0.5,
+}));
+
+/**
+ * Chapter 07's call, one cue per utterance in SCRIPT (same ids): Minji on the left, Daniel on the right,
+ * the people a little closer than the Voice Labs voice that speaks to them. Clips: /audio/reality-<id>.mp3.
+ */
+export const REALITY_VOICES: readonly VoiceCue[] = SCRIPT.map((u) => ({
+  id: u.id,
+  text: u.text,
+  lang: CONVERSATION_LANGS[u.lang] ?? u.lang,
+  src: `/audio/reality-${u.id}.mp3`,
+  pan: u.side === "minji" ? -0.55 : 0.55,
+  volume: u.source === "human" ? 0.65 : 0.5,
 }));
 
 const DEFAULT_VOLUME = 0.7;

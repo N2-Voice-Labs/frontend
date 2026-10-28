@@ -17,11 +17,13 @@ const LAST = CHAPTERS.length - 1;
  *
  * Its ScrollTrigger writes the chapter position for the canvas, chapter indicator and sound.
  */
-export function Scene({ index, timeline, children, className, fadeOutAt = 0.96 }: {
+export function Scene({ index, timeline, children, className, fadeIn = 0.04, fadeOutAt = 0.96 }: {
   index: number;
   timeline?: SceneTimeline;
   children: ReactNode;
   className?: string;
+  /** How long the layer takes to fade in; shorter for chapters that open on the previous chapter's last frame. */
+  fadeIn?: number;
   /** Chapter progress where the layer starts fading out; later for chapters that hand over a visible element. */
   fadeOutAt?: number;
 }) {
@@ -38,7 +40,7 @@ export function Scene({ index, timeline, children, className, fadeOutAt = 0.96 }
       if (film) {
         tl = gsap.timeline({ defaults: { ease: "none" } });
         tl.to({}, { duration: 1 }, 0);
-        if (index > 0) tl.fromTo(layer, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.04 }, 0);
+        if (index > 0) tl.fromTo(layer, { autoAlpha: 0 }, { autoAlpha: 1, duration: fadeIn }, 0);
         else gsap.set(layer, { autoAlpha: 1 });
         timeline?.(tl, gsap.utils.selector(layer));
         if (index < LAST) tl.to(layer, { autoAlpha: 0, duration: Math.min(0.04, 1 - fadeOutAt) }, fadeOutAt);
@@ -57,7 +59,7 @@ export function Scene({ index, timeline, children, className, fadeOutAt = 0.96 }
       });
     }, layer);
     return () => ctx.revert();
-  }, [index, timeline, fadeOutAt]);
+  }, [index, timeline, fadeIn, fadeOutAt]);
 
   return (
     <section

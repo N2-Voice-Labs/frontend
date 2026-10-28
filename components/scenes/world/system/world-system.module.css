@@ -1,0 +1,5 @@
+/* Chapter 06's own screen-space pieces; everything else reuses chapter 05's classes (engine-system.module.css). */
+/* The selected conversation opening from the centre to both edges. */
+.wide{transform-box:view-box;transform-origin:50% 50%;transform:scaleX(var(--g,0))}
+/* Plain document: the figure is the whole network, so it gets more height than chapter 05's. */
+:global(html:not(.cine-js)) .figure{height:86vh}

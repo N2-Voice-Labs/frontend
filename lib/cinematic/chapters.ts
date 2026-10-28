@@ -8,10 +8,10 @@ export const CHAPTERS = [
   { id: "distance", label: "Distance", length: 7 },
   { id: "bridge", label: "Bridge", length: 7 },
   { id: "conversation", label: "Conversation", length: 7 },
-  { id: "engine", label: "Engine", length: 4 },
-  { id: "world", label: "World", length: 3.5 },
-  { id: "reality", label: "Reality", length: 2.5 },
-  { id: "future", label: "Future", length: 4 },
+  { id: "engine", label: "Engine", length: 8 },
+  { id: "world", label: "World", length: 9 },
+  { id: "reality", label: "Reality", length: 12 },
+  { id: "future", label: "Future", length: 10 },
 ] as const;
 
 export type ChapterId = (typeof CHAPTERS)[number]["id"];

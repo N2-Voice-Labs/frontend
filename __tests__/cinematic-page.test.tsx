@@ -2,7 +2,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { CinematicPage } from "@/components/cinematic/cinematic-page";
 import { EVENTS, MEMORIES, UTTERANCES, WORDS, wordAt } from "@/components/scenes/conversation/conversation-data";
-import { BEATS, phaseAt } from "@/components/scenes/reality/reality-script";
+import { level, stateAt, ticks } from "@/components/scenes/reality/conversation-engine";
+import { EVENTS as CALL, SCRIPT } from "@/components/scenes/reality/conversation-events";
 import { CHAPTERS } from "@/lib/cinematic/chapters";
 import { director, setPosition, subscribeDirector } from "@/lib/cinematic/director";
 import { range, window01 } from "@/lib/cinematic/visual";
@@ -21,12 +22,20 @@ describe("cinematic landing page", () => {
       "But conversation should feel natural.",
       "Language should not become a wall.",
       "Conversation is more than translation.",
+      "Serious engineering, out of sight.",
+      "One runtime. Many conversations.",
       "One voice infrastructure.",
-      "Enough talking. Listen.",
+      "Many conversations.",
+      "Same runtime underneath.",
+      "Two languages. One conversation.",
+      "Natural conversation.",
       "A voice should never need a translation to be heard.",
     ]) expect(screen.getAllByText((_, el) => el?.classList.contains("ct") === true && el.textContent === text).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("heading", { name: "Voice Labs" })).toHaveLength(2);
-    expect(screen.getAllByText("Real-time voice infrastructure for a multilingual world.")).toHaveLength(2);
+    expect(screen.getAllByRole("heading", { name: "Voice Labs" })).toHaveLength(3);
+    // The tagline returns four times: the name (03), the runtime (05), the proof (07) and the end (08).
+    const tags = screen.getAllByText("Real-time voice infrastructure for a multilingual world.");
+    expect(tags).toHaveLength(4);
+    expect(tags.map((el) => el.closest("section")?.id)).toEqual(["bridge", "engine", "reality", "future"]);
   });
 
   it("has a chapter indicator that links every chapter", () => {
@@ -98,8 +107,26 @@ describe("film logic", () => {
     for (const w of WORDS) expect(wordAt(w)).toBeGreaterThan(0);
   });
 
-  it("reality beats alternate speakers and move through speaking → turn → voice", () => {
-    for (let i = 1; i < BEATS.length; i++) expect(BEATS[i].who).not.toBe(BEATS[i - 1].who);
-    expect([0.1, 0.5, 0.9].map((f) => phaseAt(f))).toEqual(["speaking", "turn", "voice"]);
+  it("the reality call is one event stream: ordered, interrupted, code-switched, carrying context", () => {
+    for (let i = 1; i < CALL.length; i++) expect(CALL[i].startTime).toBeGreaterThanOrEqual(CALL[i - 1].startTime);
+    for (const u of SCRIPT) expect(u.end).toBeGreaterThan(u.start);
+    // Every human line is followed by Voice Labs speaking to the other person, in their language (unless cut).
+    for (const u of SCRIPT.filter((x) => x.source === "human" && !x.cut)) {
+      const v = SCRIPT.find((x) => x.source === "voice" && x.side !== u.side && x.start >= u.end);
+      expect(v?.lang).not.toBe(u.lang);
+    }
+    const cut = SCRIPT.find((u) => u.cut && u.source === "human")!;
+    expect(CALL.find((e) => e.type === "interruption")?.ref).toBe(cut.id);
+    // At the barge-in the cut voice stops and the other side takes over.
+    expect(level(cut, cut.end + 0.01)).toBe(0);
+    expect(stateAt(cut.end + 0.05).markers.map((m) => m.kind)).toContain("INTERRUPTION");
+    const sw = SCRIPT.find((u) => u.parts)!;
+    expect(stateAt(sw.end - 0.05).minji.langs).toBe("KO → EN → KO");
+    const ctx = SCRIPT.find((u) => u.context)!;
+    expect(SCRIPT.find((u) => u.id === ctx.context)!.end).toBeLessThan(ctx.start);
+    expect(stateAt(ctx.start + 0.5).context?.from).toBe(ctx.context);
+    // The middle fades as the conversation becomes natural; the timeline has marks, never numbers.
+    expect(stateAt(30).presence).toBeLessThan(stateAt(2).presence);
+    expect(new Set(ticks().map((k) => k.kind))).toEqual(new Set(["turn", "first", "end"]));
   });
 });
