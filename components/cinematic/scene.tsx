@@ -17,7 +17,14 @@ const LAST = CHAPTERS.length - 1;
  *
  * Its ScrollTrigger writes the chapter position for the canvas, chapter indicator and sound.
  */
-export function Scene({ index, timeline, children, className }: { index: number; timeline?: SceneTimeline; children: ReactNode; className?: string }) {
+export function Scene({ index, timeline, children, className, fadeOutAt = 0.96 }: {
+  index: number;
+  timeline?: SceneTimeline;
+  children: ReactNode;
+  className?: string;
+  /** Chapter progress where the layer starts fading out; later for chapters that hand over a visible element. */
+  fadeOutAt?: number;
+}) {
   const chapter = CHAPTERS[index];
   const sectionRef = useRef<HTMLElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
@@ -34,7 +41,7 @@ export function Scene({ index, timeline, children, className }: { index: number;
         if (index > 0) tl.fromTo(layer, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.04 }, 0);
         else gsap.set(layer, { autoAlpha: 1 });
         timeline?.(tl, gsap.utils.selector(layer));
-        if (index < LAST) tl.to(layer, { autoAlpha: 0, duration: 0.04 }, 0.96);
+        if (index < LAST) tl.to(layer, { autoAlpha: 0, duration: Math.min(0.04, 1 - fadeOutAt) }, fadeOutAt);
       }
       ScrollTrigger.create({
         trigger: section,
@@ -50,7 +57,7 @@ export function Scene({ index, timeline, children, className }: { index: number;
       });
     }, layer);
     return () => ctx.revert();
-  }, [index, timeline]);
+  }, [index, timeline, fadeOutAt]);
 
   return (
     <section

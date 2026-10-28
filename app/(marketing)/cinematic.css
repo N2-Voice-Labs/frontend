@@ -89,18 +89,11 @@ main{position:relative;z-index:1}
 .frame{position:relative;margin:0 auto 8vh;max-width:1200px}
 .frame-center{text-align:center;display:flex;flex-direction:column;align-items:center}
 .stack>*+*{margin-top:6vh}
-.frags,.conv-head,.conv-rail,.conv-scrim,.silence-cue{display:none}
-.caps{display:grid;gap:18px;max-width:760px;margin:0 auto 6vh}
-.cap-who{display:block;font-family:var(--font-code);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--c-muted);margin-bottom:6px}
-.cap-text{display:block;font-size:clamp(18px,1.9vw,30px);font-weight:500;line-height:1.25}
-.cap[data-lane="ko"] .cap-who{color:var(--c-ko)}
-.cap[data-lane="en"] .cap-who{color:var(--c-en)}
-.cap[data-kind="voice"] .cap-text{color:var(--c-bridge)}
-.cap-flag{color:var(--c-bridge)}
+.silence-cue{display:none}
 .principles{list-style:none;margin:0 auto;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 40px;max-width:1100px}
 .principles b{display:block;font-family:var(--font-code);font-weight:400;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--c-bridge);margin-bottom:6px}
 .principles span{display:block;font-size:14px;line-height:1.5;color:var(--c-muted)}
-.bridge-foot,.distance-kicker,.world-note{text-align:center;margin-top:3vh}
+.world-note{text-align:center;margin-top:3vh}
 .future-foot{display:flex;flex-wrap:wrap;gap:10px 28px;justify-content:space-between;padding-top:8vh}
 .future-foot a{text-decoration:none;color:var(--c-muted)}
 .future-foot a:hover{color:var(--c-ink)}
@@ -145,36 +138,88 @@ main{position:relative;z-index:1}
 .cine-js .frame-top{justify-content:flex-start;align-items:center;text-align:center;padding-top:13vh}
 .cine-js .frame-bottom{justify-content:flex-end;align-items:center;text-align:center;padding-bottom:10vh}
 .cine-js .stack{display:grid}
-.cine-js .stack>*{grid-area:1/1;margin:0}
-.cine-js .frags,.cine-js .conv-head,.cine-js .conv-rail,.cine-js .conv-scrim,.cine-js .silence-cue{display:block}
+.cine-js .stack>*{grid-area:1/1;margin:0;align-self:center}
+.cine-js .silence-cue{display:block}
 
 /* 01 */
+.silence-statement{font-size:clamp(34px,6.2vw,124px)}
+.silence-statement .ct-w{overflow:visible}
+.title-thesis{font-size:clamp(38px,min(10.5vw,19vh),196px)}
 .cine-js .silence-cue{position:absolute;left:0;right:0;bottom:6vh;display:flex;flex-direction:column;align-items:center;gap:16px;font-size:10.5px}
 .cue-line{display:block;width:1px;height:44px;background:linear-gradient(var(--c-ink),transparent);transform-origin:top;animation:cue 2.4s ease-in-out infinite}
 @keyframes cue{0%{transform:scaleY(0)}50%{transform:scaleY(1)}100%{transform:scaleY(1);opacity:0}}
 
 /* 02 */
-.cine-js .frags{position:absolute;inset:0;pointer-events:none}
-.frag{position:absolute;left:var(--x);top:var(--y);font-family:var(--font-serif);font-style:italic;font-size:clamp(18px,2.2vw,34px);color:rgba(236,231,220,.55);white-space:nowrap;opacity:0}
-.cine-js .distance-kicker{position:absolute;top:13vh;left:0;right:0;margin:0;padding:0 24px}
-.distance-sub{text-align:center}
+.distance-voices{font-size:clamp(40px,min(12vw,19vh),200px)}
+.distance-language{font-size:clamp(34px,min(8vw,15vh),140px)}
+.distance-voices .ct-w,.distance-language .ct-w,.distance-thesis .ct-w{overflow:visible}
 
 /* 03 */
+/* Plain document: title and tagline before the system figure, then the stages and the statement. */
+html:not(.cine-js) #bridge .scene-layer{display:flex;flex-direction:column}
+.bridge-head{order:-1}
+.bridge-lockup{display:flex;flex-direction:column;align-items:center;transform-origin:50% 50%}
 .bridge-head .lede{text-align:center}
-.cine-js .bridge-foot{position:absolute;left:0;right:0;bottom:7vh;margin:0;padding:0 24px}
+/* One line: "LABS" must never drop onto the bridge. Sized to fit 360px. */
+.bridge-title{white-space:nowrap;font-size:clamp(34px,min(12.5vw,26vh),228px)}
+.bridge-micro{list-style:none;margin:0 auto 6vh;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 22px}
+.bridge-micro li{color:var(--c-dim)}
+.bridge-statement{font-size:clamp(22px,3.2vw,54px)}
+.bridge-statement .ct-line+.ct-line{margin-top:.16em}
+.cine-js .bridge-micro{position:absolute;inset:0;margin:0;display:block;pointer-events:none}
+.cine-js .bridge-micro li{position:absolute;opacity:0;white-space:nowrap}
+/* Two quiet rows, above and below the pipeline (which runs along the middle). */
+.cine-js .bridge-micro li:nth-child(1){left:max(16vw,220px);top:22vh}
+.cine-js .bridge-micro li:nth-child(2){left:50%;top:22vh;transform:translateX(-50%)}
+.cine-js .bridge-micro li:nth-child(3){right:6vw;top:22vh}
+.cine-js .bridge-micro li:nth-child(4){left:max(16vw,220px);bottom:22vh;color:var(--c-muted)}
+.cine-js .bridge-micro li:nth-child(5){right:6vw;bottom:22vh;color:var(--c-muted)}
+.cine-js .bridge-micro li:nth-child(6){left:50%;bottom:6vh;transform:translateX(-50%)}
 
 /* 04 */
-.cine-js .conv-head{position:absolute;top:12vh;left:0;right:0;text-align:center}
-.cine-js .caps{position:absolute;inset:0;margin:0;max-width:none;display:block}
-.cine-js .cap{position:absolute;left:calc(68vw + 28px);right:4vw;margin:0}
-.cine-js .cap[data-lane="ko"]{bottom:calc(100lvh - var(--lane-y) * 100lvh + 9vmin)}
-.cine-js .cap[data-lane="en"]{top:calc(var(--lane-y) * 100lvh + 9vmin)}
-.cine-js .cap-text{font-size:clamp(16px,1.6vw,26px)}
-.cine-js .conv-rail{position:absolute;left:0;right:0;bottom:6vh;display:flex;justify-content:center;flex-wrap:wrap;gap:10px 26px;font-family:var(--font-code);font-size:11px;letter-spacing:.2em;text-transform:uppercase;padding:0 24px}
-.rail-it{color:var(--c-dim)}
-.rail-w{display:inline-flex;align-items:center;gap:8px;color:var(--c-ink)}
-.rail-dot{width:5px;height:5px;border-radius:50%;background:var(--c-bridge);display:inline-block}
-.cine-js .conv-scrim{position:absolute;inset:0;opacity:0;background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(5,6,6,.92),rgba(5,6,6,.7) 55%,rgba(5,6,6,0) 100%)}
+/* Plain document: headline, the transcript in order, then the five words. */
+.conv-title{font-size:clamp(30px,min(6.6vw,9.5vh),118px)}
+.conv-people,.conv-via,.conv-strike{display:none}
+.conv [data-speaker="minji"]{--accent:var(--c-ko)}
+.conv [data-speaker="daniel"]{--accent:var(--c-en)}
+.conv-lines{list-style:none;margin:0 auto 6vh;padding:0;max-width:760px;display:grid;gap:16px}
+.conv-who{display:block;font-family:var(--font-code);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.conv-text{font-size:clamp(17px,1.6vw,22px);font-weight:500;line-height:1.35}
+.conv-line[data-source="voice"] .conv-text{color:#E9DCB4}
+.conv-words{margin:0 auto;text-align:center;font-family:var(--font-code);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--c-muted)}
+.conv-dot{display:none}
+/* Film: everything is placed from conversationLayout via CSS vars written on resize (conversation-scene.tsx). */
+.cine-js .conv{position:absolute;inset:0;pointer-events:none;
+  --m-x:25vw;--m-py:calc(44lvh - 56px);--m-pa:1;--m-ly:calc(44lvh + 56px);--m-a:0;--m-dir:1;
+  --d-x:75vw;--d-py:calc(44lvh - 56px);--d-pa:1;--d-ly:calc(44lvh + 56px);--d-a:0;--d-dir:1;
+  --lw:420px;--hy:20lvh;--ry:90lvh}
+.cine-js .conv [data-speaker="minji"]{--x:var(--m-x);--py:var(--m-py);--pa:var(--m-pa);--ly:var(--m-ly);--a:var(--m-a);--dir:var(--m-dir)}
+.cine-js .conv [data-speaker="daniel"]{--x:var(--d-x);--py:var(--d-py);--pa:var(--d-pa);--ly:var(--d-ly);--a:var(--d-a);--dir:var(--d-dir)}
+.cine-js .conv-head{inset:auto 0;top:var(--hy);transform:translateY(-50%)}
+.cine-js .conv-people{display:block}
+.cine-js .conv-person{position:absolute;left:var(--x);top:var(--py);transform:translate(-50%,calc(var(--pa) * -100%));text-align:center;white-space:nowrap}
+.cine-js .conv-person-in{opacity:0;display:flex;flex-direction:column;align-items:center;gap:5px}
+.conv-name{font-size:14px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--c-ink)}
+.conv-meta{display:grid;font-family:var(--font-code);font-size:10.5px;letter-spacing:.16em;color:var(--accent)}
+.conv-meta>*{grid-area:1/1}
+.conv-meta-b{opacity:0}
+.cine-js .conv-lines{position:absolute;inset:0;margin:0;max-width:none;display:block}
+/* --drift (em) and --push (× the next line's height, --hn) move a line away from its wave as it ages. */
+.cine-js .conv-line{position:absolute;left:var(--x);top:var(--ly);width:var(--lw);margin:0;text-align:center;opacity:0;--drift:0;--push:0;
+  transform:translate(-50%,calc(var(--a) * -100% + var(--dir) * (var(--push) * (var(--hn,0px) + 10px) + var(--drift) * 1em)))}
+.cine-js .conv-who{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+.cine-js .conv-via{display:inline-block;margin-right:.9em;font-family:var(--font-code);font-size:9.5px;letter-spacing:.18em;color:var(--c-bridge);opacity:.8;vertical-align:.2em}
+.cine-js .conv-text{position:relative;font-size:clamp(16px,1.35vw,20px);text-wrap:balance;color:var(--c-ink)}
+.cine-js .conv-line[data-source="voice"] .conv-text{color:#E9DCB4}
+.cine-js .conv-strike{display:block;position:absolute;left:-2px;right:-2px;top:55%;height:1px;background:var(--c-bridge);transform-origin:left;transform:scaleX(0)}
+/* The five words: a quiet rail low on the screen; during the headline it rises under it (--lift). */
+.cine-js .conv-words{position:absolute;left:50%;top:var(--ry);width:min(calc(100vw - 40px),900px);--lift:0;
+  transform:translate(-50%,calc(-50% + var(--lift) * var(--rail-lift,0px))) scale(calc(1 + var(--lift) * .22));transform-origin:50% 50%}
+.cine-js .conv-words-in{opacity:0;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 26px;font-family:var(--font-ui);font-size:13px;font-weight:600;letter-spacing:.24em;color:var(--c-ink)}
+.cine-js .conv-it{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.cine-js .conv-word{display:inline-flex;align-items:center;gap:9px;opacity:.22}
+.cine-js .conv-dot{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--c-bridge);transform:scale(0)}
+.cine-js .conv-stop{opacity:0;margin-left:-.2em}
 
 /* 05 */
 .cine-js .engine-head{align-items:flex-start;text-align:left;padding-top:11vh}
@@ -208,11 +253,9 @@ main{position:relative;z-index:1}
   .chapters-compact b{font-weight:400;color:var(--c-ink);margin-left:6px}
   .chapters-compact .chapters-bar{width:28px}
   .cine-js .frame{padding-left:20px;padding-right:20px}
-  .cine-js .cap{left:20px;right:20px}
-  .cine-js .cap[data-lane="ko"]{bottom:auto;top:20vh}
-  .cine-js .cap[data-lane="en"]{top:auto;bottom:14vh}
-  .cine-js .conv-head{top:11vh}
-  .cine-js .conv-rail{bottom:56px;gap:6px 14px;font-size:9.5px}
+  .cine-js .conv-words-in{gap:6px 16px;font-size:10.5px;letter-spacing:.2em}
+  .cine-js .conv-words{transform:translate(-50%,calc(-50% + var(--lift) * var(--rail-lift,0px))) scale(calc(1 + var(--lift) * .1))}
+  .conv-name{font-size:13px}
   .principles{grid-template-columns:1fr}
   .cine-js .principles{left:20px;right:20px;bottom:64px;display:flex;flex-wrap:wrap;gap:8px 16px}
   .cine-js .principles span{display:none}
@@ -224,7 +267,9 @@ main{position:relative;z-index:1}
   .person-line{font-size:16px;min-height:5.2em}
   .cine-js .reality-body{padding-top:10vh}
   .cine-js .future-foot{bottom:52px;justify-content:center;font-size:9.5px}
-  .frag:nth-child(n+8){display:none}
+  /* The vertical runtime fills the screen on phones; the metadata would cross it. */
+  .cine-js .bridge-micro li{display:none}
+  /* Keep the two labels on the side away from the statement. */
 }
 
 /* Reduced motion: still frames, no grain or looping decoration. */

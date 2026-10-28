@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { CinematicPage } from "@/components/cinematic/cinematic-page";
-import { EVENTS, SEGMENTS } from "@/components/scenes/conversation/script";
+import { EVENTS, MEMORIES, UTTERANCES, WORDS, wordAt } from "@/components/scenes/conversation/conversation-data";
 import { BEATS, phaseAt } from "@/components/scenes/reality/reality-script";
 import { CHAPTERS } from "@/lib/cinematic/chapters";
 import { director, setPosition, subscribeDirector } from "@/lib/cinematic/director";
@@ -83,12 +83,19 @@ describe("film logic", () => {
     expect(window01(0.95, 0.2, 0.8)).toBe(0);
   });
 
-  it("the conversation script is ordered and the barge-in cuts the voice", () => {
+  it("the conversation is ordered, the barge-in cuts the voice and context refers back", () => {
     for (let i = 1; i < EVENTS.length; i++) expect(EVENTS[i].at).toBeGreaterThan(EVENTS[i - 1].at);
-    for (const s of SEGMENTS) expect(s.end).toBeGreaterThan(s.start);
-    const cut = SEGMENTS.find((s) => s.cut)!;
-    const interrupt = EVENTS.find((e) => e.word === "Interruption")!;
-    expect(cut.end).toBeCloseTo(interrupt.at);
+    for (const u of UTTERANCES) expect(u.end).toBeGreaterThan(u.start);
+    const cut = UTTERANCES.filter((u) => u.interrupted);
+    expect(cut).toHaveLength(1);
+    const interrupt = EVENTS.find((e) => e.type === "interruption")!;
+    expect(cut[0].end).toBe(interrupt.at);
+    const context = EVENTS.find((e) => e.type === "context")!;
+    const memory = MEMORIES.find((m) => m.id === context.ref)!;
+    expect(memory).toBeTruthy();
+    expect(memory.at).toBeLessThan(context.at);
+    expect(UTTERANCES.find((u) => u.id === memory.from)!.end).toBeLessThanOrEqual(context.at);
+    for (const w of WORDS) expect(wordAt(w)).toBeGreaterThan(0);
   });
 
   it("reality beats alternate speakers and move through speaking → turn → voice", () => {

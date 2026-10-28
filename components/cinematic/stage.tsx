@@ -65,7 +65,8 @@ export function Stage() {
       const k = Math.min(Math.floor(shown), VISUALS.length - 1);
       const cur = VISUALS[k], prev = k > 0 ? VISUALS[k - 1] : null;
       const fc = frame(Math.min(1, shown - k), t), fp = frame(1, t);
-      const mix = prev ? range(fc.p, 0, MORPH) : 1;
+      const morph = cur.morph ?? MORPH;
+      const mix = prev && morph > 0 ? range(fc.p, 0, morph) : 1;
 
       for (let i = 0; i < n; i++) {
         cur.place(i, fc, A);

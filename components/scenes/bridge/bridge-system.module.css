@@ -1,0 +1,28 @@
+/* The Voice Labs system (chapter 03). Plain document: a static block in flow. Film mode: covers the layer. */
+.svg{display:block;width:100%;height:60vh;overflow:visible;pointer-events:none}
+:global(html.cine-js) .svg{position:absolute;inset:0;width:100%;height:100%}
+/* Without the film only the finished runtime is drawn (bridge, signal, concept, packets, handoff are film-only). */
+:global(html:not(.cine-js)) .filmOnly{display:none}
+
+.stroke{fill:none;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
+.node{fill:var(--c-bg);vector-effect:non-scaling-stroke}
+
+/* Size-independent transforms: GSAP tweens only the unitless vars (--s, --k, --f, --cam, --u, --hk);
+   the px values (--base, --fdy, --cy, --W, --hx0…) come from React and follow resizes. */
+.pop{transform-box:fill-box;transform-origin:center;transform:scale(calc(var(--s,1) * var(--pulse,1)))}
+.cam{transform-box:view-box;transform-origin:50% 50%;transform:scale(var(--cam,1))}
+.flat{transform-box:view-box;transform-origin:0 var(--base);transform:translateY(calc(var(--fdy) * var(--f,0))) scaleY(calc(1 - .985 * var(--f,0)))}
+.strand{transform-box:view-box;transform-origin:0 var(--base);transform:translateY(calc(var(--dy) * (1 - var(--k,0)))) scaleY(calc(1 + var(--ds) * (1 - var(--k,0))))}
+.packet{transform:translate(calc(var(--u,0) * var(--W)),var(--cy))}
+.pkKo{opacity:calc(1 - var(--u,0))}
+.pkEn{opacity:var(--u,0)}
+.handoff{transform-box:view-box;transform-origin:0 0;
+  transform:translate(calc(var(--hx0) * (1 - var(--hk,0))),calc(var(--hy0) + (var(--hy1) - var(--hy0)) * var(--hk,0)))
+    rotate(calc(var(--hr) * (1 - var(--hk,0))))
+    scaleX(calc(var(--hs0) + (1 - var(--hs0)) * var(--hk,0)))}
+
+.label{font-family:var(--font-code);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;fill:var(--c-ink);fill-opacity:.7}
+.tiny{font-family:var(--font-code);font-size:9px;letter-spacing:.1em;fill:var(--c-ink);fill-opacity:.5}
+.token{font-family:var(--font-code);font-size:10px;letter-spacing:.02em;fill:var(--c-ink);fill-opacity:.85}
+.svg[data-portrait] .label{font-size:9.5px;letter-spacing:.14em}
+.svg[data-portrait] .tiny{font-size:8.5px}

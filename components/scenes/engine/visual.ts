@@ -43,6 +43,7 @@ function pointOnChain(L: ReturnType<typeof engineLayout>, u: number) {
 
 /** 05 — the runtime under the conversation: signals flow through every stage, the agent calls out to tools. */
 export const engineVisual: SceneVisual = {
+  morph: 0, // chapter 04 (conversation/visual.ts) ends exactly on this chapter's first frame.
   place(i, f, o) {
     const L = engineLayout(f);
     const r1 = rnd(i, 1), r2 = rnd(i, 2), r3 = rnd(i, 3);
@@ -85,7 +86,9 @@ export const engineVisual: SceneVisual = {
     o.a = reveal(f.p, pt.seg + 1) * (isToken ? 0.95 : 0.75);
     o.s = isToken ? 1.5 : 1;
   },
-  draw(ctx, f, alpha) {
+  draw(ctx, f, a0) {
+    // No stage crossfade into this chapter (morph: 0), so the wires and labels fade in themselves.
+    const alpha = a0 * range(f.p, 0, 0.04);
     const L = engineLayout(f);
     // Wires
     for (let k = 0; k < N - 1; k++) {

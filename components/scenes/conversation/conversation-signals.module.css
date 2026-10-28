@@ -1,0 +1,22 @@
+/* The conversation's signal system (chapter 04). Plain document: a static figure in flow. Film mode: covers the layer. */
+.svg{display:block;width:100%;height:50vh;overflow:visible;pointer-events:none}
+:global(html.cine-js) .svg{position:absolute;inset:0;width:100%;height:100%}
+/* Without the film the opening and the handoff are not drawn. */
+:global(html:not(.cine-js)) .filmOnly{display:none}
+
+.stroke{fill:none;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
+
+/* Size-independent transforms: GSAP tweens only the unitless vars (--ok, --hk, --sp); the px values come from React. */
+.open{transform-box:view-box;transform-origin:0 0;
+  transform:translate(calc(var(--ox1) * var(--ok,0)),calc(var(--oy0) + (var(--oy1) - var(--oy0)) * var(--ok,0)))
+    scaleX(calc(1 + (var(--os1) - 1) * var(--ok,0)))}
+.handoff{transform-box:view-box;transform-origin:0 0;
+  transform:translate(calc(var(--hx0) * (1 - var(--hk,0))),calc(var(--hy0) + (var(--hy1) - var(--hy0)) * var(--hk,0)))
+    scaleX(calc(var(--hs0) + (1 - var(--hs0)) * var(--hk,0)))}
+.layer{transform:translateY(calc(var(--ly) * var(--sp,0)))}
+
+.label{font-family:var(--font-code);font-size:10px;letter-spacing:.16em;text-transform:uppercase;fill:var(--c-ink);fill-opacity:.62}
+.faint{font-family:var(--font-code);font-size:9px;letter-spacing:.16em;text-transform:uppercase;fill:var(--c-ink);fill-opacity:.42}
+.mem{font-family:var(--font-code);font-size:10px;letter-spacing:.08em}
+.token{font-family:var(--font-code);font-size:11px;letter-spacing:.02em;fill:var(--c-ink);fill-opacity:.85}
+.svg[data-portrait] .label{font-size:9.5px;letter-spacing:.14em}

@@ -1,53 +1,61 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import { CinematicText } from "@/components/cinematic/cinematic-text";
 import { Scene, type SceneTimeline } from "@/components/cinematic/scene";
-import { fadeIn, fadeOut, revealWords } from "@/lib/cinematic/gsap";
+import { BEATS, LANGUAGES } from "./beats";
 
-/** Words drifting between the two worlds; `x`/`y` are % of the viewport. Each keeps its own `lang`. */
-const FRAGMENTS = [
-  { text: "안녕하세요", lang: "ko", x: 14, y: 22 },
-  { text: "hello", lang: "en", x: 80, y: 30 },
-  { text: "привет", lang: "ru", x: 30, y: 76 },
-  { text: "bonjour", lang: "fr", x: 66, y: 16 },
-  { text: "你好", lang: "zh", x: 88, y: 70 },
-  { text: "hola", lang: "es", x: 8, y: 58 },
-  { text: "こんにちは", lang: "ja", x: 58, y: 84 },
-  { text: "сәлем", lang: "kk", x: 40, y: 12 },
-  { text: "merhaba", lang: "tr", x: 74, y: 56 },
-  { text: "नमस्ते", lang: "hi", x: 22, y: 40 },
-  { text: "مرحبا", lang: "ar", x: 92, y: 44 },
-  { text: "ciao", lang: "it", x: 50, y: 64 },
-] as const;
+type Span = readonly [number, number];
+type Timeline = Parameters<SceneTimeline>[0];
+
+const span = ([a, b]: Span) => b - a;
+
+/** Words settle into place one after another over the first `frac` of the beat, like a realisation. */
+function realize(tl: Timeline, words: Element[], beat: Span, frac = 0.45) {
+  const place = span(beat) * frac;
+  const word = place * 0.4;
+  tl.fromTo(
+    words,
+    { opacity: 0, y: "0.15em", scale: 1.04, filter: "blur(6px)" },
+    { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: word, ease: "power2.out", stagger: (place - word) / Math.max(1, words.length - 1) },
+    beat[0],
+  );
+}
+
+/** The whole title recedes (fades, shrinks slightly, blurs) over the last `frac` of the beat. */
+function recede(tl: Timeline, el: Element[], beat: Span, frac = 0.22) {
+  const out = span(beat) * frac;
+  tl.to(el, { opacity: 0, scale: 0.96, filter: "blur(5px)", duration: out, ease: "power1.in" }, beat[1] - out);
+}
 
 const timeline: SceneTimeline = (tl, q) => {
-  fadeIn(tl, q(".distance-kicker"), 0.06, 0.05);
-  q(".frag").forEach((el, i) => {
-    const x = Number((el as HTMLElement).dataset.x);
-    fadeIn(tl, el, 0.1 + i * 0.018, 0.06, { y: 0, scale: 0.9 });
-    // Drift toward the wall in the middle, then lose their way.
-    tl.to(el, { x: () => (50 - x) * window.innerWidth * 0.005, duration: 0.4 }, 0.12 + i * 0.01);
-  });
-  fadeOut(tl, q(".frag"), 0.5, 0.08, { y: 0, scale: 0.94 });
-  fadeOut(tl, q(".distance-kicker"), 0.5, 0.05);
-  revealWords(tl, q(".distance-title .ct-i"), 0.56, 0.16);
-  fadeIn(tl, q(".distance-sub"), 0.74, 0.06);
+  // Handoff → languages → attempts → slow belong to the canvas alone. Then three sentences, one at a time.
+  realize(tl, q(".distance-voices .ct-i"), BEATS.statement1);
+  recede(tl, q(".distance-voices"), BEATS.statement1);
+
+  realize(tl, q(".distance-language .ct-i"), BEATS.statement2);
+  recede(tl, q(".distance-language"), BEATS.statement2);
+
+  realize(tl, q(".distance-thesis .ct-i"), BEATS.thesis, 0.4);
+  recede(tl, q(".distance-thesis"), BEATS.thesis, 0.25);
+  // firstLink → links → bridge: no text, the canvas speaks.
 };
 
-/** 02 — two worlds and the wall between them. */
+/** 02 — THE DISTANCE: the world fills with voices that cannot reach each other. */
 export function DistanceScene() {
   return (
     <Scene index={1} timeline={timeline}>
-      <div className="frags" aria-hidden="true">
-        {FRAGMENTS.map((f) => (
-          <span key={f.text} className="frag" lang={f.lang} data-x={f.x} style={{ "--x": `${f.x}%`, "--y": `${f.y}%` } as CSSProperties}>{f.text}</span>
+      {/* The canvas draws these words; here they stay readable for assistive tech and the plain document. */}
+      <ul className="sr-only">
+        {LANGUAGES.map((l) => (
+          <li key={l.id} lang={l.lang}>{l.word}</li>
         ))}
-      </div>
-      <p className="distance-kicker kicker">Two people · two languages · one conversation that never quite lands</p>
+      </ul>
       <div className="frame frame-center">
-        <CinematicText as="h2" className="title-lg distance-title" lines={["Language should not", { em: "become a wall." }]} />
-        <p className="distance-sub lede">Too many conversations end at the first word nobody shares.</p>
+        <div className="stack">
+          <CinematicText className="distance-voices" lines={["The world is full of voices."]} />
+          <CinematicText className="distance-language" lines={["But we don't all", { em: "speak the same language." }]} />
+          <CinematicText as="h2" className="title-thesis distance-thesis" lines={["Language should not", { em: "become a wall." }]} />
+        </div>
       </div>
     </Scene>
   );

@@ -31,6 +31,11 @@ export type SceneVisual = {
   place(i: number, f: Frame, o: Point): void;
   /** Lines and labels on top of the particles; `alpha` is how present the chapter is (0–1). */
   draw?(ctx: CanvasRenderingContext2D, f: Frame, alpha: number): void;
+  /**
+   * How much of the chapter the stage spends morphing out of the previous chapter (default 0.16).
+   * 0 when this visual starts exactly where the previous one ends and does its own transition.
+   */
+  morph?: number;
 };
 
 /** Deterministic per-particle random in [0, 1). */
