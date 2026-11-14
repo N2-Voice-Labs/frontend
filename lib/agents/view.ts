@@ -7,6 +7,8 @@ export type AgentView = {
   id: string;
   name: string;
   purpose: string;
+  /** What the agent does on a call: answers as an agent, or interprets between two people. */
+  kind: "agent" | "interpreter";
   ready: boolean;
   statusLabel: string;
   /** Upper-case codes: EN, RU, KO… */
@@ -75,6 +77,7 @@ export function toAgentView(agent: Agent, providers: ProviderConfig[], voices: V
     id: agent.id,
     name: agent.name,
     purpose: agent.description.trim() || (agent.mode === "interpreter" ? "Live interpreter" : "Voice agent"),
+    kind: agent.mode === "interpreter" ? "interpreter" : "agent",
     ready,
     statusLabel: ready ? "Ready" : capitalize(agent.status) || "Draft",
     langs: langs.map((l) => l.toUpperCase()),

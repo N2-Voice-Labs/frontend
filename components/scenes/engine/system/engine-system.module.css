@@ -16,7 +16,7 @@
 
 .stroke{fill:none;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
 .dots{fill:none;vector-effect:non-scaling-stroke;stroke-linecap:round}
-.node{fill:var(--c-bg,#0b0b0c)}
+.node{fill:var(--c-bg,#03070F)}
 
 /* Screen-space layers (opening and exit): unitless vars, px from React. */
 .layer{transform:translateY(calc(var(--ly) * var(--sp,1)))}

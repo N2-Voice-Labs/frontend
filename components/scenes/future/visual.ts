@@ -1,5 +1,5 @@
 import { BRIDGE, DIM, EN, INK, KO, PALETTE, label, lerp, range, rnd, syllables, waveY, type Frame, type Point, type SceneVisual } from "@/lib/cinematic/visual";
-import { BEATS } from "./beats";
+import { BEATS, dragonPoints } from "./beats";
 import { CONNECTIONS, NODES, frameAt, pulseAt, type GlobeFrame } from "./system/globe";
 
 /*
@@ -14,7 +14,9 @@ import { CONNECTIONS, NODES, frameAt, pulseAt, type GlobeFrame } from "./system/
  * far: small in a huge darkness; colours soften toward warm white.
  * focus: the camera goes in on Seoul; everything else streams outward and fades; Seoul's particles gather on
  *   one thin horizontal line at the centre (chapter 01's tiny signal), gone by silence[0] + 0.03.
- * silence → cta: nothing at all.
+ * silence → line: nothing at all.
+ * dragon (end of line → cta): dust rises, gathers on the dragon's silhouette, the picture takes over, a cloud
+ *   settles under its feet (placeDragon).
  */
 
 const NODE = 0, TRAVEL = 1, DIST = 2;
@@ -216,11 +218,68 @@ function placeKnot(i: number, f: Frame, o: Point) {
 
 const K: Point = { x: 0, y: 0, a: 0, c: 0, s: 1 };
 
-/** 08 — a world made of voices; then one voice; then nothing. */
+// ---------------------------------------------------------------- the dragon (Inha's Biryong, "a flying dragon on a cloud")
+
+const [D0, D1] = BEATS.dragon;
+const DL = D1 - D0;
+/** Sub-beats of BEATS.dragon: dust rises, gathers into the silhouette, the picture arrives, a cloud settles. */
+const GATHER = D0 + DL * 0.2, REVEAL = D0 + DL * 0.58, CLOUD = D0 + DL * 0.68;
+/** Share of particles that stay as the cloud under the dragon's feet. */
+const CLOUD_SHARE = 0.32;
+/** The cloud's puffs: centre (−1…1 across the picture's width) and relative size. */
+const PUFFS: readonly (readonly [number, number])[] = [[-0.62, 0.62], [-0.3, 0.9], [0, 1.15], [0.3, 0.9], [0.62, 0.62]];
+
+/**
+ * From the end of the final line: faint dust rises out of the dark, gathers on the dragon's silhouette (the
+ * picture's own colours in the film palette), then the picture itself (future-scene.tsx) takes over and a
+ * third of the particles slide under its feet as a slow, drifting cloud. Without points: nothing, as before.
+ */
+function placeDragon(i: number, f: Frame, o: Point) {
+  const dp = dragonPoints.current;
+  if (!dp || dp.count === 0 || f.p < D0) { o.x = f.w / 2; o.y = f.h / 2; o.a = 0; o.c = INK; o.s = 1; return; }
+  const r1 = rnd(i, 901), r2 = rnd(i, 902), r3 = rnd(i, 903), ph = rnd(i, 904) * Math.PI * 2;
+  const { box } = dp;
+
+  // Dust: scattered low in the frame, rising a little as the chapter scrolls on.
+  const rise = range(f.p, D0, REVEAL) * f.h * 0.12;
+  const dx = f.w * (0.04 + 0.92 * r1) + Math.sin(f.t * 0.3 + ph) * 6;
+  const dy = f.h * (0.3 + 0.8 * r2) - rise + Math.cos(f.t * 0.25 + ph) * 5;
+  const dustA = range(f.p, D0 + DL * 0.04 * r3, GATHER) * (0.1 + 0.16 * r3);
+
+  // Silhouette: each particle leaves at its own moment.
+  const j = i % dp.count;
+  const tx = dp.xy[j * 2], ty = dp.xy[j * 2 + 1];
+  const g = range(f.p, GATHER + DL * 0.12 * r1, GATHER + DL * (0.24 + 0.12 * r1));
+  o.x = lerp(dx, tx, g); o.y = lerp(dy, ty, g);
+  o.a = lerp(dustA, 0.62 + 0.2 * r3, g);
+  o.c = g > 0.5 ? dp.col[j] : r3 < 0.6 ? DIM : INK;
+  o.s = lerp(0.9, 1.15, g);
+
+  if (r2 < CLOUD_SHARE) {
+    // The cloud: a few soft puffs under the feet (round on top, flat underneath), bigger in the middle,
+    // each slowly drifting and breathing.
+    const lobe = Math.floor(rnd(i, 905) * PUFFS.length);
+    const [pu, pr] = PUFFS[lobe];
+    const ang = rnd(i, 906) * Math.PI * 2, rad = Math.sqrt(rnd(i, 907));
+    const breathe = 1 + 0.06 * Math.sin(f.t * 0.6 + lobe * 1.7);
+    const cx = box.x + box.w * (0.5 + pu * 0.62) + Math.cos(ang) * rad * pr * box.w * 0.2 * breathe + Math.sin(f.t * 0.2 + lobe) * box.w * 0.03;
+    const cy = box.y + box.h * 0.985 - Math.abs(Math.sin(ang)) * rad * pr * box.h * 0.085 * breathe * (Math.sin(ang) < 0 ? 1 : 0.3);
+    const k = range(f.p, CLOUD + DL * 0.12 * r1, CLOUD + DL * (0.22 + 0.1 * r1));
+    o.x = lerp(o.x, cx, k); o.y = lerp(o.y, cy, k);
+    o.a = lerp(o.a, (0.14 + 0.28 * r3) * (1 - 0.5 * rad * rad) * (0.85 + 0.15 * Math.sin(f.t * 0.7 + ph)), k);
+    if (k > 0.5) o.c = r3 < 0.62 ? EN : r3 < 0.88 ? INK : KO;
+    o.s = lerp(o.s, 1, k);
+  } else {
+    // Into the picture as it arrives.
+    o.a *= 1 - range(f.p, REVEAL + DL * 0.04 * r1, REVEAL + DL * (0.2 + 0.08 * r1));
+  }
+}
+
+/** 08 — a world made of voices; then one voice; then nothing; then the dragon on its cloud. */
 export const futureVisual: SceneVisual = {
   morph: 0, // chapter 07 (reality/visual.ts) ends exactly on this chapter's first frame.
   place(i, f, o) {
-    if (f.p >= END) { o.x = f.w / 2; o.y = f.h / 2; o.a = 0; o.c = INK; o.s = 1; return; }
+    if (f.p >= END) { placeDragon(i, f, o); return; }
     update(f);
     const ap = placeWorld(i, f, o);
     // Out of the point, each particle when its node appears.
