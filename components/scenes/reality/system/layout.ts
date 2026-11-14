@@ -4,7 +4,7 @@ import type { Speaker } from "../conversation-events";
 /**
  * Chapter 07's stage in screen px, shared by the SVG, the canvas and the typography. Two portraits face
  * each other (desktop: left and right; phones: stacked, Minji above, Daniel below) and one signal runs from
- * mouth to mouth: Minji's lane, the middle (Voice Labs, almost invisible), Daniel's lane.
+ * mouth to mouth: Minji's lane, the middle (UNAI, almost invisible), Daniel's lane.
  */
 
 export type P2 = { x: number; y: number };

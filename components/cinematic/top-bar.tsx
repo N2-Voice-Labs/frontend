@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ROUTES } from "@/lib/landing/config";
+import Link from "next/link";
+import { SITE_NAV } from "@/components/site/site-nav";
 import { FilmSound } from "@/lib/cinematic/sound";
 
-/** Wordmark, sound switch and the way into the workspace. Deliberately quiet. */
+/** Wordmark, sound switch and the site's pages. Deliberately quiet. */
 export function TopBar() {
   const sound = useRef<FilmSound | null>(null);
   const [on, setOn] = useState(false);
@@ -20,13 +21,15 @@ export function TopBar() {
 
   return (
     <header className="topbar">
-      <a href="#silence" className="topbar-mark">VOICE<span>·</span>LABS</a>
+      <a href="#silence" className="topbar-mark">UN<span>·</span>AI</a>
       <div className="topbar-actions">
         <button type="button" className="topbar-sound" aria-pressed={on} onClick={toggle}>
           <span className="topbar-eq" data-on={on} aria-hidden="true"><i /><i /><i /><i /></span>
           Sound {on ? "on" : "off"}
         </button>
-        <a href={ROUTES.agents} className="topbar-link">Workspace</a>
+        {SITE_NAV.map((item) => (
+          <Link key={item.href} href={item.href} className="topbar-link topbar-page">{item.label}</Link>
+        ))}
       </div>
     </header>
   );

@@ -73,10 +73,10 @@ export function EngineScene() {
 
       <div className="frame frame-top engine-head">
         <CinematicText as="h2" className="engine-title" lines={["Serious engineering,", { em: "out of sight." }]} />
-        <p className="engine-tag lede">Real-time voice infrastructure for a multilingual world.</p>
+        <p className="engine-tag lede">AI communication infrastructure for business.</p>
       </div>
 
-      <ol className="sr-only engine-stages" aria-label="The Voice Labs runtime, in order">
+      <ol className="sr-only engine-stages" aria-label="The UNAI runtime, in order">
         {STAGES.map((st) => <li key={st.id}>{st.label.toLowerCase()}</li>)}
       </ol>
       <ol className="sr-only engine-sequence" aria-label="What happens to one voice">

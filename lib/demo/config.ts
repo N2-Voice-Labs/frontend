@@ -21,6 +21,6 @@ export const HISTORY = 120;
 /** The privacy line under every "Speak to it" control. */
 export function speakNote(hasAgent: boolean) {
   if (!hasAgent) return "Optional. Mic preview only: your voice is drawn on this page and is not sent anywhere.";
-  const note = "Optional. Uses your microphone to talk to the Voice Labs demo agent while the session is open.";
+  const note = "Optional. Uses your microphone to talk to the UNAI demo agent while the session is open.";
   return DEMO_CONFIG.storesTranscripts ? `${note} Transcripts of demo conversations are stored.` : note;
 }

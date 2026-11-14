@@ -11,7 +11,7 @@ export const BEATS = {
   exchange: [0.08, 0.25],
   /** Daniel offers 10:00; "그 시간" is understood through what came before. */
   context: [0.26, 0.46],
-  /** Voice Labs yields the moment Minji speaks over it. */
+  /** UNAI yields the moment Minji speaks over it. */
   interruption: [0.47, 0.59],
   /** Korean and English in one sentence; the signal never breaks. */
   codeSwitch: [0.59, 0.7],

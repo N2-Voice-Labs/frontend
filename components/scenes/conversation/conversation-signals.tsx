@@ -91,7 +91,7 @@ function speechShape(x: number, T: number, seed: number) {
   const groups = 0.3 + 0.7 * (0.5 + 0.5 * noise(x * 4.5 - T * 1.6, seed + 3));
   return (carrier * 0.8 + grain) * groups;
 }
-/** Voice Labs speaking: smoother, fewer harmonics. */
+/** UNAI speaking: smoother, fewer harmonics. */
 function voiceShape(x: number, T: number, seed: number) {
   const ph = seed * 1.31;
   return 0.75 * Math.sin(TAU * 4.5 * x - T * 4.6 + ph) + 0.25 * Math.sin(TAU * 8 * x + T * 3.1 + ph);

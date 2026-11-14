@@ -45,7 +45,7 @@ const messages: Record<string, string> = {
   voice_session_not_found: "This call no longer exists.",
   runtime_unavailable: "The interpreter isn’t responding right now. Try again in a moment.",
   runtime_auth_not_configured: "The interpreter isn’t set up on this server yet.",
-  authentication_required: "This Voice Labs server needs a sign-in key, and calls can’t start without one.",
+  authentication_required: "This UNAI server needs a sign-in key, and calls can’t start without one.",
   forbidden: "This link or session no longer has access to the call.",
 };
 

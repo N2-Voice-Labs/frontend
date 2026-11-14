@@ -10,7 +10,7 @@ import { EVENTS, SCRIPT, type ConversationEvent, type Lang, type Speaker, type U
 export type SideState = {
   /** The person's own voice, 0–1. */
   speak: number;
-  /** Voice Labs speaking to them, in their language, 0–1. */
+  /** UNAI speaking to them, in their language, 0–1. */
   hear: number;
   /** Language indicator, e.g. "KO" or, mid code-switch, "KO → EN". */
   langs: string;
@@ -64,7 +64,7 @@ export function partAt(u: Utterance, t: number) {
   return u.parts.length - 1;
 }
 
-/** The next utterance on the other side that carries this one's meaning (Voice Labs' voice). */
+/** The next utterance on the other side that carries this one's meaning (UNAI's voice). */
 function carrier(u: Utterance, script: readonly Utterance[]) {
   return script.find((v) => v.source === "voice" && v.side !== u.side && v.start >= u.end - 0.01 && !v.cut);
 }

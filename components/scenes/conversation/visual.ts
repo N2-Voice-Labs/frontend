@@ -136,7 +136,7 @@ function placeHalo(i: number, f: Frame, o: Point) {
   o.y = (minji ? my : dy) + Math.sin(ang) * r * ry;
   o.a = Math.min(0.2, (0.025 + 0.07 * (1 - RR[i])) * (1 + 1.1 * live));
   const voice = minji ? voiceM : voiceD;
-  // When it is Voice Labs speaking to this person, a few particles warm to gold.
+  // When it is UNAI speaking to this person, a few particles warm to gold.
   o.c = voice && GOLD[i] < 0.2 * live ? BRIDGE : minji ? KO : EN;
   o.s = 1;
 }

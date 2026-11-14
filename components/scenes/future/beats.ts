@@ -30,7 +30,7 @@ export const BEATS = {
   silence: [0.73, 0.8],
   /** A VOICE SHOULD NEVER NEED / A TRANSLATION TO BE HEARD. — the whole sentence, slowly. */
   line: [0.8, 0.88],
-  /** Black, then VOICE LABS and the tagline. */
+  /** Black, then UNAI and the tagline. */
   brand: [0.88, 0.94],
   /** The doorway (one primary action, two quiet links) and a minimal footer. */
   cta: [0.93, 1],

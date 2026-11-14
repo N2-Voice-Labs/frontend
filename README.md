@@ -1,4 +1,8 @@
-# Voice Labs site and workspace
+# UNAI site and workspace
+
+> **UNAI** (formerly Voice Labs) is a B2B AI communication platform: AI voice agents (primary), real-time translation, AI chatbots and developer APIs. First market: university admissions offices. First MVP: the AI Admissions Assistant for international students at Inha University. Calls run in the browser over WebRTC (LiveKit); telephone/SIP calling is deferred.
+
+This repository is the **UNAI marketing site** (confirmed 2026-11-12): the cinematic landing film at `/` plus Products, Solutions, Developers, Live demo and Contact pages. The Live demo page links to the Inha Admissions portal (`frontend.voice-labs`) through `NEXT_PUBLIC_PORTAL_URL`. The older copied workspace and call pages still in this repo are not linked from the site; the up-to-date versions live in `frontend.voice-labs`. Cloudflare Worker name: `unai-site`.
 
 Next.js App Router, plain CSS. The landing film uses GSAP (ScrollTrigger) and Lenis; nothing else animates with a library.
 

@@ -7,8 +7,8 @@ import "./cinematic.css";
 
 export const metadata: Metadata = {
   ...baseMetadata,
-  title: "Voice Labs — Conversation shouldn't feel different",
-  description: "Real-time voice infrastructure for a multilingual world: natural conversation across languages, with turn-taking, interruptions and code-switching.",
+  title: "UNAI: AI voice agents and real-time translation for businesses",
+  description: "UNAI is a B2B AI communication platform: AI voice agents, real-time translation, AI chatbots and developer APIs. First solution: an AI admissions assistant for international students.",
 };
 
 export default function MarketingLayout({ children }: Readonly<{ children: React.ReactNode }>) {

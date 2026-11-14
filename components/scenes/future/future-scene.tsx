@@ -80,21 +80,22 @@ export function FutureScene() {
       </div>
 
       <div className="frame frame-center future-end">
-        <CinematicText as="h2" className="title-brand future-say future-brand" lines={["Voice Labs"]} />
-        <p className="future-tag lede">Real-time voice infrastructure for a multilingual world.</p>
+        <CinematicText as="h2" className="title-brand future-say future-brand" lines={["UNAI"]} />
+        <p className="future-tag lede">AI communication infrastructure for business.</p>
         <nav className="future-ctas" aria-label="Where to go next">
-          <a href={ROUTES.agents} className="future-door mono">Enter the workspace<span aria-hidden="true"> →</span></a>
+          <a href={ROUTES.demo} className="future-door mono">Try the live demo<span aria-hidden="true"> →</span></a>
           <span className="future-links">
-            <a href="#reality" className="future-link mono" onClick={(e) => go(e, "reality")}>Experience Voice Labs</a>
-            <a href="#engine" className="future-link mono" onClick={(e) => go(e, "engine")}>Explore the stack</a>
+            <a href="#reality" className="future-link mono" onClick={(e) => go(e, "reality")}>Experience UNAI</a>
+            <a href={ROUTES.products} className="future-link mono">Products</a>
+            <a href={ROUTES.developers} className="future-link mono">Developers</a>
           </span>
         </nav>
       </div>
 
       <footer className="future-foot mono">
-        <span className="future-foot-name">Voice Labs</span>
+        <span className="future-foot-name">UNAI</span>
         <span>Built for conversations that shouldn&apos;t need translation.</span>
-        <span>© {new Date().getFullYear()} Voice Labs</span>
+        <span>© {new Date().getFullYear()} UNAI</span>
         <span>Conversation examples are illustrative.</span>
       </footer>
     </Scene>
