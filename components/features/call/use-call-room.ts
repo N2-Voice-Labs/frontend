@@ -21,7 +21,8 @@ import {
   type EndReason,
   type Seat,
 } from "@/lib/call-state";
-import { endVoiceSession } from "@/lib/platform";
+import { endCall as endCallSession, type ListenConnection } from "@/lib/platform";
+import { LatencyRecorder, VoicedOnsetDetector, latencyDiagnosticsEnabled } from "@/lib/audio-latency";
 import { createLevelSampler, LevelStore, type LevelSampler } from "./level-store";
 
 /**
@@ -52,6 +53,11 @@ export type CallCredentials = {
   sessionId: string;
   /** Session-scoped Bearer token (creator or guest). */
   sessionToken?: string | null;
+  /**
+   * Private listening: where this person's translation arrives (a second, subscribe-only room). The session-room
+   * token cannot subscribe to anything, so without this the browser would receive no translated audio at all.
+   */
+  listen?: ListenConnection;
   /** Unix seconds after which `token` no longer works (LiveKit TTL is 10 minutes). */
   tokenExpiresAt: number;
   micDeviceId?: string;
@@ -62,12 +68,29 @@ const DUPLICATE_IDENTITY = 2;
 const PARTICIPANT_REMOVED = 4;
 const ROOM_DELETED = 5;
 
+function safeStorage(): Pick<Storage, "getItem"> | undefined {
+  try {
+    return window.localStorage;
+  } catch {
+    return undefined; // blocked storage throws on access
+  }
+}
+
 const AUDIO_ATTRIBUTE = "voiceLabsAudio"; // data-voice-labs-audio (shared with the playground's cleanup)
 
 export function useCallRoom(options: { otherName?: string } = {}) {
   const [state, dispatch] = useReducer(callReducer, initialCallState);
   const levels = useMemo(() => new LevelStore(), []);
   const roomRef = useRef<Room | null>(null);
+  /** The private listen room (subscribe-only) that carries this person's translation. */
+  const listenRoomRef = useRef<Room | null>(null);
+  /** Opt-in browser-side audio timing (lib/audio-latency.ts): a disabled recorder is a no-op. */
+  const latencyRef = useRef<LatencyRecorder>(new LatencyRecorder({ enabled: false }));
+  const diagSampler = useRef<LevelSampler | null>(null);
+  /** Starts the diagnostics tap on the current translation track (set by connect; used after "turn on sound"). */
+  const startDiagRef = useRef<(() => void) | null>(null);
+  const diagTimers = useRef<number[]>([]);
+  const otherIdentityRef = useRef<string | null>(null);
   const credentialsRef = useRef<CallCredentials | null>(null);
   const mountedRef = useRef(true);
   const intentionalRef = useRef(false);
@@ -126,14 +149,35 @@ export function useCallRoom(options: { otherName?: string } = {}) {
     translationTrack.current = null;
   }, []);
 
+  const stopDiagnostics = useCallback(() => {
+    startDiagRef.current = null;
+    diagSampler.current?.dispose();
+    diagSampler.current = null;
+    diagTimers.current.forEach((timer) => window.clearInterval(timer));
+    diagTimers.current = [];
+  }, []);
+
   const removeAudio = useCallback(() => {
+    stopDiagnostics();
     audioElements.current.forEach((element) => element.remove());
     audioElements.current.clear();
     localSampler.current?.dispose();
     localSampler.current = null;
     disposeTranslationSampler();
     levels.reset();
-  }, [levels, disposeTranslationSampler]);
+  }, [levels, disposeTranslationSampler, stopDiagnostics]);
+
+  const teardownListen = useCallback(async () => {
+    const listenRoom = listenRoomRef.current;
+    listenRoomRef.current = null;
+    if (!listenRoom) return;
+    try {
+      await listenRoom.disconnect();
+    } catch {
+      // Already gone.
+    }
+    listenRoom.removeAllListeners?.();
+  }, []);
 
   const teardownRoom = useCallback(async (room: Room | null) => {
     intentionalRef.current = true;
@@ -144,8 +188,9 @@ export function useCallRoom(options: { otherName?: string } = {}) {
       // Already gone.
     }
     room?.removeAllListeners?.();
+    await teardownListen();
     removeAudio();
-  }, [removeAudio]);
+  }, [removeAudio, teardownListen]);
 
   const endSession = useCallback(async (reason: EndReason) => {
     const credentials = credentialsRef.current;
@@ -161,7 +206,7 @@ export function useCallRoom(options: { otherName?: string } = {}) {
       return;
     }
     try {
-      await endVoiceSession(credentials.sessionId, credentials.sessionToken);
+      await endCallSession(credentials.sessionId, credentials.sessionToken);
       safeDispatch({ type: "ended", reason });
     } catch (cause) {
       // Keep the session id so "Retry end call" can try again (same rule as the playground).
@@ -183,6 +228,18 @@ export function useCallRoom(options: { otherName?: string } = {}) {
     credentialsRef.current = credentials;
     intentionalRef.current = false;
     endRequestedRef.current = false;
+    await teardownListen(); // a rejoin starts from nothing: no second translation track on top of the old one
+    otherIdentityRef.current = null;
+    const recorder = new LatencyRecorder({
+      enabled: typeof window !== "undefined" && latencyDiagnosticsEnabled(window.location.search, safeStorage()),
+    });
+    latencyRef.current = recorder;
+    if (recorder.enabled) {
+      (window as unknown as { __voiceLabsLatency?: unknown }).__voiceLabsLatency = {
+        export: () => recorder.export(),
+        events: () => recorder.snapshot(),
+      };
+    }
     safeDispatch({ type: "connect" });
     if (!credentials.url || !credentials.token) {
       safeDispatch({ type: "connect-failed", message: "Calls aren’t set up on this server yet." });
@@ -235,12 +292,80 @@ export function useCallRoom(options: { otherName?: string } = {}) {
     const joined = (participant: RemoteParticipant) => {
       const seat = seatOf(participant);
       if (seat === "self") return;
-      if (seat === "other") clearGrace();
+      if (seat === "other") {
+        clearGrace();
+        otherIdentityRef.current = participant.identity;
+      }
       const micPublication = participant.getTrackPublication?.(Track.Source.Microphone);
       safeDispatch({ type: "participant-joined", seat, identity: participant.identity, muted: micPublication?.isMuted });
     };
 
-    room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => {
+    /** Diagnostics only: a continuous tap on the track we play, never on our own microphone. */
+    const ensureDiagSampler = (track: MediaStreamTrack) => {
+      const recorder = latencyRef.current;
+      if (!recorder.enabled || diagSampler.current) return;
+      const context = liveContext();
+      if (!context) {
+        recorder.record("analyser_unavailable", { detail: { reason: "audio_context_not_running" } });
+        return;
+      }
+      const detector = new VoicedOnsetDetector();
+      const sampler = createLevelSampler(
+        track,
+        context,
+        (level) => {
+          const change = detector.feed(level, performance.now());
+          if (change) recorder.record(change.type === "onset" ? "browser_first_voiced_audio" : "browser_voiced_audio_ended", { seq: change.seq, at: change.at });
+        },
+        { intervalMs: 20, tailMs: Number.POSITIVE_INFINITY },
+      );
+      if (!sampler) {
+        recorder.record("analyser_unavailable", { detail: { reason: "web_audio_missing" } });
+        return;
+      }
+      diagSampler.current = sampler;
+      sampler.start();
+    };
+
+    /** Diagnostics only: RTP arrival and concealed samples (packet loss / underrun) of the translated track. */
+    const watchReceiver = (track: RemoteTrack) => {
+      const recorder = latencyRef.current;
+      const receiver = track as unknown as { getReceiverStats?: () => Promise<Record<string, unknown> | undefined> };
+      if (!recorder.enabled) return;
+      if (typeof receiver.getReceiverStats !== "function") {
+        recorder.record("receiver_stats_unavailable", { detail: { reason: "not_supported" } });
+        return;
+      }
+      let seen = false;
+      let concealed = 0;
+      let polls = 0;
+      let reportedMissing = false;
+      const timer = window.setInterval(() => {
+        polls += 1;
+        void receiver.getReceiverStats?.().then((stats) => {
+          // livekit-client's audio receiver stats carry bytesReceived (not packetsReceived).
+          const bytes = Number(stats?.bytesReceived ?? 0);
+          if (!seen && bytes > 0) {
+            seen = true;
+            recorder.record("first_rtp_audio_received", { detail: { bytes } });
+          } else if (!seen && polls >= 12 && !reportedMissing) {
+            reportedMissing = true; // honest "could not measure", with which fields the browser gave
+            recorder.record("receiver_stats_unavailable", { detail: { reason: stats ? "no_bytes_counted" : "no_stats", fields: stats ? Object.keys(stats).slice(0, 12).join(",") : null } });
+          }
+          const now = Number(stats?.concealedSamples ?? 0);
+          if (seen && now > concealed) recorder.record("audio_concealment", { detail: { added_samples: now - concealed } });
+          concealed = now;
+        }).catch(() => undefined);
+      }, 250);
+      diagTimers.current.push(timer);
+    };
+
+    startDiagRef.current = () => {
+      if (translationTrack.current) ensureDiagSampler(translationTrack.current);
+    };
+
+    /** Our translation arrived: attach it for playback (unchanged) and, when asked to, time it. */
+    const onAudioTrack = (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant, viaListenRoom: boolean) => {
       if (!isCurrent()) {
         track.detach().forEach((element) => element.remove());
         return;
@@ -254,6 +379,16 @@ export function useCallRoom(options: { otherName?: string } = {}) {
       element.volume = volumeRef.current;
       document.body.appendChild(element);
       audioElements.current.add(element);
+      const isTranslation = viaListenRoom || seatOf(participant) === "interpreter" || publication.trackName?.startsWith("translation-for-");
+      const recorder = latencyRef.current;
+      if (recorder.enabled && isTranslation) {
+        recorder.context = { listener: room.localParticipant?.identity ?? null, speaker: otherIdentityRef.current, track: publication.trackName ?? null };
+        recorder.record("translated_track_subscribed", { detail: { via: viaListenRoom ? "listen_room" : "session_room" } });
+        element.addEventListener("playing", () => recorder.record("playback_started"));
+        element.addEventListener("waiting", () => recorder.record("element_waiting"));
+        element.addEventListener("stalled", () => recorder.record("element_stalled"));
+        element.addEventListener("error", () => recorder.record("element_error", { detail: { code: element.error?.code ?? null } }));
+      }
       const played = (() => {
         try {
           return element.play();
@@ -261,23 +396,31 @@ export function useCallRoom(options: { otherName?: string } = {}) {
           return Promise.reject(new Error("play failed"));
         }
       })();
-      void Promise.resolve(played).then(() => safeDispatch({ type: "sound-blocked", blocked: false })).catch(() => {
+      void Promise.resolve(played).then(() => safeDispatch({ type: "sound-blocked", blocked: false })).catch((cause: unknown) => {
+        if (recorder.enabled && isTranslation) recorder.record("playback_failed", { detail: { reason: cause instanceof Error ? cause.name : "unknown" } });
         if (element.isConnected) safeDispatch({ type: "sound-blocked", blocked: true });
       });
       // Our translation: the Runtime publishes `translation-for-<our identity>` (only we may subscribe).
-      if (seatOf(participant) === "interpreter" || publication.trackName?.startsWith("translation-for-")) {
+      if (isTranslation) {
         disposeTranslationSampler();
         translationTrack.current = track.mediaStreamTrack;
         setHearing(null);
+        if (recorder.enabled) {
+          watchReceiver(track);
+          ensureDiagSampler(track.mediaStreamTrack);
+        }
       }
-    });
-    room.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack) => {
+    };
+    const onAudioTrackGone = (track: RemoteTrack) => {
       if (track.mediaStreamTrack && track.mediaStreamTrack === translationTrack.current) disposeTranslationSampler();
+      latencyRef.current.record("translated_track_unsubscribed");
       track.detach().forEach((element) => {
         audioElements.current.delete(element);
         element.remove();
       });
-    });
+    };
+    room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => onAudioTrack(track, publication, participant, false));
+    room.on(RoomEvent.TrackUnsubscribed, onAudioTrackGone);
     room.on(RoomEvent.ParticipantConnected, (participant: RemoteParticipant) => {
       if (isCurrent()) joined(participant);
     });
@@ -368,10 +511,42 @@ export function useCallRoom(options: { otherName?: string } = {}) {
       });
     });
 
+    // Private listening: the translation arrives in a second, subscribe-only room, joined alongside the session room.
+    let listenRoom: Room | null = null;
+    if (credentials.listen?.token) {
+      const listen = credentials.listen;
+      listenRoom = new Room();
+      listenRoomRef.current = listenRoom;
+      listenRoom.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => onAudioTrack(track, publication, participant, true));
+      listenRoom.on(RoomEvent.TrackUnsubscribed, onAudioTrackGone);
+      listenRoom.on(RoomEvent.AudioPlaybackStatusChanged, () => {
+        if (!isCurrent()) return;
+        const allowed = Boolean(room.canPlaybackAudio && listenRoom?.canPlaybackAudio);
+        latencyRef.current.record(allowed ? "playback_allowed" : "playback_blocked");
+        safeDispatch({ type: "sound-blocked", blocked: !allowed });
+      });
+      listenRoom.on(RoomEvent.Reconnecting, () => latencyRef.current.record("listener_reconnecting"));
+      listenRoom.on(RoomEvent.Reconnected, () => latencyRef.current.record("listener_reconnected"));
+      listenRoom.on(RoomEvent.Disconnected, (reason?: number) => {
+        latencyRef.current.record("listener_disconnected", { detail: { reason: reason ?? null } });
+        // Losing the listen room means no translated audio, even though the session room is fine.
+        if (!mountedRef.current || intentionalRef.current || listenRoomRef.current !== listenRoom) return;
+        safeDispatch({ type: "disconnected", message: "You lost the translation audio.", inUseElsewhere: reason === DUPLICATE_IDENTITY });
+      });
+    }
     try {
-      await room.connect(credentials.url, credentials.token);
+      await Promise.all([
+        room.connect(credentials.url, credentials.token),
+        listenRoom && credentials.listen
+          ? listenRoom.connect(credentials.listen.url, credentials.listen.token).then(() => latencyRef.current.record("listener_room_connected"))
+          : Promise.resolve(),
+      ]).catch((cause: unknown) => {
+        if (listenRoom) latencyRef.current.record("listener_connect_failed", { detail: { reason: cause instanceof Error ? cause.name : "unknown" } });
+        throw cause;
+      });
       if (!isCurrent()) {
         await room.disconnect().catch(() => undefined);
+        await teardownListen();
         return false;
       }
       await room.localParticipant.setMicrophoneEnabled(true);
@@ -383,6 +558,7 @@ export function useCallRoom(options: { otherName?: string } = {}) {
       intentionalRef.current = true;
       if (roomRef.current === room) roomRef.current = null;
       await room.disconnect().catch(() => undefined);
+      await teardownListen();
       removeAudio();
       intentionalRef.current = false;
       const message = cause instanceof Error && /token|expired|unauthori[sz]ed|401/i.test(cause.message)
@@ -391,7 +567,7 @@ export function useCallRoom(options: { otherName?: string } = {}) {
       safeDispatch({ type: "connect-failed", message });
       return false;
     }
-  }, [clearGrace, disposeTranslationSampler, endSession, levels, liveContext, removeAudio, safeDispatch]);
+  }, [clearGrace, disposeTranslationSampler, endSession, levels, liveContext, removeAudio, safeDispatch, teardownListen]);
 
   // Inferred "Translating" never outlives its timeout (UX spec §5.3).
   useEffect(() => {
@@ -411,6 +587,10 @@ export function useCallRoom(options: { otherName?: string } = {}) {
       const room = roomRef.current;
       roomRef.current = null;
       if (room) void room.disconnect().catch(() => undefined);
+      const listenRoom = listenRoomRef.current;
+      listenRoomRef.current = null;
+      if (listenRoom) void listenRoom.disconnect().catch(() => undefined);
+      stopDiagnostics();
       elements.forEach((element) => element.remove());
       elements.clear();
       localSampler.current?.dispose();
@@ -441,9 +621,13 @@ export function useCallRoom(options: { otherName?: string } = {}) {
     primeAudio(); // this runs in the "Tap to turn on sound" click
     try {
       await room?.startAudio();
+      await listenRoomRef.current?.startAudio();
       await Promise.all([...audioElements.current].map((element) => element.play().catch(() => undefined)));
-      void audioContextRef.current?.resume().catch(() => undefined);
-      safeDispatch({ type: "sound-blocked", blocked: room ? !room.canPlaybackAudio : false });
+      await audioContextRef.current?.resume().catch(() => undefined);
+      const listenRoom = listenRoomRef.current;
+      safeDispatch({ type: "sound-blocked", blocked: room ? !(room.canPlaybackAudio && (listenRoom ? listenRoom.canPlaybackAudio : true)) : false });
+      // A diagnostics tap that could not start because the audio context was suspended starts now.
+      startDiagRef.current?.();
     } catch {
       safeDispatch({ type: "sound-blocked", blocked: true });
     }
@@ -502,6 +686,12 @@ export function useCallRoom(options: { otherName?: string } = {}) {
     canRejoin,
     switchDevice,
     setVolume,
+    /** Opt-in browser-side audio timing (?latency=1): `enabled` is false and the rest empty unless switched on. */
+    latency: {
+      get enabled() { return latencyRef.current.enabled; },
+      snapshot: () => latencyRef.current.snapshot(),
+      export: () => latencyRef.current.export(),
+    },
   };
 }
 

@@ -1,109 +1,46 @@
 /**
- * Guest invite links for two-person calls (UX spec §4.2–4.3).
+ * Shareable call links.
  *
- * There is no join endpoint, so the link has to carry the guest's LiveKit token and session token.
- * Everything lives in the URL #fragment, which browsers never send to a server and which never
- * reaches access logs. /join strips it from the address bar as soon as it has been read.
- * LiveKit tokens live 10 minutes (backend livekit.py), so the link carries its own expiry.
+ * The link carries one thing: a random invitation code in the URL #fragment, which browsers never send
+ * to a server and which never reaches access logs. /join strips it from the address bar as soon as it
+ * has been read, then asks the Platform who invited the guest and for the guest's own connection
+ * (`getCallInvite`, `joinCall` in lib/platform.ts). The code expires on the Platform (default 30 minutes)
+ * and seats one guest; the LiveKit and session tokens are issued only when the guest joins.
  */
 
-export const INVITE_VERSION = "1";
-export const INVITE_TTL_SECONDS = 600;
+export type InviteCodeResult = { ok: true; code: string } | { ok: false; reason: "missing" | "incomplete" };
 
-export type Invite = {
-  sessionId: string;
-  conversationId: string;
-  /** LiveKit server URL. */
-  url: string;
-  /** Guest LiveKit token. */
-  token: string;
-  /** Guest Platform session token (Bearer for transcript polling and End). */
-  sessionToken: string;
+/** What the guest sees before joining (Platform `GET /calls/invites/{code}`). */
+export type InviteInfo = {
+  code: string;
+  /** The inviter's display name (may be empty). */
+  from: string;
   /** The guest's language (what they speak and hear). */
   me: string;
   /** The inviter's language. */
   them: string;
-  /** The inviter's display name. */
-  from: string;
-  /** The guest's display name, as given by the inviter. */
-  name: string;
-  /** Unix seconds after which the LiveKit token no longer works. */
+  /** Unix seconds after which the code stops working. */
   expiresAt: number;
 };
 
-export type InviteParseResult =
-  | { ok: true; invite: Invite }
-  | { ok: false; reason: "missing" | "incomplete" | "unsupported"; from?: string };
-
-const REQUIRED: [keyof Invite, string][] = [
-  ["sessionId", "s"],
-  ["conversationId", "c"],
-  ["url", "u"],
-  ["token", "t"],
-  ["sessionToken", "k"],
-  ["me", "me"],
-  ["them", "them"],
-];
-
-export function buildInviteFragment(invite: Invite): string {
-  const params = new URLSearchParams();
-  params.set("v", INVITE_VERSION);
-  params.set("s", invite.sessionId);
-  params.set("c", invite.conversationId);
-  params.set("u", invite.url);
-  params.set("t", invite.token);
-  params.set("k", invite.sessionToken);
-  params.set("me", invite.me);
-  params.set("them", invite.them);
-  if (invite.from) params.set("from", invite.from);
-  if (invite.name) params.set("name", invite.name);
-  params.set("exp", String(invite.expiresAt));
-  return params.toString();
-}
-
-/** Absolute link: `${origin}/join#…`. */
-export function buildInviteLink(origin: string, invite: Invite): string {
-  return `${origin.replace(/\/$/, "")}/join#${buildInviteFragment(invite)}`;
+/** Absolute link: `${origin}/join#c=<code>`. */
+export function buildInviteLink(origin: string, code: string): string {
+  return `${origin.replace(/\/$/, "")}/join#c=${encodeURIComponent(code)}`;
 }
 
 /** Parses `location.hash` (with or without the leading `#`). Never throws. */
-export function parseInviteFragment(hash: string): InviteParseResult {
+export function parseInviteCode(hash: string): InviteCodeResult {
   const raw = hash.startsWith("#") ? hash.slice(1) : hash;
   if (!raw.trim()) return { ok: false, reason: "missing" };
-  let params: URLSearchParams;
+  let code: string | null = null;
   try {
-    params = new URLSearchParams(raw);
+    code = new URLSearchParams(raw).get("c")?.trim() ?? null;
   } catch {
     return { ok: false, reason: "incomplete" };
   }
-  const from = (params.get("from") ?? "").trim().slice(0, 100) || undefined;
-  const version = params.get("v");
-  if (version && version !== INVITE_VERSION) return { ok: false, reason: "unsupported", from };
-  const values: Partial<Record<keyof Invite, string>> = {};
-  for (const [field, key] of REQUIRED) {
-    const value = params.get(key)?.trim();
-    if (!value) return { ok: false, reason: "incomplete", from };
-    values[field] = value;
-  }
-  const expiresAt = Number(params.get("exp"));
-  if (!Number.isFinite(expiresAt) || expiresAt <= 0) return { ok: false, reason: "incomplete", from };
-  if (!/^wss?:\/\//i.test(values.url!) && !/^https?:\/\//i.test(values.url!)) return { ok: false, reason: "incomplete", from };
-  if (values.me === values.them) return { ok: false, reason: "incomplete", from };
-  return {
-    ok: true,
-    invite: {
-      sessionId: values.sessionId!,
-      conversationId: values.conversationId!,
-      url: values.url!,
-      token: values.token!,
-      sessionToken: values.sessionToken!,
-      me: values.me!.toLowerCase(),
-      them: values.them!.toLowerCase(),
-      from: from ?? "",
-      name: (params.get("name") ?? "").trim().slice(0, 100),
-      expiresAt,
-    },
-  };
+  // <session uuid>.<secret>: URL-safe characters only, bounded length.
+  if (!code || code.length > 120 || !/^[0-9a-f-]{36}\.[A-Za-z0-9_-]{16,}$/.test(code)) return { ok: false, reason: "incomplete" };
+  return { ok: true, code };
 }
 
 /** Seconds left before the invite stops working (never negative). */

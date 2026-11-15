@@ -12,7 +12,7 @@ const timeline: SceneTimeline = (tl, q) => {
   // The system (bridge → signal → runtime) is the main actor; the type follows it.
   systemTimeline(tl, q);
 
-  // VOICE LABS rises out of the signal as it passes the centre: masked words, blur → sharp,
+  // UNAI rises out of the signal as it passes the centre: masked words, blur → sharp,
   // while a slight horizontal drift (the signal's direction) settles to 0. No bounce.
   const [t0] = BEATS.title;
   const t = span(BEATS.title);
@@ -24,7 +24,7 @@ const timeline: SceneTimeline = (tl, q) => {
   );
   tl.fromTo(q(".bridge-title"), { x: () => -window.innerWidth * 0.05 }, { x: 0, duration: t * 0.7, ease: "power2.out" }, t0);
 
-  // Real-time voice infrastructure for a multilingual world.
+  // AI communication infrastructure for business.
   const [g0] = BEATS.tagline;
   tl.fromTo(
     q(".bridge-tag"),
@@ -79,11 +79,11 @@ export function BridgeScene() {
       <BridgeSystem />
       <div className="frame frame-center bridge-head">
         <div className="bridge-lockup">
-          <CinematicText as="h2" className="title-brand bridge-title" lines={["Voice Labs"]} />
-          <p className="bridge-tag lede">Real-time voice infrastructure for a multilingual world.</p>
+          <CinematicText as="h2" className="title-brand bridge-title" lines={["UNAI"]} />
+          <p className="bridge-tag lede">AI communication infrastructure for business.</p>
         </div>
       </div>
-      <ol className="sr-only" aria-label="The Voice Labs runtime, in order">
+      <ol className="sr-only" aria-label="The UNAI runtime, in order">
         {STAGES.map((s) => <li key={s.id}>{s.label.toLowerCase()}</li>)}
       </ol>
       <ul className="bridge-micro" data-zone={STATEMENT_ZONE} aria-label="Properties">

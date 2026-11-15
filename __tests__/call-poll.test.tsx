@@ -69,6 +69,7 @@ test("unchanged polls keep the same array; unchanged messages keep their identit
 });
 
 test("turns keep their identity across re-pairing, so memoised rows don't re-render", () => {
+  vi.setSystemTime(new Date(Date.UTC(2026, 9, 21, 5, 0, 4)));
   const first = [message("1", "user", "ko", "안녕", 1), message("2", "assistant", "en", "Hi", 2)];
   const turnsA = pairCallMessages(first, { self: "en", other: "ko" });
   const turnsB = reuseTurns(turnsA, pairCallMessages(first, { self: "en", other: "ko" }));

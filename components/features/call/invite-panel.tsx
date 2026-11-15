@@ -2,8 +2,8 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { describeError, errorCode } from "@/lib/platform-errors";
-import { addSessionParticipant } from "@/lib/platform";
-import { buildInviteLink, INVITE_TTL_SECONDS, type Invite } from "@/lib/invite";
+import { createCallInvite } from "@/lib/platform";
+import { buildInviteLink } from "@/lib/invite";
 import { ErrorState } from "./call-states";
 import { Icon } from "./icons";
 import { InviteCountdown, useInviteStage } from "./invite-countdown";
@@ -12,36 +12,30 @@ import { LanguageReadout } from "./language-select";
 export type InviteLink = { link: string; expiresAt: number; name: string };
 
 /**
- * Invite the second person (UX spec §4.2). Creating the link is an explicit click: it uses up the
- * call's only guest slot and starts the 10-minute LiveKit clock. The link is built in the browser and
- * carries the guest credentials in its #fragment (never sent to a server).
+ * Invite the second person (UX spec §4.2). Creating the link is an explicit click. The link carries only
+ * a random code in its #fragment (never sent to a server); the guest's seat and credentials are issued
+ * when they open it, and the code expires on the Platform.
  */
 export function InvitePanel({
   sessionId,
-  conversationId,
   sessionToken,
   selfName,
-  selfLanguage,
   otherLanguage,
   otherName,
   onOtherNameChange,
   invite,
   onInvite,
-  onExpiredRestart,
   onMinuteLeft,
   origin,
 }: {
   sessionId: string;
-  conversationId: string;
   sessionToken?: string | null;
   selfName: string;
-  selfLanguage: string;
   otherLanguage: string;
   otherName: string;
   onOtherNameChange: (name: string) => void;
   invite: InviteLink | null;
-  onInvite: (invite: InviteLink) => void;
-  onExpiredRestart: () => void;
+  onInvite: (invite: InviteLink | null) => void;
   /** Receives the 1-minute / expired warning for the page status line (WCAG 2.2.1), or undefined. */
   onMinuteLeft?: (message: string | undefined) => void;
   origin?: string;
@@ -78,22 +72,8 @@ export function InvitePanel({
     setBusy(true);
     setError(null);
     try {
-      const display = otherName.trim() || null;
-      const guest = await addSessionParticipant(sessionId, { language: otherLanguage, display_name: display }, sessionToken);
-      const expiresAt = Math.floor(Date.now() / 1000) + INVITE_TTL_SECONDS;
-      const payload: Invite = {
-        sessionId,
-        conversationId,
-        url: guest.connection.url,
-        token: guest.connection.token,
-        sessionToken: guest.session_token,
-        me: otherLanguage,
-        them: selfLanguage,
-        from: selfName,
-        name: otherName.trim(),
-        expiresAt,
-      };
-      onInvite({ link: buildInviteLink(origin ?? window.location.origin, payload), expiresAt, name: otherName.trim() });
+      const created = await createCallInvite(sessionId, sessionToken);
+      onInvite({ link: buildInviteLink(origin ?? window.location.origin, created.code), expiresAt: created.expires_at, name: otherName.trim() });
     } catch (cause) {
       setError({ message: describeError(cause, "Couldn’t create the invite link. Try again."), code: errorCode(cause) });
     } finally {
@@ -115,7 +95,7 @@ export function InvitePanel({
   async function share() {
     if (!invite || typeof navigator.share !== "function") return;
     try {
-      await navigator.share({ title: "Join my Voice Labs call", text: `${selfName} invited you to a translated call.`, url: invite.link });
+      await navigator.share({ title: "Join my UNAI call", text: `${selfName} invited you to a translated call.`, url: invite.link });
     } catch {
       // Cancelled.
     }
@@ -135,17 +115,16 @@ export function InvitePanel({
             <label htmlFor={nameId}>Their name <span className="call-optional">(optional)</span></label>
             <input id={nameId} value={otherName} maxLength={100} autoComplete="off" onChange={(event) => onOtherNameChange(event.target.value)} />
           </div>
-          <p className="call-hint">You can create one invite link per call. It can be used to join for the next 10 minutes.</p>
+          <p className="call-hint">Send the link to the other person. It expires after a while, and lets one person join.</p>
           <button type="button" className="call-btn" data-variant="primary" onClick={() => void create()} disabled={busy} aria-busy={busy || undefined}>
             {busy ? <span className="call-spinner" aria-hidden="true" /> : <Icon name="link" />} Create invite link
           </button>
           {error && (
             <ErrorState
-              title={error.code === "session_full" ? "Someone has already been invited to this call" : "Couldn’t create the invite link"}
+              title="Couldn’t create the invite link"
               technical={error.code ?? undefined}
-              action={error.code === "session_full" ? <button type="button" className="call-btn" data-variant="secondary" data-size="sm" onClick={onExpiredRestart}>End call and start a new one</button> : undefined}
             >
-              {error.code === "session_full" ? "This call can only have one guest link." : error.message}
+              {error.message}
             </ErrorState>
           )}
         </>
@@ -166,18 +145,18 @@ export function InvitePanel({
           {copied === "manual" && <p className="call-hint">Copying is blocked here. Press ⌘C / Ctrl+C to copy the selected link.</p>}
           <p className="invite-countdown">Link works for <InviteCountdown expiresAt={invite.expiresAt} /></p>
           <p className="call-hint">
-            Treat this link like a password. Anyone who has it can join as {who} during the next 10 minutes; opening it again
-            moves the call to the newer device. It also lets them read this call’s transcript, even after the call.
-            Testing on one device? Use headphones to avoid echo.
+            Treat this link like a password. The first person to open it takes the second seat as {who}; nobody else
+            can join with it, and opening it again on the same device reconnects. It also lets them read this call’s
+            transcript. Testing on one device? Use headphones to avoid echo.
           </p>
         </>
       )}
       {expired && (
         <ErrorState
           title="The invite link expired"
-          action={<button type="button" className="call-btn" data-variant="primary" data-size="sm" onClick={onExpiredRestart}>End and start a new call</button>}
+          action={<button type="button" className="call-btn" data-variant="primary" data-size="sm" onClick={() => onInvite(null)}>Create a new link</button>}
         >
-          The link expired before {who} joined. Voice Labs can’t issue a second link for this call.
+          The link expired before {who} joined. Create a new one.
         </ErrorState>
       )}
     </section>

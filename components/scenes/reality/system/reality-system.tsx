@@ -138,7 +138,7 @@ export function RealitySystem({ live = false }: { live?: boolean }): JSX.Element
       op(E[`${who}-head`], 0.55 + 0.45 * Math.max(st.speak, st.hear * 0.7, 0.5) * (1 - 0.35 * st.cut));
     }
 
-    // Voices: each lane carries its person's speech (strong) and Voice Labs speaking to them (finer).
+    // Voices: each lane carries its person's speech (strong) and UNAI speaking to them (finer).
     const lane = (who: Speaker) => {
       const st = S[who];
       const [a, b] = who === "minji" ? LANE.minji : LANE.daniel;

@@ -20,7 +20,7 @@ import { conversationLayout } from "./layout";
 
 const SPEAKERS: readonly Speaker[] = ["minji", "daniel"];
 const meta = (s: Speaker, langs: readonly string[] = [PEOPLE[s].lang]) => `${langs.join(" / ")} · ${PEOPLE[s].place.toUpperCase()}`;
-const who = (u: Utterance) => `${u.source === "voice" ? "Voice Labs → " : ""}${PEOPLE[u.speaker].name} · ${u.langs.join(" / ")}`;
+const who = (u: Utterance) => `${u.source === "voice" ? "UNAI → " : ""}${PEOPLE[u.speaker].name} · ${u.langs.join(" / ")}`;
 /** Minji's code-switch: the utterance that speaks more than one language. */
 const SWITCH = UTTERANCES.find((u) => u.langs.length > 1)!;
 const DANIEL_IN = UTTERANCES.find((u) => u.speaker === "daniel")!.start - 0.005;
@@ -186,7 +186,7 @@ export function ConversationScene() {
           {UTTERANCES.map((u) => (
             <li key={u.id} className="conv-line" data-speaker={u.speaker} data-source={u.source} data-cut={u.interrupted ? "" : undefined}>
               <span className="conv-who">{who(u)}</span>
-              {u.source === "voice" && <span className="conv-via" aria-hidden="true">Voice Labs →</span>}
+              {u.source === "voice" && <span className="conv-via" aria-hidden="true">UNAI →</span>}
               <span className="conv-text" lang={u.lang}>
                 {u.text}
                 {u.interrupted && <span className="conv-strike" aria-hidden="true" />}

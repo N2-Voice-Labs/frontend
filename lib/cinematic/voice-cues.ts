@@ -48,7 +48,7 @@ const CONVERSATION_LANGS: Record<string, string> = { ko: "ko-KR", en: "en-US" };
 
 /**
  * Chapter 04's call, one cue per utterance in UTTERANCES (same ids, same text): Minji's side on the left,
- * Daniel's on the right; the people slightly louder than the Voice Labs voice speaking to them.
+ * Daniel's on the right; the people slightly louder than the UNAI voice speaking to them.
  */
 export const CONVERSATION_VOICES: readonly VoiceCue[] = UTTERANCES.map((u) => ({
   id: u.id,
@@ -61,7 +61,7 @@ export const CONVERSATION_VOICES: readonly VoiceCue[] = UTTERANCES.map((u) => ({
 
 /**
  * Chapter 07's call, one cue per utterance in SCRIPT (same ids): Minji on the left, Daniel on the right,
- * the people a little closer than the Voice Labs voice that speaks to them. Clips: /audio/reality-<id>.mp3.
+ * the people a little closer than the UNAI voice that speaks to them. Clips: /audio/reality-<id>.mp3.
  */
 export const REALITY_VOICES: readonly VoiceCue[] = SCRIPT.map((u) => ({
   id: u.id,

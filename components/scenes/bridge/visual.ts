@@ -15,7 +15,7 @@ export const STATIONS = [
 ] as const;
 
 /*
- * 03 — the canvas is the world AROUND the Voice Labs system (the SVG draws the system itself).
+ * 03 — the canvas is the world AROUND the UNAI system (the SVG draws the system itself).
  * stabilize/align: chapter 02's bridge loosens; cables thin, a few strands stay as a faint haze line.
  * enter: the camera moves into the bridge; particles stream outward with depth, the centre clears.
  * signal → tagline: almost empty — sparse dim dust, a cyan → magenta haze along the signal line.

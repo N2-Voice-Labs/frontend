@@ -3,7 +3,7 @@ import { PEOPLE, type Speaker } from "@/components/scenes/conversation/conversat
 /**
  * Chapter 07's conversation as an EVENT STREAM, in seconds. Everything on screen (waveforms, portraits,
  * typography, the timeline, the sound) is driven by these events through conversation-engine.ts, so a
- * live Voice Labs session (LiveKit / WebSocket: STT, TTS, turn and latency events) can later produce the
+ * live UNAI session (LiveKit / WebSocket: STT, TTS, turn and latency events) can later produce the
  * same events and replace the script without touching the visuals.
  *
  * The scripted V1 below is illustrative, not a recording.
@@ -40,7 +40,7 @@ export type ConversationEvent = {
 };
 
 /**
- * One stretch of audio on one side of the call. `human`: the person speaks. `voice`: Voice Labs speaks
+ * One stretch of audio on one side of the call. `human`: the person speaks. `voice`: UNAI speaks
  * to that person, in their language, carrying what the other person meant.
  */
 export type Utterance = {

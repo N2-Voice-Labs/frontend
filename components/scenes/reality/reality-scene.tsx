@@ -60,7 +60,7 @@ const timeline: SceneTimeline = (tl, q) => {
   realize(tl, q(".rl-natural .ct-i"), n0, (n1 - n0) * 0.4, (n1 - n0) * 0.08);
   fade(tl, q(".rl-natural"), n1 - 0.005, 0.015);
 
-  // VOICE LABS — the voices connect; the real thing is one click away.
+  // UNAI — the voices connect; the real thing is one click away.
   const [b0, b1] = BEATS.brand;
   const b = span(BEATS.brand);
   realize(tl, q(".rl-brand-name .ct-i"), b0 + b * 0.15, b * 0.25, b * 0.05);
@@ -84,7 +84,7 @@ function useLiveLevels(live: boolean) {
   }, [live, session]);
 }
 
-const who = (u: Utterance) => (u.source === "voice" ? `Voice Labs → ${PEOPLE[u.side].name}` : PEOPLE[u.side].name);
+const who = (u: Utterance) => (u.source === "voice" ? `UNAI → ${PEOPLE[u.side].name}` : PEOPLE[u.side].name);
 
 /** One line of the call, near its speaker's voice: what they said, or what they heard. */
 function Line({ u }: { u: Utterance }) {
@@ -144,7 +144,7 @@ export function RealityScene() {
           {(["minji", "daniel"] as const).map((s) => (
             <div key={s} className="rl-person" data-who={s}>
               <span className="rl-name mono">
-                {live ? (s === "minji" ? "YOU" : "VOICE LABS") : `${PERSON[s].label} · `}
+                {live ? (s === "minji" ? "YOU" : "UNAI") : `${PERSON[s].label} · `}
                 {!live && <span className={`rl-lang rl-lang-${s}`}>{PERSON[s].lang}</span>}
               </span>
               <span className="rl-place mono">{live ? (s === "minji" ? "your microphone" : "demo agent") : PEOPLE[s].place}</span>
@@ -175,8 +175,8 @@ export function RealityScene() {
         </div>
 
         <div className="frame frame-bottom rl-brand">
-          <CinematicText as="h2" className="rl-brand-name" lines={["Voice Labs"]} />
-          <p className="lede">Real-time voice infrastructure for a multilingual world.</p>
+          <CinematicText as="h2" className="rl-brand-name" lines={["UNAI"]} />
+          <p className="lede">AI communication infrastructure for business.</p>
           <div className="reality-actions rl-actions">
             <button type="button" className="cta cta-primary" onClick={session.toggle} aria-pressed={live}>
               {state === "connecting" ? "Connecting…" : live ? "End conversation" : "Speak to it"}

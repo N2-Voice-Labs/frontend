@@ -1,10 +1,10 @@
 /**
  * The beats of chapter 03, in chapter progress (0–1). One visual object changes form all the way through:
- * connections → bridge → one signal → VOICE LABS → the runtime → the outgoing voice that chapter 04 picks up.
+ * connections → bridge → one signal → UNAI → the runtime → the outgoing voice that chapter 04 picks up.
  * The SVG system (bridge-system.tsx), the typography (bridge-scene.tsx), the canvas (visual.ts) and the
  * sound (lib/cinematic/sound.ts) all read these.
  *
- * SVG draws the Voice Labs system; canvas particles are the world around it; DOM carries the type.
+ * SVG draws the UNAI system; canvas particles are the world around it; DOM carries the type.
  */
 export const BEATS = {
   /** Chapter 02's connections, already lying on the arc, steady and gain coherence. */
@@ -15,9 +15,9 @@ export const BEATS = {
   enter: [0.18, 0.3],
   /** The strands collapse into one primary line and one signal crosses the screen (cyan → magenta). */
   signal: [0.3, 0.4],
-  /** VOICE LABS emerges where the signal passes the centre. */
+  /** UNAI emerges where the signal passes the centre. */
   title: [0.38, 0.48],
-  /** Real-time voice infrastructure for a multilingual world. */
+  /** AI communication infrastructure for business. */
   tagline: [0.46, 0.56],
   /** One signal through four states: SPEECH (wave) → UNDERSTAND (language) → REASON (context network) → RESPOND (wave). */
   concept: [0.56, 0.66],

@@ -1,5 +1,5 @@
 /* =========================================================
-   Voice Labs landing film (components/cinematic, components/scenes).
+   UNAI landing film (components/cinematic, components/scenes).
    Always dark. Two modes:
    - html.cine-js (set before paint unless reduced motion): every scene layer is fixed to the viewport
      over one canvas, and scroll scrubs the scenes' timelines;
@@ -375,3 +375,5 @@ html:not(.cine-js) #reality .rl{display:flex;flex-direction:column}
   .grain,.cue-line,.topbar-eq i,.future-dragon-body,.future-dragon-halo{animation:none!important}
   .chapters-label{transition:none}
 }
+/* Page links in the film's top bar: hidden on phones, where the closing chapter carries them. */
+@media (max-width:760px){.topbar-page{display:none}}

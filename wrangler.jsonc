@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
-  "name": "frontend-voice-labs",
+  "name": "voice-labs",
   "compatibility_date": "2026-10-06",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
@@ -11,7 +11,7 @@
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
-      "service": "frontend-voice-labs"
+      "service": "voice-labs"
     }
   ],
   // Per-IP limit for the public demo route (app/api/demo/session). Shared across isolates,
@@ -22,5 +22,16 @@
       "namespace_id": "1001",
       "simple": { "limit": 4, "period": 60 }
     }
-  ]
+  ],
+  // Branch builds (non-main) deploy with `wrangler preview`, which needs preview-safe bindings spelled out.
+  // Previews get their own rate-limit counter so preview traffic never uses up production's.
+  "previews": {
+    "ratelimits": [
+      {
+        "name": "DEMO_RATE_LIMITER",
+        "namespace_id": "1002",
+        "simple": { "limit": 4, "period": 60 }
+      }
+    ]
+  }
 }

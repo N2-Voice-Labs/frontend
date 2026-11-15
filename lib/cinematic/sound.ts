@@ -430,7 +430,7 @@ const CUES: readonly Cue[] = [
   },
   // The one signal crosses the screen: filtered noise passing left → right.
   { id: "signalPass", chapter: 2, at: b(BRIDGE.signal[0] + 0.03), until: b(BRIDGE.signal[1]), kind: "passby" },
-  // A low, warm tone under VOICE LABS (D2 + A2). Not a sting.
+  // A low, warm tone under UNAI (D2 + A2). Not a sting.
   {
     id: "title",
     chapter: 2,

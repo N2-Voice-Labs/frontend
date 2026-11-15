@@ -45,7 +45,16 @@ const messages: Record<string, string> = {
   voice_session_not_found: "This call no longer exists.",
   runtime_unavailable: "The interpreter isn’t responding right now. Try again in a moment.",
   runtime_auth_not_configured: "The interpreter isn’t set up on this server yet.",
-  authentication_required: "This Voice Labs server needs a sign-in key, and calls can’t start without one.",
+  authentication_required: "This UNAI server needs a sign-in key, and calls can’t start without one.",
+  // Shareable-link calls.
+  provider_unavailable: "A speech or translation service isn’t available right now (it may be out of credit or down). The call can’t start; try again later.",
+  calls_disabled: "Calls by link aren’t switched on for this server yet.",
+  invite_not_found: "This invite link isn’t valid. Ask for a new one.",
+  invite_expired: "This invite has expired. Ask for a new one.",
+  call_ended: "This call has already ended.",
+  guest_already_invited: "Someone else already joined this call with a different link.",
+  rate_limited: "Too many tries from this connection. Wait a moment and try again.",
+  too_many_active_sessions: "The service is busy with other calls. Try again in a few minutes.",
   forbidden: "This link or session no longer has access to the call.",
 };
 

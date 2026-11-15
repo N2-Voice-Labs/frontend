@@ -5,7 +5,7 @@ import { themeInitScript } from "@/lib/theme";
 import "@/styles/legacy/tokens.css";
 import "@/styles/legacy/restyle.css";
 
-export const metadata: Metadata = { title: "Page not found · Voice Labs" };
+export const metadata: Metadata = { title: "Page not found · UNAI" };
 
 /**
  * 404 for any URL no route matches. The app has several root layouts, so this renders its own <html>.

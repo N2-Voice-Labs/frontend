@@ -34,7 +34,7 @@ export const BEATS = {
   line: [0.8, 0.88],
   /** Dust rises out of the dark and gathers into Inha's dragon above the name; the picture arrives; a cloud settles under it. */
   dragon: [0.872, 0.93],
-  /** Black, then VOICE LABS and the tagline. */
+  /** Black, then UNAI and the tagline. */
   brand: [0.88, 0.94],
   /** The doorway (one primary action, two quiet links) and a minimal footer. */
   cta: [0.93, 1],

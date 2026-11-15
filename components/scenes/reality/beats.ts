@@ -23,7 +23,7 @@ export const BEATS = {
   words: [0.75, 0.83],
   /** NATURAL CONVERSATION. */
   natural: [0.82, 0.86],
-  /** The two voices connect: the bridge, VOICE LABS, the tagline, and the real thing one click away. */
+  /** The two voices connect: the bridge, UNAI, the tagline, and the real thing one click away. */
   brand: [0.85, 0.93],
   /** The two voices merge into one point of light that joins chapter 08's network. */
   exit: [0.92, 1],

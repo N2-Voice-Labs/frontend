@@ -31,9 +31,9 @@ describe("cinematic landing page", () => {
       "Natural conversation.",
       "A voice should never need a translation to be heard.",
     ]) expect(screen.getAllByText((_, el) => el?.classList.contains("ct") === true && el.textContent === text).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("heading", { name: "Voice Labs" })).toHaveLength(3);
+    expect(screen.getAllByRole("heading", { name: "UNAI" })).toHaveLength(3);
     // The tagline returns four times: the name (03), the runtime (05), the proof (07) and the end (08).
-    const tags = screen.getAllByText("Real-time voice infrastructure for a multilingual world.");
+    const tags = screen.getAllByText("AI communication infrastructure for business.");
     expect(tags).toHaveLength(4);
     expect(tags.map((el) => el.closest("section")?.id)).toEqual(["bridge", "engine", "reality", "future"]);
   });
@@ -54,10 +54,11 @@ describe("cinematic landing page", () => {
     expect(links.filter((a) => a.getAttribute("aria-current") === "step")).toHaveLength(1);
   });
 
-  it("ends with the demo and the stack as calls to action", () => {
+  it("ends with the live demo and the site's pages as calls to action", () => {
     render(<CinematicPage />);
-    expect(screen.getByRole("link", { name: "Experience Voice Labs" }).getAttribute("href")).toBe("#reality");
-    expect(screen.getByRole("link", { name: "Explore the stack" }).getAttribute("href")).toBe("#engine");
+    expect(screen.getByRole("link", { name: "Experience UNAI" }).getAttribute("href")).toBe("#reality");
+    expect(screen.getByRole("link", { name: /Try the live demo/ }).getAttribute("href")).toBe("/demo");
+    expect(screen.getAllByRole("link", { name: "Developers" }).map((a) => a.getAttribute("href"))).toContain("/developers");
     expect(screen.getByRole("button", { name: "Speak to it" })).toBeTruthy();
   });
 
@@ -117,7 +118,7 @@ describe("film logic", () => {
   it("the reality call is one event stream: ordered, interrupted, code-switched, carrying context", () => {
     for (let i = 1; i < CALL.length; i++) expect(CALL[i].startTime).toBeGreaterThanOrEqual(CALL[i - 1].startTime);
     for (const u of SCRIPT) expect(u.end).toBeGreaterThan(u.start);
-    // Every human line is followed by Voice Labs speaking to the other person, in their language (unless cut).
+    // Every human line is followed by UNAI speaking to the other person, in their language (unless cut).
     for (const u of SCRIPT.filter((x) => x.source === "human" && !x.cut)) {
       const v = SCRIPT.find((x) => x.source === "voice" && x.side !== u.side && x.start >= u.end);
       expect(v?.lang).not.toBe(u.lang);

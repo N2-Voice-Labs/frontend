@@ -3,8 +3,17 @@ const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
 const app = (path: string) => `${APP_URL}${path}`;
 const q = (id: string) => encodeURIComponent(id);
 
+/** The Inha Admissions portal: UNAI's first customer-style implementation. */
+export const PORTAL_URL = (process.env.NEXT_PUBLIC_PORTAL_URL ?? "").replace(/\/$/, "") || "/inha";
+
 export const ROUTES = {
   home: "/",
+  inha: "/inha",
+  products: "/products",
+  solutions: "/solutions",
+  developers: "/developers",
+  demo: "/demo",
+  contact: "/contact",
   /** The Agents page lives in this app. */
   agents: "/agents",
   call: app("/call"),
@@ -33,7 +42,7 @@ export const SITE_LINKS: Record<"email" | "github" | "linkedin" | "contact" | "p
   support: null,
 };
 
-export const pilotHref = SITE_LINKS.pilot ?? (SITE_LINKS.email ? `mailto:${SITE_LINKS.email}?subject=Voice%20Labs%20pilot` : null);
+export const pilotHref = SITE_LINKS.pilot ?? (SITE_LINKS.email ? `mailto:${SITE_LINKS.email}?subject=UNAI%20pilot` : null);
 
 export type LatencyStage = {
   id: string;

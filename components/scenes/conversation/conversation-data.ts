@@ -1,6 +1,6 @@
 /**
  * The conversation of chapter 04 as plain data, separate from any animation. Times are chapter progress
- * (0–1). A live Voice Labs stream can later produce the same shapes (with times in seconds, mapped onto
+ * (0–1). A live UNAI stream can later produce the same shapes (with times in seconds, mapped onto
  * the chapter) and replace this script without touching the signals, typography or canvas.
  * Illustrative, not a recording.
  */
@@ -16,7 +16,7 @@ export type Utterance = {
   id: string;
   /** Whose side of the call the audio is on. */
   speaker: Speaker;
-  /** `human`: the person speaks. `voice`: Voice Labs speaks to that person, in their language. */
+  /** `human`: the person speaks. `voice`: UNAI speaks to that person, in their language. */
   source: "human" | "voice";
   lang: string;
   /** Spoken languages, e.g. ["KO", "EN"] for a code-switch. */

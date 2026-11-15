@@ -2,25 +2,23 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { CallExperience } from "@/components/features/call/call-experience";
 import { InvitePanel } from "@/components/features/call/invite-panel";
-import { parseInviteFragment } from "@/lib/invite";
+import { parseInviteCode } from "@/lib/invite";
 
 const mocks = vi.hoisted(() => ({
-  resolveInterpreter: vi.fn(),
-  createVoiceSession: vi.fn(),
+  createCall: vi.fn(),
   endVoiceSession: vi.fn(),
-  addSessionParticipant: vi.fn(),
+  createCallInvite: vi.fn(),
   connect: vi.fn(),
   disconnect: vi.fn(),
   getUserMedia: vi.fn(),
 }));
 
-vi.mock("@/lib/interpreter", async (original) => ({ ...(await original<typeof import("@/lib/interpreter")>()), resolveInterpreter: mocks.resolveInterpreter }));
 vi.mock("@/lib/voices", () => ({ getVoices: vi.fn().mockResolvedValue([]) }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/call" }));
 vi.mock("@/lib/platform", () => ({
-  createVoiceSession: mocks.createVoiceSession,
-  endVoiceSession: mocks.endVoiceSession,
-  addSessionParticipant: mocks.addSessionParticipant,
+  createCall: mocks.createCall,
+  endCall: mocks.endVoiceSession,
+  createCallInvite: mocks.createCallInvite,
   getConversation: vi.fn().mockResolvedValue({ id: "c1", agent_id: "i1", status: "active", started_at: "", ended_at: null }),
   getMessages: vi.fn().mockResolvedValue([]),
   ensureVoiceSessionRunning: vi.fn().mockResolvedValue({ session_status: "created", runtime_status: "starting" }),
@@ -56,8 +54,7 @@ beforeEach(() => {
     value: { getUserMedia: mocks.getUserMedia, enumerateDevices: vi.fn().mockResolvedValue([]) },
   });
   mocks.getUserMedia.mockResolvedValue({ getTracks: () => [{ stop: vi.fn() }], getAudioTracks: () => [] });
-  mocks.resolveInterpreter.mockResolvedValue({ agent: { id: "i1", name: "English ↔ Korean interpreter" }, created: true });
-  mocks.createVoiceSession.mockResolvedValue(session);
+  mocks.createCall.mockResolvedValue(session);
   mocks.endVoiceSession.mockResolvedValue({ status: "ended" });
   mocks.connect.mockResolvedValue(undefined);
   mocks.disconnect.mockResolvedValue(undefined);
@@ -71,17 +68,25 @@ async function readyToStart() {
   return screen.getByRole("button", { name: /Start call/ });
 }
 
-test("Start call: resolve interpreter → create session with the creator participant → connect LiveKit → live call", async () => {
+test("Start call: create the call (no account, no agent lookup) → connect LiveKit → live call", async () => {
   const startButton = await readyToStart();
   expect(startButton.getAttribute("aria-disabled")).toBeNull();
   fireEvent.click(startButton);
 
   await screen.findByRole("heading", { name: "Invite the other person" });
-  expect(mocks.resolveInterpreter).toHaveBeenCalledWith({ mine: "en", theirs: "ko", pace: "balanced", hearOriginal: false });
-  expect(mocks.createVoiceSession).toHaveBeenCalledWith("i1", { language: "en", display_name: null, voice_profile_id: null });
+  expect(mocks.createCall).toHaveBeenCalledWith({ languages: ["en", "ko"], name: null, voice_profile_id: null, latency_mode: "balanced", experience: "ai_only" });
   expect(mocks.connect).toHaveBeenCalledWith("ws://livekit.test", "creator-token");
   expect(mocks.endVoiceSession).not.toHaveBeenCalled();
   expect(screen.getByRole("toolbar", { name: "Call controls" })).toBeTruthy();
+});
+
+test("the creator also joins the private listen room, where their translation arrives", async () => {
+  const listen = { url: "ws://livekit.test", token: "creator-listen-token", room_name: "voice-labs-s1--listen", track: "translation-for-browser-s1" };
+  mocks.createCall.mockResolvedValue({ ...session, connection: { ...session.connection, listen } });
+  fireEvent.click(await readyToStart());
+  await screen.findByRole("heading", { name: "Invite the other person" });
+  expect(mocks.connect).toHaveBeenCalledWith("ws://livekit.test", "creator-token");
+  expect(mocks.connect).toHaveBeenCalledWith("ws://livekit.test", "creator-listen-token");
 });
 
 test("Start is unavailable until the mic is checked, but stays focusable and explains why", async () => {
@@ -90,7 +95,7 @@ test("Start is unavailable until the mic is checked, but stays focusable and exp
   expect(start.getAttribute("aria-disabled")).toBe("true");
   expect(document.getElementById(start.getAttribute("aria-describedby")!.split(" ")[0])?.textContent).toMatch(/Check your microphone first/);
   fireEvent.click(start);
-  expect(mocks.resolveInterpreter).not.toHaveBeenCalled();
+  expect(mocks.createCall).not.toHaveBeenCalled();
   expect(document.activeElement?.textContent).toMatch(/Check microphone/);
 });
 
@@ -103,7 +108,7 @@ test("a failed LiveKit connect ends the partial session and shows a plain error"
 });
 
 test("an empty LiveKit token means calls aren't configured: the session is ended, nothing connects", async () => {
-  mocks.createVoiceSession.mockResolvedValue({ ...session, connection: { url: "", token: "" } });
+  mocks.createCall.mockResolvedValue({ ...session, connection: { url: "", token: "" } });
   fireEvent.click(await readyToStart());
   await screen.findByText("Calls aren’t set up on this server yet");
   expect(mocks.endVoiceSession).toHaveBeenCalledWith("s1", "vls_creator");
@@ -112,10 +117,10 @@ test("an empty LiveKit token means calls aren't configured: the session is ended
 
 test("leaving while the session is being created ends it once it arrives", async () => {
   let resolve!: (value: typeof session) => void;
-  mocks.createVoiceSession.mockReturnValue(new Promise((done) => { resolve = done; }));
+  mocks.createCall.mockReturnValue(new Promise((done) => { resolve = done; }));
   const start = await readyToStart();
   fireEvent.click(start);
-  await waitFor(() => expect(mocks.createVoiceSession).toHaveBeenCalled());
+  await waitFor(() => expect(mocks.createCall).toHaveBeenCalled());
   cleanup();
   await act(async () => { resolve(session); });
   await waitFor(() => expect(mocks.endVoiceSession).toHaveBeenCalledWith("s1", "vls_creator"));
@@ -123,53 +128,60 @@ test("leaving while the session is being created ends it once it arrives", async
 });
 
 test("a voice that isn't ready offers a retry with the interpreter's voice", async () => {
-  mocks.createVoiceSession.mockRejectedValueOnce(Object.assign(new Error("selected_voice_unavailable"), { status: 409 }));
+  mocks.createCall.mockRejectedValueOnce(Object.assign(new Error("selected_voice_unavailable"), { status: 409 }));
   fireEvent.click(await readyToStart());
   fireEvent.click(await screen.findByRole("button", { name: "Use the interpreter’s voice" }));
   await screen.findByRole("heading", { name: "Invite the other person" });
-  expect(mocks.createVoiceSession).toHaveBeenLastCalledWith("i1", expect.objectContaining({ voice_profile_id: null }));
+  expect(mocks.createCall).toHaveBeenLastCalledWith(expect.objectContaining({ voice_profile_id: null }));
 });
 
 const panelProps = {
   sessionId: "s1",
-  conversationId: "c1",
   sessionToken: "vls_creator",
   selfName: "Sam",
-  selfLanguage: "en",
   otherLanguage: "ko",
   otherName: "Ji-woo",
   onOtherNameChange: vi.fn(),
-  onExpiredRestart: vi.fn(),
   origin: "https://voice.example",
 };
+const CODE = "11111111-2222-3333-4444-555555555555.abcdefghijklmnopqrstuv";
 
-test("Create invite link: adds the guest with the creator's token and builds a /join# link carrying the guest credentials", async () => {
-  mocks.addSessionParticipant.mockResolvedValue({ participant_identity: "guest-1", connection: { url: "wss://lk.example", token: "guest-lk" }, session_token: "vls_guest" });
+test("Create invite link: asks the Platform for a code with the creator's token and builds a /join#c= link that carries only the code", async () => {
+  mocks.createCallInvite.mockResolvedValue({ code: CODE, expires_at: Math.floor(Date.now() / 1000) + 1800, ttl_seconds: 1800 });
   const onInvite = vi.fn();
   const { rerender } = render(<InvitePanel {...panelProps} invite={null} onInvite={onInvite} />);
   fireEvent.click(screen.getByRole("button", { name: /Create invite link/ }));
   await waitFor(() => expect(onInvite).toHaveBeenCalled());
-  expect(mocks.addSessionParticipant).toHaveBeenCalledWith("s1", { language: "ko", display_name: "Ji-woo" }, "vls_creator");
+  expect(mocks.createCallInvite).toHaveBeenCalledWith("s1", "vls_creator");
 
   const created = onInvite.mock.calls[0][0];
-  expect(created.link).toMatch(/^https:\/\/voice\.example\/join#/);
-  const parsed = parseInviteFragment(created.link.split("#")[1]);
-  expect(parsed).toMatchObject({ ok: true, invite: { token: "guest-lk", sessionToken: "vls_guest", me: "ko", them: "en", from: "Sam", name: "Ji-woo" } });
+  expect(created.link).toBe(`https://voice.example/join#c=${encodeURIComponent(CODE)}`);
+  expect(created.link).not.toMatch(/vls_|token/);
+  expect(parseInviteCode(created.link.split("#")[1])).toEqual({ ok: true, code: CODE });
 
   rerender(<InvitePanel {...panelProps} invite={created} onInvite={onInvite} />);
   expect((screen.getByLabelText("Invite link") as HTMLInputElement).value).toBe(created.link);
-  // Honest copy: reusable for 10 minutes, treat it like a password, never "used once".
   expect(screen.getByText(/Treat this link like a password/)).toBeTruthy();
   expect(document.body.textContent).not.toMatch(/used once/i);
 });
 
-test("session_full explains the single guest slot and offers to start over", async () => {
-  mocks.addSessionParticipant.mockRejectedValue(Object.assign(new Error("session_full"), { status: 409 }));
-  const onExpiredRestart = vi.fn();
-  render(<InvitePanel {...panelProps} invite={null} onInvite={vi.fn()} onExpiredRestart={onExpiredRestart} />);
+test("a failed invite request says so and lets the creator try again", async () => {
+  mocks.createCallInvite.mockRejectedValue(Object.assign(new Error("session_not_active"), { status: 409 }));
+  render(<InvitePanel {...panelProps} invite={null} onInvite={vi.fn()} />);
   fireEvent.click(screen.getByRole("button", { name: /Create invite link/ }));
-  fireEvent.click(await screen.findByRole("button", { name: "End call and start a new one" }));
-  expect(onExpiredRestart).toHaveBeenCalled();
+  await screen.findByText("This call has already ended.");
+  expect(screen.getByRole("button", { name: /Create invite link/ })).toBeTruthy();
+});
+
+test("the audio option is a test switch: AI only by default, cinematic when chosen", async () => {
+  render(<CallExperience />);
+  fireEvent.click(await screen.findByRole("button", { name: /Check microphone/ }));
+  await screen.findByText("Say something to test it");
+  fireEvent.click(screen.getByText("Call options"));
+  fireEvent.change(screen.getByLabelText("Audio"), { target: { value: "cinematic" } });
+  fireEvent.click(screen.getByRole("button", { name: /Start call/ }));
+  await waitFor(() => expect(mocks.createCall).toHaveBeenCalled());
+  expect(mocks.createCall).toHaveBeenCalledWith(expect.objectContaining({ experience: "cinematic" }));
 });
 
 test("the creator is warned once through the status line when the invite has a minute left", async () => {

@@ -10,7 +10,7 @@ import { bridgeGeometry, isPortrait } from "./geometry";
 import s from "./bridge-system.module.css";
 
 /**
- * The Voice Labs system of chapter 03 as ONE evolving SVG: bridge strands → one line + one signal →
+ * The UNAI system of chapter 03 as ONE evolving SVG: bridge strands → one line + one signal →
  * the four states of the concept → the runtime pipeline → VOICE OUT's waveform handed to chapter 04.
  *
  * - Scroll (systemTimeline) handles visibility and reveals; it only tweens size-independent values
