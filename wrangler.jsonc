@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
-  "name": "unai-site",
+  "name": "voice-labs",
   "compatibility_date": "2026-10-06",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
@@ -11,7 +11,7 @@
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
-      "service": "frontend-voice-labs"
+      "service": "voice-labs"
     }
   ],
   // Per-IP limit for the public demo route (app/api/demo/session). Shared across isolates,
