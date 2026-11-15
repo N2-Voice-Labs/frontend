@@ -23,7 +23,16 @@ export type Frame = {
 /** Particle colours: indexes into PALETTE. */
 export const INK = 0, KO = 1, EN = 2, BRIDGE = 3, DIM = 4;
 
-export const PALETTE = ["#ECE7DC", "#7CCFC2", "#E3A2C2", "#EED596", "#6E6A63"] as const;
+/**
+ * Inha University brand colours (eng.inha.ac.kr/eng/3774), tuned for light on a dark navy film. Keep in
+ * sync with the --c-* properties in app/(marketing)/cinematic.css.
+ * - INK: warm white (the film's type colour).
+ * - KO: Inha Sky Blue #00AFEC, the first voice (scene comments call it "cyan").
+ * - EN: Inha Silver #BCBDC0 lifted and cooled for dark backgrounds, the second voice ("magenta" in scene comments).
+ * - BRIDGE: Inha Gold #BB8732 brightened so it glows on black, the translation bridge ("gold").
+ * - DIM: quiet dust.
+ */
+export const PALETTE = ["#ECE7DC", "#00AFEC", "#B9C6D3", "#D8A94F", "#6E6A63"] as const;
 
 export type Point = { x: number; y: number; a: number; c: number; s: number };
 

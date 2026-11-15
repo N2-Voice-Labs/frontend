@@ -18,7 +18,7 @@ export const EMPTY_POINTS: TextPoints = { xy: new Float32Array(0), word: new Uin
 type Word = { x: number; y: number; w: number; h: number; text: string; font: string; size: number; spacing: number; lineHeight: number };
 
 /** Deterministic integer hash → [0, 1). */
-const hash = (i: number, k: number) => {
+export const hash = (i: number, k: number) => {
   let h = Math.imul(i ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(k + 0x27d4eb2f, 0xc2b2ae35);
   h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d);
   h = Math.imul(h ^ (h >>> 12), 0x297a2d39);
@@ -28,7 +28,7 @@ const hash = (i: number, k: number) => {
 const px = (v: string) => parseFloat(v) || 0;
 
 /** Layout box of an element in viewport px: offsets summed up the offsetParent chain, so transforms are ignored. */
-function layoutOrigin(el: HTMLElement) {
+export function layoutOrigin(el: HTMLElement) {
   let x = 0, y = 0;
   for (let e: HTMLElement | null = el; e; e = e.offsetParent as HTMLElement | null) {
     x += e.offsetLeft;

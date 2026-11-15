@@ -38,6 +38,13 @@ describe("cinematic landing page", () => {
     expect(tags.map((el) => el.closest("section")?.id)).toEqual(["bridge", "engine", "reality", "future"]);
   });
 
+  it("ends on Inha's dragon above the name", () => {
+    render(<CinematicPage />);
+    const dragon = screen.getByRole("img", { name: "Inha University's dragon mascot, waving" });
+    expect(dragon.closest("section")?.id).toBe("future");
+    expect(dragon.getAttribute("src")).toBe("/brand/inha-dragon.webp");
+  });
+
   it("has a chapter indicator that links every chapter", () => {
     render(<CinematicPage />);
     const nav = screen.getByRole("navigation", { name: "Chapters" });

@@ -4,11 +4,17 @@
    - html.cine-js (set before paint unless reduced motion): every scene layer is fixed to the viewport
      over one canvas, and scroll scrubs the scenes' timelines;
    - otherwise: a plain readable document, the canvas still behind it.
-   Colours match the canvas palette (lib/cinematic/visual.ts).
+   Colours match the canvas palette (lib/cinematic/visual.ts): Inha University's brand colours
+   (eng.inha.ac.kr/eng/3774) on an Inha-navy black. Sky Blue and Silver are the two voices, Gold the bridge.
    ========================================================= */
 :root{
-  --c-bg:#050606;--c-ink:#ECE7DC;--c-muted:#9C978D;--c-dim:#6E6A63;--c-line:rgba(236,231,220,.14);
-  --c-ko:#7CCFC2;--c-en:#E3A2C2;--c-bridge:#EED596;
+  /* Inha University reference colours (official values). */
+  --inha-blue:#005BAC;--inha-sky:#00AFEC;--inha-gold:#BB8732;--inha-silver:#BCBDC0;
+  --c-bg:#03070F;--c-ink:#ECE7DC;--c-muted:#9C978D;--c-dim:#6E6A63;--c-line:rgba(236,231,220,.14);
+  /* Voices and bridge, tuned for light on dark: Sky Blue as is, Silver lifted and cooled, Gold brightened. */
+  --c-ko:var(--inha-sky);--c-en:#B9C6D3;--c-bridge:#D8A94F;
+  /* Spoken (synthesised) voice text: a gold-tinted cream. */
+  --c-voice:#E6D2A8;
   --len-scale:1;
   color-scheme:dark;
 }
@@ -28,7 +34,10 @@ html.lenis,html.lenis body{height:auto}
 .cine-stage{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;display:block}
 /* Behind flowing text (no film mode) the canvas is only atmosphere. */
 html:not(.cine-js) .cine-stage{opacity:.28}
-.vignette{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse 120% 90% at 50% 50%,transparent 55%,rgba(0,0,0,.55) 100%)}
+/* A faint Inha Blue wash rising from below, under the canvas (painted before it). */
+.cine::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 90% 60% at 50% 112%,rgba(0,91,172,.13),transparent 70%),radial-gradient(ellipse 70% 50% at 50% -12%,rgba(0,91,172,.05),transparent 70%)}
+.vignette{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse 120% 90% at 50% 50%,transparent 55%,rgba(0,4,14,.6) 100%)}
 .grain{position:fixed;inset:-100px;z-index:3;pointer-events:none;opacity:.07;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   animation:grain 1.2s steps(6) infinite}
@@ -157,7 +166,7 @@ html:not(.cine-js) #bridge .scene-layer{display:flex;flex-direction:column}
 .conv-lines{list-style:none;margin:0 auto 6vh;padding:0;max-width:760px;display:grid;gap:16px}
 .conv-who{display:block;font-family:var(--font-code);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
 .conv-text{font-size:clamp(17px,1.6vw,22px);font-weight:500;line-height:1.35}
-.conv-line[data-source="voice"] .conv-text{color:#E9DCB4}
+.conv-line[data-source="voice"] .conv-text{color:var(--c-voice)}
 .conv-words{margin:0 auto;text-align:center;font-family:var(--font-code);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--c-muted)}
 .conv-dot{display:none}
 /* Film: everything is placed from conversationLayout via CSS vars written on resize (conversation-scene.tsx). */
@@ -182,7 +191,7 @@ html:not(.cine-js) #bridge .scene-layer{display:flex;flex-direction:column}
 .cine-js .conv-who{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
 .cine-js .conv-via{display:inline-block;margin-right:.9em;font-family:var(--font-code);font-size:9.5px;letter-spacing:.18em;color:var(--c-bridge);opacity:.8;vertical-align:.2em}
 .cine-js .conv-text{position:relative;font-size:clamp(16px,1.35vw,20px);text-wrap:balance;color:var(--c-ink)}
-.cine-js .conv-line[data-source="voice"] .conv-text{color:#E9DCB4}
+.cine-js .conv-line[data-source="voice"] .conv-text{color:var(--c-voice)}
 .cine-js .conv-strike{display:block;position:absolute;left:-2px;right:-2px;top:55%;height:1px;background:var(--c-bridge);transform-origin:left;transform:scaleX(0)}
 /* The five words: a quiet rail low on the screen; during the headline it rises under it (--lift). */
 .cine-js .conv-words{position:absolute;left:50%;top:var(--ry);width:min(calc(100vw - 40px),900px);--lift:0;
@@ -310,6 +319,19 @@ html:not(.cine-js) #reality .rl{display:flex;flex-direction:column}
 .cine-js .future-say .ct-i{opacity:1}
 .cine-js .future-say,.cine-js .future-tag,.cine-js .future-ctas,.cine-js .future-foot{opacity:0}
 .cine-js .future-foot{position:absolute;left:clamp(16px,3.4vw,48px);right:clamp(16px,3.4vw,48px);bottom:22px;padding:0}
+/* Inha's dragon above the name: gathered out of the canvas dust, then the picture with a Sky Blue / Inha Blue
+   halo, floating slowly. Top and bottom fade out (the render's horn tip and feet are cut by its frame); the
+   canvas lays a drifting cloud under the feet (future/visual.ts). */
+.future-dragon{position:relative;display:flex;justify-content:center;margin:0 0 clamp(4px,1.4vh,16px);height:clamp(130px,27vh,290px);aspect-ratio:552/640}
+.future-dragon-halo{position:absolute;left:50%;top:46%;width:165%;aspect-ratio:1;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);
+  background:radial-gradient(closest-side,rgba(0,175,236,.2),rgba(0,91,172,.13) 46%,transparent 74%);animation:dragon-halo 7s ease-in-out infinite}
+/* The glow and the float sit on a wrapper: the img's fade mask would clip a drop-shadow to its box. */
+.future-dragon-body{position:relative;display:block;height:100%;filter:drop-shadow(0 0 20px rgba(0,175,236,.22)) drop-shadow(0 16px 36px rgba(0,91,172,.32));animation:dragon-float 6s ease-in-out infinite}
+.future-dragon-img{display:block;height:100%;width:auto;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 5%,#000 88%,transparent 100%);mask-image:linear-gradient(to bottom,transparent 0,#000 5%,#000 88%,transparent 100%)}
+@keyframes dragon-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes dragon-halo{0%,100%{opacity:.72;transform:translate(-50%,-50%) scale(.96)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.04)}}
+.cine-js .future-dragon{opacity:0}
 
 /* ---------- Small screens: own composition, shorter chapters ---------- */
 @media (max-width:720px){
@@ -342,6 +364,7 @@ html:not(.cine-js) #reality .rl{display:flex;flex-direction:column}
   .cine-js .rl-brand{padding-bottom:64px}
   .cine-js .future-foot{bottom:52px;flex-direction:column;align-items:center;gap:3px;text-align:center;font-size:9.5px}
   .cine-js .future-ctas{margin-top:clamp(24px,5vh,40px)}
+  .future-dragon{height:clamp(120px,22vh,210px)}
   /* The vertical runtime fills the screen on phones; the metadata would cross it. */
   .cine-js .bridge-micro li{display:none}
   /* Keep the two labels on the side away from the statement. */
@@ -349,7 +372,7 @@ html:not(.cine-js) #reality .rl{display:flex;flex-direction:column}
 
 /* Reduced motion: still frames, no grain or looping decoration. */
 @media (prefers-reduced-motion:reduce){
-  .grain,.cue-line,.topbar-eq i{animation:none!important}
+  .grain,.cue-line,.topbar-eq i,.future-dragon-body,.future-dragon-halo{animation:none!important}
   .chapters-label{transition:none}
 }
 /* Page links in the film's top bar: hidden on phones, where the closing chapter carries them. */

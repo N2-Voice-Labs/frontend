@@ -1,3 +1,5 @@
+import type { ImagePoints } from "@/lib/cinematic/image-points";
+
 /**
  * The beats of chapter 08, in chapter progress (0–1). One continuous pull-back (the conversation of
  * chapter 07 becomes a point, the point a network, the network a world made of voices, the world small in
@@ -30,6 +32,8 @@ export const BEATS = {
   silence: [0.73, 0.8],
   /** A VOICE SHOULD NEVER NEED / A TRANSLATION TO BE HEARD. — the whole sentence, slowly. */
   line: [0.8, 0.88],
+  /** Dust rises out of the dark and gathers into Inha's dragon above the name; the picture arrives; a cloud settles under it. */
+  dragon: [0.872, 0.93],
   /** Black, then UNAI and the tagline. */
   brand: [0.88, 0.94],
   /** The doorway (one primary action, two quiet links) and a minimal footer. */
@@ -37,3 +41,6 @@ export const BEATS = {
 } as const satisfies Record<string, readonly [number, number]>;
 
 export type Beat = keyof typeof BEATS;
+
+/** The dragon picture's pixels as particle targets, sampled by future-scene.tsx (film mode) and read by visual.ts. */
+export const dragonPoints: { current: ImagePoints | null } = { current: null };

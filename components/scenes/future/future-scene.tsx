@@ -1,11 +1,12 @@
 "use client";
 
-import type { MouseEvent } from "react";
+import { useEffect, useRef, type MouseEvent } from "react";
 import { CinematicText } from "@/components/cinematic/cinematic-text";
 import { Scene, type SceneTimeline } from "@/components/cinematic/scene";
-import { director } from "@/lib/cinematic/director";
+import { director, isCinematic } from "@/lib/cinematic/director";
+import { sampleImagePoints } from "@/lib/cinematic/image-points";
 import { ROUTES } from "@/lib/landing/config";
-import { BEATS } from "./beats";
+import { BEATS, dragonPoints } from "./beats";
 import { FutureSystem, futureSystemTimeline } from "./system/future-system";
 
 type Span = readonly [number, number];
@@ -41,6 +42,12 @@ const timeline: SceneTimeline = (tl, q) => {
   emerge(tl, q(".future-line"), l0, l * 0.45, 10);
   fade(tl, q(".future-line"), l1 - l * 0.22, l * 0.2);
 
+  // Out of the dust the canvas gathers into its silhouette (visual.ts): the dragon itself arrives, a little
+  // larger than life settling to size, just before the name.
+  const [d0] = BEATS.dragon;
+  const d = span(BEATS.dragon);
+  tl.fromTo(q(".future-dragon"), { opacity: 0, scale: 0.96, filter: "blur(10px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: d * 0.3, ease: "power1.out" }, d0 + d * 0.58);
+
   // Black, then the name and the tagline. Nothing around them.
   const [b0] = BEATS.brand;
   const b = span(BEATS.brand);
@@ -62,8 +69,42 @@ function go(e: MouseEvent<HTMLAnchorElement>, id: string) {
   director.scrollTo(target);
 }
 
-/** 08 — a world of voices, small in the dark; one voice; silence; the promise; the name; the door. */
+/** Size of public/brand/inha-dragon.webp (cut out of the mascot render, background removed). */
+const DRAGON = { src: "/brand/inha-dragon.webp", w: 552, h: 640 };
+
+const pointTarget = () => (window.innerWidth < 720 ? 700 : window.innerWidth < 1200 ? 1200 : 1600);
+
+/** Film mode: the dragon's pixels become the canvas particles' targets; sampled once decoded and after resizes. */
+function useDragonPoints() {
+  const ref = useRef<HTMLImageElement>(null);
+  useEffect(() => {
+    const img = ref.current;
+    if (!img || !isCinematic()) return;
+    let alive = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const sample = () => { if (alive) dragonPoints.current = sampleImagePoints(img, pointTarget()); };
+    const onResize = () => {
+      clearTimeout(timer);
+      timer = setTimeout(sample, 150);
+    };
+    (img.decode ? img.decode() : Promise.resolve()).then(sample, () => img.addEventListener("load", sample, { once: true }));
+    // Fonts move the brand title, and the dragon with it.
+    document.fonts?.ready.then(sample).catch(() => {});
+    window.addEventListener("resize", onResize);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+      window.removeEventListener("resize", onResize);
+      img.removeEventListener("load", sample);
+      dragonPoints.current = null;
+    };
+  }, []);
+  return ref;
+}
+
+/** 08 — a world of voices, small in the dark; one voice; silence; the promise; the dragon; the name; the door. */
 export function FutureScene() {
+  const dragonRef = useDragonPoints();
   return (
     <Scene index={7} timeline={timeline}>
       <FutureSystem />
@@ -80,6 +121,13 @@ export function FutureScene() {
       </div>
 
       <div className="frame frame-center future-end">
+        <figure className="future-dragon">
+          <span className="future-dragon-halo" aria-hidden="true" />
+          {/* A plain img: a static file in public/, no image optimisation needed (or available on the Worker). */}
+          <span className="future-dragon-body">
+            <img ref={dragonRef} className="future-dragon-img" src={DRAGON.src} width={DRAGON.w} height={DRAGON.h} alt="Inha University's dragon mascot, waving" decoding="async" />
+          </span>
+        </figure>
         <CinematicText as="h2" className="title-brand future-say future-brand" lines={["UNAI"]} />
         <p className="future-tag lede">AI communication infrastructure for business.</p>
         <nav className="future-ctas" aria-label="Where to go next">
