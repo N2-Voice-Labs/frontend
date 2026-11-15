@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("@/lib/platform", () => ({ endVoiceSession: mocks.endVoiceSession }));
+vi.mock("@/lib/platform", () => ({ endCall: mocks.endVoiceSession }));
 vi.mock("livekit-client", () => ({
   Room: class {
     localParticipant = { identity: "browser-s1", setMicrophoneEnabled: mocks.setMicrophoneEnabled, getTrackPublication: () => undefined };

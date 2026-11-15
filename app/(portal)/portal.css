@@ -1,0 +1,219 @@
+/* Inha Admissions portal (UNAI demo). Built on the shared tokens (app/tokens.css) so light and dark both work.
+   One institutional accent (deep navy) for the university; the call screens keep their own teal/plum seats. */
+
+.portal-root {
+  --p-accent: #17396b;
+  --p-accent-hover: #0f2a52;
+  --p-accent-tint: #e8eef7;
+  --p-accent-ink: #17396b;
+  --p-warm: #f2efe6;
+  --p-max: 1200px;
+  --p-gutter: clamp(16px, 4vw, 48px);
+  background: var(--bg);
+}
+html[data-vl-theme="dark"] .portal-root {
+  --p-accent: #8fb3ec;
+  --p-accent-hover: #b0caf3;
+  --p-accent-tint: #1a2433;
+  --p-accent-ink: #b0caf3;
+  --p-warm: #191c1d;
+}
+
+/* ----- Header ----- */
+.portal-header { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
+  padding: var(--space-3) var(--p-gutter); background: var(--bg); border-bottom: 1px solid var(--border); }
+.portal-brand { display: inline-flex; align-items: center; gap: var(--space-3); text-decoration: none; }
+.portal-crest { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--p-accent); color: var(--bg); font: 700 12px/1 var(--display); letter-spacing: .06em; }
+.portal-brand-name { display: block; font: 700 15px/18px var(--display); color: var(--text); }
+.portal-brand-sub { display: block; font: var(--type-small); color: var(--text-muted); }
+.portal-header-nav { display: flex; align-items: center; gap: var(--space-5); font: var(--type-small); }
+.portal-header-nav a { text-decoration: none; color: var(--text-2); }
+.portal-header-nav a:hover { color: var(--text); }
+.portal-demo-badge { padding: 4px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-pill); color: var(--text-muted); font: 500 12px/18px var(--sans); white-space: nowrap; }
+@media (max-width: 720px) { .portal-header-nav a { display: none; } }
+
+/* ----- Layout ----- */
+.portal-root main.portal-main { width: 100%; max-width: var(--p-max); margin: 0 auto; padding: 0 var(--p-gutter) var(--space-16); }
+.portal-eyebrow { font: 600 12px/16px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--p-accent-ink); }
+
+/* ----- Hero ----- */
+.portal-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, 440px); gap: clamp(28px, 5vw, 72px); align-items: start; padding: clamp(32px, 7vh, 80px) 0 clamp(40px, 7vh, 72px); }
+.portal-root .portal-hero h1 { margin-top: var(--space-3); font: 700 clamp(32px, 4.6vw, 56px)/1.08 var(--display); letter-spacing: -.02em; color: var(--text); text-wrap: balance; }
+.portal-hero h1 span { color: var(--p-accent-ink); }
+.portal-root .portal-hero-lead { margin-top: var(--space-5); max-width: 54ch; font: var(--type-body-lg); color: var(--text-2); }
+.portal-promises { list-style: none; margin: var(--space-8) 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); max-width: 560px; }
+.portal-promises li { display: flex; flex-direction: column; gap: 2px; padding: var(--space-3) var(--space-4); border-left: 2px solid var(--p-accent); background: var(--p-warm); }
+.portal-promises strong { font: 700 17px/22px var(--display); color: var(--text); }
+.portal-promises span { font: var(--type-small); color: var(--text-muted); }
+@media (max-width: 900px) {
+  .portal-hero { grid-template-columns: 1fr; }
+  /* One column: a sticky panel would slide under the (taller, wrapped) header; let it scroll with the page. */
+  .portal-assistant { position: static; scroll-margin-top: 96px; }
+}
+@media (max-width: 480px) {
+  .portal-promises { gap: var(--space-2); margin-top: var(--space-5); }
+  .portal-promises li { padding: var(--space-2) var(--space-3); }
+  .portal-promises strong { font-size: 15px; }
+  .portal-promises span { font-size: 12px; line-height: 16px; }
+  .portal-root .portal-hero h1 { font-size: 30px; }
+}
+
+/* ----- Assistant card ----- */
+.portal-assistant { position: sticky; top: 84px; background: var(--surface-elevated); border: 1px solid var(--border); border-radius: var(--radius-window); box-shadow: var(--elev-3); overflow: hidden; }
+.portal-assistant-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); padding: var(--space-5) var(--space-5) var(--space-3); }
+.portal-assistant-head h2 { margin-top: 4px; font: var(--type-h2); }
+.portal-live-dot { width: 10px; height: 10px; margin-top: 6px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 4px var(--success-tint); flex: none; }
+.portal-tabs { display: flex; gap: var(--space-1); padding: 0 var(--space-5); border-bottom: 1px solid var(--border); }
+.portal-root.portal-root.portal-root .portal-tab { appearance: none; border: 0; border-radius: 0; min-height: 0; background: none; padding: var(--space-3) var(--space-3); margin-bottom: -1px; font: 600 14px/20px var(--sans); color: var(--text-muted); border-bottom: 2px solid transparent; cursor: pointer; }
+.portal-root.portal-root.portal-root .portal-tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--p-accent); }
+.portal-pane { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-5); }
+.portal-pane-lead { font: var(--type-body); color: var(--text-2); }
+.portal-field { display: flex; flex-direction: column; gap: 6px; font: var(--type-small); color: var(--text-2); }
+.portal-field small { color: var(--text-muted); font-weight: 400; }
+.portal-root .portal-field input { width: 100%; padding: 0 var(--space-3); }
+.portal-fine { font: 400 13px/20px var(--sans); color: var(--text-muted); }
+.portal-note { font: var(--type-body-sm); color: var(--text-2); padding: var(--space-3) var(--space-4); background: var(--surface-2); border-radius: var(--radius-surface); }
+.portal-error { font: var(--type-body-sm); color: var(--danger); padding: var(--space-3) var(--space-4); background: var(--danger-tint); border-radius: var(--radius-surface); }
+
+/* ----- Buttons (scoped: globals.css styles bare buttons) ----- */
+.portal-root.portal-root.portal-root .portal-btn { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); padding: 0 var(--space-4);
+  border: 1px solid var(--border-control); border-radius: var(--radius-control); background: var(--surface); color: var(--text); font: 600 14px/20px var(--sans); cursor: pointer; transition: background .15s, border-color .15s; }
+.portal-root.portal-root.portal-root .portal-btn:hover:not(:disabled) { border-color: var(--text-2); background: var(--surface-2); }
+.portal-root.portal-root.portal-root .portal-btn:disabled { opacity: .55; cursor: not-allowed; }
+.portal-root.portal-root.portal-root .portal-btn-primary { background: var(--p-accent); border-color: var(--p-accent); color: var(--bg); }
+.portal-root.portal-root.portal-root .portal-btn-primary:hover:not(:disabled) { background: var(--p-accent-hover); border-color: var(--p-accent-hover); }
+.portal-root.portal-root.portal-root .portal-btn-call { min-height: 52px; font-size: 16px; width: 100%; }
+.portal-root.portal-root.portal-root .portal-btn-officer { border-color: var(--p-accent); color: var(--p-accent-ink); }
+.portal-root.portal-root.portal-root .portal-btn-end { border-color: var(--danger); color: var(--danger); }
+.portal-root.portal-root.portal-root .portal-btn-end:hover:not(:disabled) { background: var(--danger-tint); border-color: var(--danger); }
+.portal-root.portal-root.portal-root .portal-link { appearance: none; border: 0; background: none; padding: 0; font: inherit; color: var(--p-accent-ink); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.portal-icon { width: 20px; height: 20px; fill: none; stroke: currentcolor; stroke-width: 1.8; stroke-linecap: round; }
+.portal-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+/* ----- Live call ----- */
+.portal-callstate { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-surface); background: var(--p-accent-tint); font: 600 15px/22px var(--sans); color: var(--text); }
+.portal-timer { margin-left: auto; font: 500 13px/20px var(--sans); color: var(--text-muted); }
+.portal-orb { display: inline-flex; align-items: center; gap: 3px; height: 18px; }
+.portal-orb i { width: 4px; height: 6px; border-radius: 2px; background: var(--p-accent); transition: height .2s; }
+.portal-callstate[data-speaking="agent"] .portal-orb i { animation: portal-eq .8s ease-in-out infinite alternate; }
+.portal-callstate[data-speaking="user"] .portal-orb i { background: var(--id-self); animation: portal-eq .6s ease-in-out infinite alternate; }
+.portal-orb i:nth-child(2) { animation-delay: -.25s !important; }
+.portal-orb i:nth-child(3) { animation-delay: -.5s !important; }
+@keyframes portal-eq { to { height: 18px; } }
+@media (prefers-reduced-motion: reduce) { .portal-orb i { animation: none !important; height: 12px; } }
+
+.portal-transcript { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); max-height: 300px; overflow-y: auto; overscroll-behavior: contain; }
+.portal-turn { display: flex; flex-direction: column; gap: 2px; max-width: 92%; padding: var(--space-2) var(--space-3); border-radius: var(--radius-surface); background: var(--surface-2); font: var(--type-body-sm); color: var(--text); }
+.portal-turn[data-role="user"] { align-self: flex-end; background: var(--id-self-tint); }
+.portal-turn-who { font: 600 11px/16px var(--sans); letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); }
+.portal-turn-empty { font: var(--type-body-sm); color: var(--text-muted); font-style: italic; }
+.portal-turn-anchor { height: 0; }
+.portal-answer { white-space: pre-wrap; }
+.portal-cite { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding: 0 4px; margin: 0 1px 0 3px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 600 10px/1 var(--sans); color: var(--text-muted); text-decoration: none; vertical-align: 2px; }
+a.portal-cite:hover, a.portal-cite:focus-visible { color: var(--text); border-color: currentColor; }
+.portal-sources { margin-top: var(--space-2); padding-top: var(--space-2); border-top: 1px solid var(--border); }
+.portal-sources summary { cursor: pointer; font: 600 11px/16px var(--sans); letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); }
+.portal-sources ol { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 4px; }
+.portal-sources li { display: flex; align-items: baseline; gap: 6px; font: var(--type-body-sm); font-size: 12px; }
+.portal-sources li .portal-cite { margin: 0; flex: none; }
+.portal-sources a { color: var(--text); text-underline-offset: 2px; overflow-wrap: anywhere; }
+.portal-sources li:target { background: var(--id-self-tint); border-radius: 4px; }
+.portal-chat { min-height: 180px; }
+.portal-typing { display: inline-flex; gap: 4px; padding: 6px 0; }
+.portal-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); animation: portal-dot 1s infinite ease-in-out; }
+.portal-typing i:nth-child(2) { animation-delay: .15s; }
+.portal-typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes portal-dot { 0%, 80%, 100% { opacity: .3; } 40% { opacity: 1; } }
+
+.portal-confirm { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--p-accent); border-radius: var(--radius-surface); background: var(--p-accent-tint); font: var(--type-body-sm); }
+.portal-controls { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-2); }
+
+.portal-compose { display: flex; gap: var(--space-2); align-items: flex-end; }
+.portal-root .portal-compose textarea { flex: 1; resize: none; min-height: 44px; padding: var(--space-2) var(--space-3); color: var(--text); background: var(--surface); border: 1px solid var(--border-control); border-radius: var(--radius-control); font: var(--type-body); }
+.portal-root .portal-compose textarea:focus-visible { border-color: var(--focus); }
+
+/* After handoff the call takes the whole viewport, like /call. */
+.portal-handoff-layer { position: fixed; inset: 0; z-index: 50; background: var(--bg); overflow-y: auto; }
+.portal-handoff-note { display: flex; flex-direction: column; gap: var(--space-4); align-items: flex-start; padding: var(--space-8); max-width: 520px; margin: 10vh auto 0; }
+.portal-call-ended { min-height: 100dvh; }
+
+/* ----- Sections ----- */
+.portal-section { padding: clamp(40px, 7vh, 72px) 0 0; }
+.portal-section h2 { font: 700 clamp(24px, 2.6vw, 32px)/1.2 var(--display); letter-spacing: -.01em; }
+.portal-section-lead { margin-top: var(--space-2); color: var(--text-2); }
+.portal-topics { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: var(--space-3); margin-top: var(--space-6); }
+.portal-root.portal-root.portal-root .portal-topic { appearance: none; text-align: left; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; min-height: 0; gap: var(--space-2); padding: var(--space-5); border: 1px solid var(--border); border-radius: var(--radius-surface); background: var(--surface); color: var(--text); cursor: pointer; transition: border-color .15s, transform .15s; }
+.portal-root.portal-root.portal-root .portal-topic:hover { border-color: var(--p-accent); transform: translateY(-1px); }
+.portal-topic-title { font: 700 16px/22px var(--display); }
+.portal-topic-q { font: var(--type-body-sm); color: var(--text-2); }
+.portal-topic-go { margin-top: auto; padding-top: var(--space-2); font: 600 13px/18px var(--sans); color: var(--p-accent-ink); }
+.portal-steps { list-style: none; counter-reset: s; margin: var(--space-6) 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: var(--space-6); }
+.portal-steps li { counter-increment: s; display: flex; flex-direction: column; gap: var(--space-2); padding-top: var(--space-4); border-top: 2px solid var(--p-accent); }
+.portal-steps li::before { content: "0" counter(s); font: 700 13px/16px var(--sans); color: var(--p-accent-ink); }
+.portal-steps strong { font: 700 17px/24px var(--display); }
+.portal-steps span { color: var(--text-2); font: var(--type-body-sm); }
+
+/* ----- Footer ----- */
+.portal-footer { max-width: var(--p-max); margin: 0 auto; padding: var(--space-8) var(--p-gutter) var(--space-12); border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: var(--space-3); font: var(--type-body-sm); color: var(--text-2); }
+
+/* ----- Staff console ----- */
+.portal-root main.staff-main { width: 100%; max-width: 880px; margin: 0 auto; padding: clamp(32px, 6vh, 64px) var(--p-gutter) var(--space-16); display: flex; flex-direction: column; gap: var(--space-5); }
+.staff-signin { display: flex; flex-direction: column; gap: var(--space-4); max-width: 420px; }
+.staff-signin h1, .staff-head h1 { font: 700 clamp(26px, 3vw, 34px)/1.15 var(--display); }
+.staff-signin form { display: flex; flex-direction: column; gap: var(--space-3); }
+.staff-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
+.staff-count { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 10px; margin-left: 6px; border-radius: var(--radius-pill); background: var(--p-accent); color: var(--bg); font: 700 16px/1 var(--sans); vertical-align: middle; }
+.staff-empty { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-6); border: 1px dashed var(--border-strong); border-radius: var(--radius-surface); color: var(--text-2); }
+.staff-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.staff-item { display: grid; grid-template-columns: 1fr auto; gap: var(--space-3) var(--space-4); padding: var(--space-5); border: 1px solid var(--border); border-left: 3px solid var(--p-accent); border-radius: var(--radius-surface); background: var(--surface); }
+.staff-who { font: 700 17px/24px var(--display); }
+.staff-meta { font: var(--type-small); color: var(--text-muted); margin-top: 2px; }
+.staff-reason { font: var(--type-body-sm); color: var(--text-2); margin-top: var(--space-2); }
+.staff-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: flex-start; justify-content: flex-end; }
+.staff-transcript { grid-column: 1 / -1; padding-top: var(--space-3); border-top: 1px solid var(--border); }
+@media (max-width: 640px) { .staff-item { grid-template-columns: 1fr; } .staff-actions { justify-content: flex-start; } }
+/* Hover states for the quiet buttons (the global button:hover would paint them dark). */
+.portal-root.portal-root.portal-root .portal-tab:hover { color: var(--text); background: none; }
+.portal-root.portal-root.portal-root .portal-link:hover { color: var(--p-accent-hover); background: none; }
+.portal-root.portal-root.portal-root .portal-topic:hover { color: var(--text); background: var(--surface); }
+
+/* ----- Embedded assistant (/embed, inside the iframe that public/widget.js opens) ----- */
+.portal-root main.portal-embed { position: relative; height: 100dvh; width: 100%; max-width: none; margin: 0; padding: 0; display: flex; flex-direction: column; background: var(--surface-elevated); }
+.portal-embed .portal-assistant { position: static; flex: 1; min-height: 0; overflow-y: auto; border: 0; border-radius: 0; box-shadow: none; }
+.portal-embed .portal-assistant-head { padding-right: 56px; }
+.portal-embed .portal-live-dot { display: none; }
+.portal-root.portal-root.portal-root .portal-embed-close { position: absolute; top: 14px; right: 14px; z-index: 5; width: 36px; height: 36px; min-height: 0; padding: 0;
+  display: grid; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--text-2); cursor: pointer; }
+.portal-root.portal-root.portal-root .portal-embed-close:hover { color: var(--text); border-color: var(--text-2); }
+.portal-embed-foot { flex: none; margin: 0; padding: var(--space-2) var(--space-5) var(--space-3); border-top: 1px solid var(--border); font: var(--type-small); color: var(--text-muted); }
+
+/* ----- Widget install page (/widget) ----- */
+.portal-root main.widget-page { max-width: 860px; display: flex; flex-direction: column; gap: var(--space-8); padding-top: var(--space-12); }
+.widget-intro h1 { margin-top: var(--space-3); font: 700 clamp(30px, 4.2vw, 48px)/1.1 var(--display); letter-spacing: -.02em; color: var(--text); text-wrap: balance; }
+.widget-try { margin-top: var(--space-4); padding: var(--space-3) var(--space-4); border-radius: var(--radius-control); background: var(--p-accent-tint); color: var(--p-accent-ink); font: 600 14px/20px var(--sans); width: fit-content; }
+.widget-step { display: grid; grid-template-columns: 40px 1fr; gap: var(--space-4); padding-top: var(--space-6); border-top: 1px solid var(--border); }
+.widget-step-n { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--p-accent); color: var(--bg); font: 700 15px/1 var(--display); }
+.widget-step-body { min-width: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.widget-step-body h2 { font: var(--type-h3); color: var(--text); }
+.widget-step-body p { color: var(--text-2); max-width: 64ch; }
+.widget-step-body code { font-family: var(--mono); font-size: .92em; }
+.widget-code { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-surface); background: var(--surface-2); }
+.widget-code pre { flex: 1; min-width: 0; margin: 0; overflow-x: auto; font: var(--type-code); color: var(--text); }
+.widget-options { width: 100%; border-collapse: collapse; font: var(--type-body-sm); }
+.widget-options caption { text-align: left; padding-bottom: var(--space-2); color: var(--text-muted); font: var(--type-small); }
+.widget-options th, .widget-options td { text-align: left; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-2); }
+.widget-options th { font: 600 12px/16px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.widget-options td:first-child { white-space: nowrap; color: var(--text); }
+.portal-root .widget-bookmarklet { display: inline-flex; align-items: center; gap: var(--space-2); width: fit-content; padding: var(--space-3) var(--space-5); border-radius: var(--radius-pill);
+  background: var(--p-accent); color: var(--bg); font: 600 15px/1 var(--sans); text-decoration: none; cursor: grab; box-shadow: var(--elev-2, 0 2px 8px rgba(0,0,0,.15)); }
+.portal-root .widget-bookmarklet::before { content: "★"; opacity: .8; }
+.widget-note { font: var(--type-small); color: var(--text-muted) !important; }
+.widget-list { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: var(--space-2); color: var(--text-2); }
+@media (max-width: 560px) { .widget-step { grid-template-columns: 1fr; } .widget-options td:first-child { white-space: normal; } }
+.portal-chat-reset { margin: 0; text-align: right; font: var(--type-small); }
+.portal-root.portal-root.portal-root .widget-download { width: fit-content; text-decoration: none; }
+.widget-steps-small { list-style: decimal; }
+
+/* The site's shared restyle turns every button under .call-root into a dark pill (see styles/legacy/restyle.css).
+   The portal's own controls (tabs, text links, its buttons) keep their look; call screens inside the portal keep theirs. */
+.portal-root.portal-root.portal-root :is(.portal-tab, .portal-link, .portal-btn):hover { transform: none; }

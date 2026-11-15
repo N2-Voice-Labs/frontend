@@ -343,7 +343,7 @@ export function CallScreen(props: CallScreenProps) {
           </>
         }
       >
-        <p id="call-end-consequence">{other.name} will be disconnected too. Voice Labs can’t leave a call without ending it yet.</p>
+        <p id="call-end-consequence">{other.name} will be disconnected too. UNAI can’t leave a call without ending it yet.</p>
       </CallDialog>
 
       <CallDialog open={moreOpen} onClose={closeMore} title="Call options" variant="sheet-bottom">

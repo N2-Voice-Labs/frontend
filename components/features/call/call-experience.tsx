@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { resolveInterpreter, PACE_OPTIONS, type TranslationPace } from "@/lib/interpreter";
+import { PACE_OPTIONS, type TranslationPace } from "@/lib/interpreter";
 import { interpreterDirection, interpreterLanguages, isInterpreterLanguage, languageName } from "@/lib/languages";
-import { createVoiceSession, endVoiceSession, type VoiceSession } from "@/lib/platform";
+import { createCall, endCall as endCallSession, type CallExperience as Experience, type VoiceSession } from "@/lib/platform";
 import { describeError, errorCode } from "@/lib/platform-errors";
 import { getVoices, type Voice } from "@/lib/voices";
 import { CallEnded } from "./call-ended";
@@ -22,12 +22,18 @@ const PREFS_KEY = "vl-call-prefs";
 const START_STEPS = ["Preparing interpreter…", "Connecting audio…", "Starting interpreter…"];
 const LIVEKIT_TTL_SECONDS = 600;
 
-type Prefs = { mine: string; theirs: string; name: string; pace: TranslationPace; hearOriginal: boolean };
+type Prefs = { mine: string; theirs: string; name: string; pace: TranslationPace; experience: Experience };
+
+/** "Audio" in the call options: the testing switch between today's AI-only call and cinematic dubbing. */
+const EXPERIENCE_OPTIONS: { id: Experience; label: string }[] = [
+  { id: "ai_only", label: "Translation only" },
+  { id: "cinematic", label: "Also their real voice, quietly (test)" },
+];
 
 function readPrefs(): Prefs {
   const browser = typeof navigator !== "undefined" ? navigator.language?.slice(0, 2).toLowerCase() : "en";
   const mine = browser && isInterpreterLanguage(browser) ? browser : "en";
-  const fallback: Prefs = { mine, theirs: mine === "en" ? "ko" : "en", name: "", pace: "balanced", hearOriginal: false };
+  const fallback: Prefs = { mine, theirs: mine === "en" ? "ko" : "en", name: "", pace: "balanced", experience: "ai_only" };
   try {
     const stored = JSON.parse(window.localStorage.getItem(PREFS_KEY) ?? "null") as Partial<Prefs> | null;
     if (!stored) return fallback;
@@ -35,6 +41,7 @@ function readPrefs(): Prefs {
     if (!isInterpreterLanguage(merged.mine)) merged.mine = fallback.mine;
     if (!isInterpreterLanguage(merged.theirs) || merged.theirs === merged.mine) merged.theirs = merged.mine === "en" ? "ko" : "en";
     if (!PACE_OPTIONS.some((option) => option.id === merged.pace)) merged.pace = "balanced";
+    if (!EXPERIENCE_OPTIONS.some((option) => option.id === merged.experience)) merged.experience = "ai_only";
     return merged;
   } catch {
     return fallback;
@@ -58,14 +65,16 @@ function startError(cause: unknown, pace: TranslationPace): StartError {
     return { title: "This language pair can’t be interpreted with the current settings", message: pace === "instant" ? "Try the Balanced pace." : "Try a different pair or pace.", code, suggestBalanced: pace === "instant" };
   }
   if (code === "selected_voice_unavailable") return { title: "That voice isn’t ready", message: "Start the call with the interpreter’s voice instead.", code, retryWithoutVoice: true };
+  if (code === "calls_disabled") return { title: "Calls by link aren’t switched on", message: "Ask whoever runs UNAI to enable them on this server.", code };
+  if (code === "rate_limited" || code === "too_many_active_sessions") return { title: "Please wait a moment", message: describeError(cause), code };
   if (code === "runtime_unavailable" || code === "runtime_auth_not_configured") return { title: "The interpreter isn’t responding", message: "Try again in a moment.", code };
   if (cause instanceof Error && (cause.message.startsWith("Failed to fetch") || cause.message === "fetch failed")) {
-    return { title: "Can’t reach Voice Labs right now", message: "Check your connection and try again.", code: cause.message };
+    return { title: "Can’t reach UNAI right now", message: "Check your connection and try again.", code: cause.message };
   }
   return { title: "The call couldn’t start", message: describeError(cause), code: code ?? (cause instanceof Error ? cause.message : null) };
 }
 
-type Session = VoiceSession & { agentId: string; agentName: string; createdInterpreter: boolean; issuedAt: number };
+type Session = VoiceSession & { issuedAt: number };
 
 /** /call: setup → live → ended, as one client state machine (UX spec §2.2: no reloadable /call/[id]). */
 export function CallExperience() {
@@ -130,35 +139,36 @@ export function CallExperience() {
     setStep(0);
     let created: VoiceSession | null = null;
     try {
-      const { agent, created: createdInterpreter } = await resolveInterpreter({ mine: settings.mine, theirs: settings.theirs, pace: settings.pace, hearOriginal: settings.hearOriginal });
-      if (!mountedRef.current) return;
       // Probe before session: the mic check already proved access; stop its tracks before LiveKit opens its own.
       const micDeviceId = mic.deviceId || undefined;
       mic.release();
       setStep(1);
-      created = await createVoiceSession(agent.id, {
-        language: settings.mine,
-        display_name: settings.name.trim() || null,
+      created = await createCall({
+        languages: [settings.mine, settings.theirs],
+        name: settings.name.trim() || null,
         voice_profile_id: options.withoutVoice ? null : voiceId || null,
+        latency_mode: settings.pace,
+        experience: settings.experience,
       });
       if (!mountedRef.current) {
-        void endVoiceSession(created.session_id, created.session_token).catch(() => undefined);
+        void endCallSession(created.session_id, created.session_token).catch(() => undefined);
         return;
       }
       if (!created.connection.url || !created.connection.token) {
         const partial = created;
         created = null;
-        await endVoiceSession(partial.session_id, partial.session_token).catch(() => undefined);
+        await endCallSession(partial.session_id, partial.session_token).catch(() => undefined);
         setStep(null);
-        setError({ title: "Calls aren’t set up on this server yet", message: "Ask whoever runs Voice Labs to configure LiveKit.", code: "livekit_not_configured" });
+        setError({ title: "Calls aren’t set up on this server yet", message: "Ask whoever runs UNAI to configure LiveKit.", code: "livekit_not_configured" });
         return;
       }
       const issuedAt = Math.floor(Date.now() / 1000);
-      setSession({ ...created, agentId: agent.id, agentName: agent.name, createdInterpreter, issuedAt });
+      setSession({ ...created, issuedAt });
       setStep(2);
       const ok = await room.connect({
         url: created.connection.url,
         token: created.connection.token,
+        listen: created.connection.listen,
         sessionId: created.session_id,
         sessionToken: created.session_token,
         tokenExpiresAt: issuedAt + LIVEKIT_TTL_SECONDS,
@@ -166,7 +176,7 @@ export function CallExperience() {
       });
       if (!mountedRef.current) {
         // Left the page while connecting: nobody else can be in this call yet, so end it.
-        void endVoiceSession(created.session_id, created.session_token).catch(() => undefined);
+        void endCallSession(created.session_id, created.session_token).catch(() => undefined);
         return;
       }
       setStep(null);
@@ -174,7 +184,7 @@ export function CallExperience() {
       if (!ok) {
         // Nobody else can be in this call yet, so ending it is safe.
         const partial = created;
-        void endVoiceSession(partial.session_id, partial.session_token).catch(() => undefined);
+        void endCallSession(partial.session_id, partial.session_token).catch(() => undefined);
         setSession(null);
         setError({ title: "Couldn’t connect the call audio", message: "Check your connection and try again.", code: "livekit_connect_failed" });
       }
@@ -182,7 +192,7 @@ export function CallExperience() {
       if (!mountedRef.current) return;
       setStep(null);
       setError(startError(cause, settings.pace));
-      if (created) void endVoiceSession(created.session_id, created.session_token).catch(() => undefined);
+      if (created) void endCallSession(created.session_id, created.session_token).catch(() => undefined);
     }
   }, [prefs, mic, voiceId, room]);
 
@@ -192,11 +202,6 @@ export function CallExperience() {
     setOtherName("");
     setStep(null);
     window.location.assign("/call");
-  }
-
-  async function endAndRestart() {
-    await room.end();
-    startAnother();
   }
 
   const state = room.state;
@@ -248,25 +253,20 @@ export function CallExperience() {
         invite={
           <InvitePanel
             sessionId={session.session_id}
-            conversationId={session.conversation_id}
             sessionToken={session.session_token}
             selfName={prefs?.name.trim() ?? ""}
-            selfLanguage={mine}
             otherLanguage={theirs}
             otherName={otherName}
             onOtherNameChange={setOtherName}
             invite={invite}
             onInvite={setInvite}
-            onExpiredRestart={() => void endAndRestart()}
             onMinuteLeft={setInviteWarning}
           />
         }
         technical={[
-          { label: "Interpreter", value: `${session.agentName}${session.createdInterpreter ? " (created for this call)" : ""}` },
-          { label: "Interpreter id", value: session.agentId },
           { label: "Engine · pace · direction", value: `cascaded · ${prefs?.pace ?? "balanced"} · ${interpreterDirection(mine, theirs)}` },
           { label: "Languages", value: `${mine} (you) / ${theirs} (them)` },
-          { label: "Also hear their real voice", value: prefs?.hearOriginal ? "On" : "Off" },
+          { label: "Audio", value: EXPERIENCE_OPTIONS.find((option) => option.id === prefs?.experience)?.label ?? "Translation only" },
           { label: "Session", value: session.session_id },
           { label: "Conversation", value: session.conversation_id },
           { label: "Room", value: session.room_name },
@@ -318,10 +318,13 @@ export function CallExperience() {
                 {PACE_OPTIONS.map((option) => <option key={option.id} value={option.id}>{option.label} · {option.hint}</option>)}
               </select>
             </div>
-            <label className="call-check">
-              <input type="checkbox" checked={prefs?.hearOriginal ?? false} onChange={(event) => update({ hearOriginal: event.target.checked })} />
-              Also hear their real voice
-            </label>
+            <div className="call-field">
+              <label htmlFor={`${formId}-experience`}>Audio</label>
+              <select id={`${formId}-experience`} value={prefs?.experience ?? "ai_only"} onChange={(event) => update({ experience: event.target.value as Experience })}>
+                {EXPERIENCE_OPTIONS.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+              </select>
+              <p className="call-hint">For testing. Each person hears the other’s real voice under the translation. Use headphones.</p>
+            </div>
             {voices.length > 0 && (
               <div className="call-field">
                 <label htmlFor={`${formId}-voice`}>My translated voice</label>

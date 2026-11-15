@@ -2,7 +2,7 @@
 
 > **UNAI** (formerly Voice Labs) is a B2B AI communication platform: AI voice agents (primary), real-time translation, AI chatbots and developer APIs. First market: university admissions offices. First MVP: the AI Admissions Assistant for international students at Inha University. Calls run in the browser over WebRTC (LiveKit); telephone/SIP calling is deferred.
 
-This repository is the **UNAI marketing site** (confirmed 2026-11-12): the cinematic landing film at `/` plus Products, Solutions, Developers, Live demo and Contact pages. The Live demo page links to the Inha Admissions portal (`frontend.voice-labs`) through `NEXT_PUBLIC_PORTAL_URL`. The older copied workspace and call pages still in this repo are not linked from the site; the up-to-date versions live in `frontend.voice-labs`. Cloudflare Worker name: `voice-labs` (it must match the Worker the Cloudflare build is connected to, or the deploy step fails; rename it in the Cloudflare dashboard first if you want a UNAI name).
+This repository is the **UNAI marketing site** (confirmed 2026-11-12): the cinematic landing film at `/` plus Products, Solutions, Developers, Live demo and Contact pages. The Live demo page opens the Inha Admissions portal at `/inha` on this site (`NEXT_PUBLIC_PORTAL_URL` optionally overrides its destination). The workspace and call pages are also hosted here. Cloudflare Worker name: `voice-labs` (it must match the Worker the Cloudflare build is connected to, or the deploy step fails; rename it in the Cloudflare dashboard first if you want a UNAI name).
 
 Next.js App Router, plain CSS. The landing film uses GSAP (ScrollTrigger) and Lenis; nothing else animates with a library.
 
@@ -26,7 +26,7 @@ Next.js App Router, plain CSS. The landing film uses GSAP (ScrollTrigger) and Le
   `/analytics`, which redirects), `/agents/new`, `/agents/:id` (+ edit, and `/test`, the Voice
   Playground), `/campaigns`, `/knowledge`, `/tools`. `/playground?agent=<id>` redirects to the playground.
 
-Each area has its own root layout: `app/(marketing)`, `app/(workspace)`, `app/(dashboard)` and `app/(call)`.
+Each area has its own root layout: `app/(marketing)`, `app/(workspace)`, `app/(dashboard)`, `app/(call)` and `app/(portal)`.
 They ship different stylesheets (the previous app's tokens use the same variable names with other values,
 in `styles/legacy/`), and moving between root layouts is a full page load, so the styles never mix. Unknown
 URLs render `app/global-not-found.tsx`.
@@ -35,6 +35,20 @@ Fonts live in `lib/fonts/site.ts` and every area uses them. Only the two headlin
 Instrument Serif) are preloaded. Korean uses the system faces (`--font-kr`, `--font-hangul-system`), not a
 web font: Noto Sans KR through next/font adds 120–370 render-blocking `@font-face` rules per page, which was
 the main reason first paint was slow.
+
+## Inha admissions portal
+
+- `/inha`: student voice/chat assistant and translated handoff to admissions staff.
+- `/inha/staff`: officer queue and pickup console.
+- `/call` and `/join`: shared translated call and invitation flows.
+
+Set `NEXT_PUBLIC_PLATFORM_URL` to the Platform API origin (default `http://localhost:8000`) and
+`NEXT_PUBLIC_PORTAL_AGENT_KEY` to its demo agent key (default `inha-admissions`). Staff enter their
+staff key directly in the console; do not put it in a public environment variable. The officer language
+defaults to Korean (`NEXT_PUBLIC_STAFF_LANGUAGE` optionally overrides it).
+For a same-origin proxy, set `NEXT_PUBLIC_PLATFORM_URL=/_platform` and
+`PLATFORM_PROXY_TARGET=http://127.0.0.1:8000` (or your Platform origin). The rewrite is off unless set.
+`NEXT_PUBLIC_PORTAL_URL` optionally overrides the demo button; otherwise it opens `/inha`.
 
 ## Run locally
 

@@ -1,4 +1,10 @@
-const platformUrl = process.env.NEXT_PUBLIC_PLATFORM_URL ?? "http://localhost:8000";
+const platformUrl = (process.env.NEXT_PUBLIC_PLATFORM_URL ?? "http://localhost:8000").replace(/\/$/, "");
+
+/**
+ * Private listening (the default for two-person calls): the session-room token cannot subscribe to anything, and
+ * the translation for this person arrives on `track` in a separate, subscribe-only room (`connection.listen`).
+ */
+export type ListenConnection = { url: string; token: string; room_name: string; track: string };
 
 export type VoiceSession = {
   session_id: string;
@@ -6,7 +12,7 @@ export type VoiceSession = {
   room_name: string;
   connection_status: "configured" | "not_configured";
   runtime_status: string;
-  connection: { url: string; token: string };
+  connection: { url: string; token: string; listen?: ListenConnection };
   /**
    * Bearer token scoped to this session (`vls_…`). Lets the creator read the conversation and end the
    * session on an auth-enabled Platform. Optional: an older Platform does not return it.
@@ -42,7 +48,7 @@ export type SessionParticipantInput = {
 /** `POST /voice/sessions/{id}/participants`: the guest's own LiveKit connection and session token. */
 export type SessionParticipant = {
   participant_identity: string;
-  connection: { url: string; token: string };
+  connection: { url: string; token: string; listen?: ListenConnection };
   session_token: string;
 };
 
@@ -147,6 +153,7 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
     try {
       const body = await response.json();
       if (typeof body.detail === "string") detail = body.detail;
+      else if (typeof body.detail?.code === "string") detail = body.detail.code;
       // FastAPI validation errors arrive as a list of { loc, msg }.
       else if (Array.isArray(body.detail)) detail = body.detail.map((item: { loc?: unknown[]; msg?: string }) => [item.loc?.filter((part) => part !== "body").join("."), item.msg].filter(Boolean).join(": ")).join("; ") || detail;
     } catch {
@@ -205,6 +212,49 @@ export const addSessionParticipant = (sessionId: string, participant: SessionPar
   request<SessionParticipant>(
     `/voice/sessions/${encodeURIComponent(sessionId)}/participants`,
     withBearer({ method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(participant) }, token),
+  );
+
+/** Hangs up a shareable-link call. Either person may: it ends for both (`POST /calls/{id}/end`). */
+export const endCall = (sessionId: string, token?: string | null) =>
+  request<{ status: string }>(`/calls/${encodeURIComponent(sessionId)}/end`, withBearer({ method: "POST" }, token));
+
+/** Which audio the listener gets: the translation alone, or also the other person's real voice kept low under it. */
+export type CallExperience = "ai_only" | "cinematic";
+
+/**
+ * Starts a shareable-link call (Platform `POST /calls`): no account, no admin key. The reply is the
+ * creator's LiveKit connection and a session token for this call only.
+ */
+export async function createCall(body: {
+  languages: [string, string];
+  name?: string | null;
+  voice_profile_id?: string | null;
+  latency_mode?: "instant" | "balanced" | "accurate";
+  experience?: CallExperience;
+}): Promise<VoiceSession> {
+  return request<VoiceSession>("/calls", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+/** The creator's shareable code (a new one replaces the old). Seats nobody until the guest opens it. */
+export const createCallInvite = (sessionId: string, token?: string | null) =>
+  request<{ code: string; expires_at: number; ttl_seconds: number }>(
+    `/calls/${encodeURIComponent(sessionId)}/invite`,
+    withBearer({ method: "POST" }, token),
+  );
+
+/** Who invited the guest and the two languages; 404/410 codes for a wrong, expired or finished invitation. */
+export const getCallInvite = (code: string) =>
+  request<{ from: string; me: string; them: string; expires_at: number }>(`/calls/invites/${encodeURIComponent(code)}`);
+
+/** Seats the guest. Opening the same code again returns the same seat with fresh credentials. */
+export const joinCall = (code: string, name?: string | null) =>
+  request<SessionParticipant & { session_id: string; conversation_id: string; me: string; them: string; from: string }>(
+    `/calls/invites/${encodeURIComponent(code)}/join`,
+    { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: name || null }) },
   );
 
 /** Records how a call ended. `outcome` must be one of `OUTCOMES` (lib/outcomes.ts). */

@@ -3,7 +3,12 @@ import { interpreterAgentBody, matchesInterpreter, resolveInterpreter } from "@/
 import { interpreterDirection, interpreterLanguages, languageLabel } from "@/lib/languages";
 import {
   addSessionParticipant,
+  createCall,
+  createCallInvite,
   createVoiceSession,
+  endCall,
+  getCallInvite,
+  joinCall,
   endVoiceSession,
   getConversation,
   getVoiceSession,
@@ -102,4 +107,41 @@ test("resolveInterpreter reuses a match, otherwise creates one", async () => {
   const create = lastInit(fetchSpy);
   expect(create.method).toBe("POST");
   expect(JSON.parse(String(create.body)).interpreter.engine).toBe("cascaded");
+});
+
+test("shareable-link calls use the public call routes, send no admin credentials, and keep the code out of the body", async () => {
+  const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(() => Promise.resolve(ok({ session_id: "s1" })));
+  await createCall({ languages: ["en", "ko"], name: "Sam", experience: "cinematic" });
+  expect(String(fetchSpy.mock.calls.at(-1)?.[0])).toMatch(/\/calls$/);
+  expect(JSON.parse(String(lastInit(fetchSpy).body))).toEqual({ languages: ["en", "ko"], name: "Sam", experience: "cinematic" });
+  expect(header(lastInit(fetchSpy), "authorization")).toBeNull();
+
+  await createCallInvite("s1", "vls_creator");
+  expect(String(fetchSpy.mock.calls.at(-1)?.[0])).toMatch(/\/calls\/s1\/invite$/);
+  expect(header(lastInit(fetchSpy), "authorization")).toBe("Bearer vls_creator");
+
+  await getCallInvite("s1.secret");
+  expect(String(fetchSpy.mock.calls.at(-1)?.[0])).toMatch(/\/calls\/invites\/s1\.secret$/);
+  expect(header(lastInit(fetchSpy), "authorization")).toBeNull();
+
+  await joinCall("s1.secret", "");
+  expect(String(fetchSpy.mock.calls.at(-1)?.[0])).toMatch(/\/calls\/invites\/s1\.secret\/join$/);
+  expect(JSON.parse(String(lastInit(fetchSpy).body))).toEqual({ name: null });
+
+  await endCall("s1", "vls_guest");
+  expect(String(fetchSpy.mock.calls.at(-1)?.[0])).toMatch(/\/calls\/s1\/end$/);
+  expect(lastInit(fetchSpy).method).toBe("POST");
+  expect(header(lastInit(fetchSpy), "authorization")).toBe("Bearer vls_guest");
+});
+
+test("an error detail that is an object surfaces its code (rate limits, session caps)", async () => {
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ detail: { code: "rate_limited", message: "slow down" } }), { status: 429 }));
+  await expect(createCall({ languages: ["en", "ko"] })).rejects.toMatchObject({ message: "rate_limited", status: 429 });
+});
+
+test("a refused call because a speech provider is down gets a plain message, not the raw code", async () => {
+  vi.spyOn(globalThis, "fetch").mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ detail: { code: "provider_unavailable", provider: "elevenlabs", kind: "stt" } }), { status: 503 })));
+  const cause = await createCall({ languages: ["en", "ko"] }).catch((error: unknown) => error);
+  const { describeError } = await import("@/lib/platform-errors");
+  expect(describeError(cause)).toMatch(/isn’t available right now/);
 });

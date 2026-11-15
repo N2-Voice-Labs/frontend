@@ -3,11 +3,12 @@ const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
 const app = (path: string) => `${APP_URL}${path}`;
 const q = (id: string) => encodeURIComponent(id);
 
-/** The Inha Admissions portal (frontend.voice-labs): UNAI's first customer-style implementation. */
-export const PORTAL_URL = (process.env.NEXT_PUBLIC_PORTAL_URL ?? "").replace(/\/$/, "") || null;
+/** The Inha Admissions portal: UNAI's first customer-style implementation. */
+export const PORTAL_URL = (process.env.NEXT_PUBLIC_PORTAL_URL ?? "").replace(/\/$/, "") || "/inha";
 
 export const ROUTES = {
   home: "/",
+  inha: "/inha",
   products: "/products",
   solutions: "/solutions",
   developers: "/developers",

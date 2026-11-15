@@ -18,11 +18,7 @@ export default function DemoPage() {
           em="assistant yourself."
           lede="A working example of UNAI: a voice assistant for international applicants to Inha University. It answers from the university's published admissions information and can bring in an admissions officer, with live Korean ↔ English translation."
         >
-          {PORTAL_URL ? (
-            <a href={PORTAL_URL} className="cta cta-primary">Open the Admissions Assistant</a>
-          ) : (
-            <span className="cta" aria-disabled="true">The demo opens here soon</span>
-          )}
+          <a href={PORTAL_URL} className="cta cta-primary">Open the Admissions Assistant</a>
         </PageHero>
 
         <Section index="01" label="Try asking" title="Questions an applicant might ask.">

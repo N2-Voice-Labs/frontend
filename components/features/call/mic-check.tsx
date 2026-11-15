@@ -52,7 +52,7 @@ export function useMicCheck() {
     if (context.current?.state === "suspended") void context.current.resume().catch(() => undefined);
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setStatus("error");
-      setError("Microphone access is unavailable here. Open Voice Labs over HTTPS (or localhost) in a current browser.");
+      setError("Microphone access is unavailable here. Open UNAI over HTTPS (or localhost) in a current browser.");
       return false;
     }
     setStatus("asking");

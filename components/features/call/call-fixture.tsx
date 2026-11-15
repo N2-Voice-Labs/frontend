@@ -82,8 +82,8 @@ function Fixture({ name }: { name: FixtureName }) {
       onEnd={noop}
       onStartAudio={noop}
       invite={name === "waiting" ? (
-        <InvitePanel sessionId="fixture" conversationId="fixture" selfName="Sam" selfLanguage="en" otherLanguage="ko" otherName="Ji-woo"
-          onOtherNameChange={noop} invite={null} onInvite={noop} onExpiredRestart={noop} />
+        <InvitePanel sessionId="fixture" selfName="Sam" otherLanguage="ko" otherName="Ji-woo"
+          onOtherNameChange={noop} invite={null} onInvite={noop} />
       ) : undefined}
       technical={[{ label: "Fixture", value: name }]}
     />
