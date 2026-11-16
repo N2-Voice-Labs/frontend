@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { languageName } from "@/lib/languages";
 import { acceptHandoff, getHandoffTranscript, listStaffHandoffs, type StaffHandoff } from "@/lib/portal";
 import type { ConversationMessage } from "@/lib/platform";
+import { Mascot } from "./mascot";
 
 const KEY_STORAGE = "portal-staff-key";
 const POLL_MS = 3_000;
@@ -126,14 +127,20 @@ export function StaffConsole() {
   return (
     <main className="staff-main" id="main-content">
       <div className="staff-head">
-        <div>
+        <Mascot pose={waiting.length ? "megaphone" : "wave"} width={120} className="staff-mascot" />
+        <div className="staff-head-copy">
           <p className="portal-eyebrow">Admissions office</p>
           <h1>Students waiting <span className="staff-count">{waiting.length}</span></h1>
         </div>
         <button type="button" className="portal-btn" onClick={() => signOut()}>Lock console</button>
       </div>
       <p className="sr-only" role="status" aria-live="polite">{announce}</p>
-      {error && <p className="portal-error" role="alert">{error}</p>}
+      {error && (
+        <div className="portal-mascot-row">
+          <Mascot pose="confused" width={56} />
+          <p className="portal-error" role="alert">{error}</p>
+        </div>
+      )}
 
       {!loaded ? (
         <p className="portal-note">Loading the queue…</p>
