@@ -5,6 +5,7 @@ import { languageName } from "@/lib/languages";
 import { sendDemoChat, STAFF_LANGUAGE, type ChatSource, type Handoff } from "@/lib/portal";
 import { describeError } from "@/lib/platform-errors";
 import { HandoffCall } from "./handoff-call";
+import { Mascot } from "./mascot";
 import { useAgentCall } from "./use-agent-call";
 
 type Tab = "voice" | "chat";
@@ -86,16 +87,16 @@ function saveChat(lines: ChatLine[], conversationId: string | null) {
   }
 }
 
-export type AssistantHandle = { ask: (question: string) => void };
+export type AssistantHandle = { ask: (question: string) => void; show: (tab: Tab) => void };
 
 /** Student language for the AI call and the officer call. English first; the platform takes others later. */
 const STUDENT_LANGUAGE = "en";
 
 /**
  * The portal's assistant: an AI voice call (primary) with a text chat beside it, and the path to a
- * human admissions officer. Sits in the page's right column, and fills the screen once a person joins.
+ * human admissions officer. Lives in the portal's assistant drawer, and fills the screen once a person joins.
  */
-export const AssistantPanel = forwardRef<AssistantHandle>(function AssistantPanel(_, ref) {
+export const AssistantPanel = forwardRef<AssistantHandle, { onLiveChange?: (live: boolean) => void }>(function AssistantPanel({ onLiveChange }, ref) {
   const [tab, setTab] = useState<Tab>("voice");
   const [chatDraft, setChatDraft] = useState("");
   const chatInput = useRef<HTMLTextAreaElement>(null);
@@ -116,6 +117,9 @@ export const AssistantPanel = forwardRef<AssistantHandle>(function AssistantPane
   }, [tab]);
 
   useImperativeHandle(ref, () => ({
+    show(t) {
+      setTab(t);
+    },
     ask(question) {
       setTab("chat");
       setChatDraft(question);
@@ -126,6 +130,7 @@ export const AssistantPanel = forwardRef<AssistantHandle>(function AssistantPane
   return (
     <section className="portal-assistant" aria-labelledby={`${ids}-title`}>
       <header className="portal-assistant-head">
+        <Mascot pose="headset" width={56} className="portal-mascot-avatar" />
         <div>
           <p className="portal-eyebrow">Admissions Assistant</p>
           <h2 id={`${ids}-title`}>Ask about applying to Inha</h2>
@@ -140,7 +145,7 @@ export const AssistantPanel = forwardRef<AssistantHandle>(function AssistantPane
         ))}
       </div>
       <div role="tabpanel" id={`${ids}-voice-panel`} aria-labelledby={`${ids}-voice`} hidden={tab !== "voice"}>
-        <VoicePane onUseChat={() => setTab("chat")} />
+        <VoicePane onUseChat={() => setTab("chat")} onLiveChange={onLiveChange} />
       </div>
       <div role="tabpanel" id={`${ids}-chat-panel`} aria-labelledby={`${ids}-chat`} hidden={tab !== "chat"}>
         <ChatPane draft={chatDraft} onDraft={setChatDraft} inputRef={chatInput} onUseVoice={() => setTab("voice")} />
@@ -149,7 +154,7 @@ export const AssistantPanel = forwardRef<AssistantHandle>(function AssistantPane
   );
 });
 
-function VoicePane({ onUseChat }: { onUseChat: () => void }) {
+function VoicePane({ onUseChat, onLiveChange }: { onUseChat: () => void; onLiveChange?: (live: boolean) => void }) {
   const call = useAgentCall();
   const [name, setName] = useState("");
   const [confirming, setConfirming] = useState(false);
@@ -159,6 +164,8 @@ function VoicePane({ onUseChat }: { onUseChat: () => void }) {
   const nameId = useId();
   const transcriptEnd = useRef<HTMLLIElement>(null);
 
+  const inCall = handoff !== null || call.phase === "starting" || call.phase === "live" || call.phase === "reconnecting";
+  useEffect(() => { onLiveChange?.(inCall); }, [inCall, onLiveChange]);
   useEffect(() => {
     if (call.escalated && call.phase === "live") setConfirming(true);
   }, [call.escalated, call.phase]);
@@ -194,12 +201,22 @@ function VoicePane({ onUseChat }: { onUseChat: () => void }) {
     return (
       <div className="portal-pane">
         {call.phase === "ended" ? (
-          <p className="portal-note" role="status">The call has ended. Thanks for calling. You can start a new one any time.</p>
+          <div className="portal-mascot-row">
+            <Mascot pose="celebrate" width={110} />
+            <p className="portal-note" role="status">The call has ended. Thanks for calling. You can start a new one any time. Good luck with your application!</p>
+          </div>
         ) : (
           <p className="portal-pane-lead">Talk to the assistant like you would on the phone. It answers from Inha&apos;s published admissions information and can connect you to an admissions officer.</p>
         )}
-        {handoffError && <p className="portal-error" role="alert">{handoffError}</p>}
-        {call.error && <p className="portal-error" role="alert">{call.error}</p>}
+        {(handoffError || call.error) && (
+          <div className="portal-mascot-row">
+            <Mascot pose="confused" width={64} />
+            <div>
+              {handoffError && <p className="portal-error" role="alert">{handoffError}</p>}
+              {call.error && <p className="portal-error" role="alert">{call.error}</p>}
+            </div>
+          </div>
+        )}
         <label className="portal-field" htmlFor={nameId}>
           <span>Your name <small>(optional)</small></span>
           <input id={nameId} value={name} maxLength={100} autoComplete="given-name" onChange={(e) => setName(e.target.value)} placeholder="So the officer can greet you" />
@@ -244,6 +261,7 @@ function VoicePane({ onUseChat }: { onUseChat: () => void }) {
 
       {confirming && live && (
         <div className="portal-confirm" role="alertdialog" aria-labelledby={`${nameId}-confirm`}>
+          <Mascot pose="megaphone" width={96} className="portal-mascot-confirm" />
           <p id={`${nameId}-confirm`}><strong>Would you like to speak with an admissions officer?</strong> The AI call ends and an officer joins you here. They speak {languageName(STAFF_LANGUAGE)}; you&apos;ll hear them in {languageName(STUDENT_LANGUAGE)}, and they&apos;ll hear you in {languageName(STAFF_LANGUAGE)}.</p>
           <div className="portal-row">
             <button type="button" className="portal-btn portal-btn-primary" disabled={connecting} onClick={() => void connectOfficer()}>{connecting ? "Connecting…" : "Connect to Admissions Officer"}</button>
@@ -317,7 +335,11 @@ function ChatPane({ draft, onDraft, inputRef, onUseVoice }: { draft: string; onD
   return (
     <div className="portal-pane">
       <ol className="portal-transcript portal-chat" aria-label="Chat" aria-live="polite">
-        {lines.length === 0 && <li className="portal-turn-empty">Ask anything about admissions: documents, deadlines, tuition, scholarships or language requirements.</li>}
+        {lines.length === 0 && (
+          <li className="portal-turn-empty portal-chat-empty">
+            <Mascot pose="reading" width={150} speechSide="top" speech={<>Ask anything about admissions: documents, deadlines, tuition, scholarships or language. I answer from Inha&apos;s published information.</>} />
+          </li>
+        )}
         {lines.map((line) => (
           <li key={line.id} className="portal-turn" data-role={line.role}>
             <span className="portal-turn-who">{line.role === "user" ? "You" : "Assistant"}</span>
@@ -325,13 +347,26 @@ function ChatPane({ draft, onDraft, inputRef, onUseVoice }: { draft: string; onD
             {line.role === "assistant" && line.sources?.length ? <SourceList sources={line.sources} idPrefix={line.id} /> : null}
           </li>
         ))}
-        {sending && <li className="portal-turn" data-role="assistant"><span className="portal-turn-who">Assistant</span><span className="portal-typing" aria-label="Typing"><i /><i /><i /></span></li>}
+        {sending && (
+          <li className="portal-turn portal-turn-thinking" data-role="assistant">
+            <Mascot pose="writing" width={64} />
+            <span><span className="portal-turn-who">Assistant</span><span className="portal-typing" aria-label="Typing"><i /><i /><i /></span></span>
+          </li>
+        )}
         <li ref={end} aria-hidden="true" className="portal-turn-anchor" />
       </ol>
       {suggestOfficer && (
-        <p className="portal-note">Need a person? <button type="button" className="portal-link" onClick={onUseVoice}>Start a voice call</button> and choose &ldquo;Connect to Admissions Officer&rdquo;.</p>
+        <div className="portal-mascot-row">
+          <Mascot pose="megaphone" width={80} />
+          <p className="portal-note">Need a person? <button type="button" className="portal-link" onClick={onUseVoice}>Start a voice call</button> and choose &ldquo;Connect to Admissions Officer&rdquo;.</p>
+        </div>
       )}
-      {error && <p className="portal-error" role="alert">{error}</p>}
+      {error && (
+        <div className="portal-mascot-row">
+          <Mascot pose="confused" width={56} />
+          <p className="portal-error" role="alert">{error}</p>
+        </div>
+      )}
       <form className="portal-compose" onSubmit={(e) => { e.preventDefault(); void send(); }}>
         <label htmlFor={inputId} className="sr-only">Your question</label>
         <textarea

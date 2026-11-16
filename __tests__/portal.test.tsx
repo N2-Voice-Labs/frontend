@@ -2,6 +2,8 @@ import { cleanup, fireEvent, render, screen, waitFor, within, act } from "@testi
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { AssistantPanel } from "@/components/features/portal/assistant-panel";
 import { PortalHome } from "@/components/features/portal/portal-home";
+import { AssistantDock } from "@/components/features/portal/assistant-dock";
+import { PortalHeader } from "@/components/features/portal/portal-chrome";
 import { StaffConsole } from "@/components/features/portal/staff-console";
 
 const mocks = vi.hoisted(() => ({
@@ -26,6 +28,7 @@ vi.mock("livekit-client", () => ({
   RoomEvent: new Proxy({}, { get: (_t, key) => String(key) }),
   Track: { Kind: { Audio: "audio" } },
 }));
+vi.mock("next/navigation", () => ({ usePathname: () => "/inha" }));
 vi.mock("@/components/features/portal/handoff-call", () => ({ HandoffCall: () => <div>HandoffCall rendered</div> }));
 
 const session = { session_id: "s1", conversation_id: "c1", room_name: "r1", connection_status: "configured", runtime_status: "accepted", connection: { url: "ws://lk", token: "lk-token" }, session_token: "bearer-s1" };
@@ -42,6 +45,8 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn(() => Promise.resolve()) as unknown as Element["scrollIntoView"];
 });
 afterEach(cleanup);
+
+const renderHome = () => render(<><PortalHeader /><AssistantDock><PortalHome /></AssistantDock></>);
 
 async function startCall() {
   fireEvent.click(screen.getByRole("button", { name: /Start AI Voice Call/ }));
@@ -95,7 +100,7 @@ test("chat sends and renders reply, offers voice after escalation, and reports r
 });
 
 test("PortalHome topic fills chat question and switches tabs", async () => {
-  render(<PortalHome />);
+  renderHome();
   fireEvent.click(screen.getByRole("button", { name: /Required documents/ }));
   expect(screen.getByRole("tab", { name: "Chat" }).getAttribute("aria-selected")).toBe("true");
   await waitFor(() => expect((screen.getByLabelText("Your question") as HTMLTextAreaElement).value).toBe("What documents do I need to apply?"));
@@ -141,8 +146,26 @@ test("chat answers show their [n] citations as links to the cited official pages
 
 
 test("portal navigation stays under /inha and omits the website widget", () => {
-  render(<PortalHome />);
+  renderHome();
   expect(screen.getByRole("link", { name: /demo home/ }).getAttribute("href")).toBe("/inha");
   expect(screen.getByRole("link", { name: "Staff" }).getAttribute("href")).toBe("/inha/staff");
   expect(screen.queryByRole("link", { name: "For your website" })).toBeNull();
+});
+
+test("the mascot greets on the home page and in the empty chat, decoratively", () => {
+  const { container } = renderHome();
+  const wave = container.querySelector('img[src="/portal/mascot/wave-320.webp"]');
+  expect(wave).not.toBeNull();
+  expect(wave?.getAttribute("alt")).toBe("");
+  expect(wave?.getAttribute("srcset")).toContain("wave-640.webp 640w");
+  fireEvent.click(screen.getByRole("tab", { name: "Chat" }));
+  expect(container.querySelector('img[src="/portal/mascot/reading-320.webp"]')).not.toBeNull();
+});
+
+test("the portal 404 shows the confused dragon and a way back", async () => {
+  const { default: PortalNotFound } = await import("@/app/(portal)/inha/not-found");
+  render(<PortalNotFound />);
+  expect(screen.getByRole("heading", { name: "We couldn't find that page" })).toBeTruthy();
+  expect(screen.getByAltText(/confused/)).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Back to the admissions portal" }).getAttribute("href")).toBe("/inha");
 });

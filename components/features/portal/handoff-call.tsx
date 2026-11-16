@@ -5,6 +5,7 @@ import type { Handoff } from "@/lib/portal";
 import { CallEnded } from "@/components/features/call/call-ended";
 import { CallScreen } from "@/components/features/call/call-screen";
 import { useLiveCall } from "@/components/features/call/use-live-call";
+import { Mascot } from "./mascot";
 
 const LIVEKIT_TTL_SECONDS = 600;
 
@@ -63,6 +64,7 @@ export function HandoffCall({ handoff, selfName, selfLanguage, staffLanguage, on
   if (failed) {
     return (
       <div className="portal-handoff-note" role="alert">
+        <Mascot pose="confused" width={160} />
         <p><strong>The call to an officer couldn&apos;t connect.</strong> Check your connection and try again, or use the chat.</p>
         <button type="button" className="portal-btn" onClick={onDone}>Back to the assistant</button>
       </div>
@@ -78,6 +80,8 @@ export function HandoffCall({ handoff, selfName, selfLanguage, staffLanguage, on
   }
 
   return (
+    <>
+    {!state.other.everJoined && <Mascot pose="clock" width={200} className="portal-mascot-waiting" speechSide="top" speech={<>An officer is on the way.</>} />}
     <CallScreen
       role="creator"
       state={state}
@@ -95,5 +99,6 @@ export function HandoffCall({ handoff, selfName, selfLanguage, staffLanguage, on
       onVolume={room.setVolume}
       statusExtra={state.other.everJoined ? undefined : "Waiting for an admissions officer to pick up. You'll each hear the other in your own language."}
     />
+    </>
   );
 }
