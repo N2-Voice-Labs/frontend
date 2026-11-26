@@ -1,5 +1,3 @@
-import { readWorkspaceKey, rejectWorkspaceKey } from "./workspace-key";
-
 const platformUrl = (process.env.NEXT_PUBLIC_PLATFORM_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 /**
@@ -147,21 +145,22 @@ export function withBearer(init: RequestInit | undefined, token?: string | null)
   return { ...init, headers };
 }
 
+/** Workspace pages (agents, voices, ...); everything else (portal, calls) uses only public or token routes. */
+const WORKSPACE_PAGE = /^\/(agents|voices|conversations|knowledge|tools|usage|campaigns|playground)(\/|$)/;
+
 /**
- * Adds the workspace key (lib/workspace-key.ts) when the call has no Authorization of its own.
- * Session tokens set by `withBearer` always win. Returns whether the key was added.
+ * Where Platform requests go. On a workspace page they go through this site's /api/platform route,
+ * whose server adds the Platform API key (app/api/platform/[...path]/route.ts), so the key never
+ * reaches the browser. Everything else calls the Platform directly, as before.
  */
-export function withWorkspaceKey(init: RequestInit | undefined): { init: RequestInit | undefined; usedKey: boolean } {
-  const key = readWorkspaceKey();
-  if (!key || new Headers(init?.headers).has("authorization")) return { init, usedKey: false };
-  return { init: withBearer(init, key), usedKey: true };
+export function platformBase(): string {
+  if (typeof window !== "undefined" && WORKSPACE_PAGE.test(window.location.pathname)) return "/api/platform";
+  return platformUrl;
 }
 
 /** The one place that talks to the Platform. Every other `lib/*` module builds on it. */
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const auth = withWorkspaceKey(init);
-  const response = await fetch(`${platformUrl}${path}`, { ...auth.init, cache: "no-store" });
-  if (response.status === 401 && auth.usedKey) rejectWorkspaceKey();
+  const response = await fetch(`${platformBase()}${path}`, { ...init, cache: "no-store" });
   if (!response.ok) {
     let detail = `Platform returned ${response.status}`;
     try {

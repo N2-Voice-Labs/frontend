@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { DotSpotlight } from "@/components/shared/dot-spotlight";
 import { RootHtml } from "@/components/shared/root-html";
 import { WorkspaceFooter } from "@/components/workspace/workspace-footer";
-import { WorkspaceKeyGate } from "@/components/workspace/workspace-key-gate";
 import { WorkspaceNav } from "@/components/workspace/workspace-nav";
 import { siteFonts } from "@/lib/fonts/site";
 import { baseMetadata } from "@/lib/site-metadata";
@@ -17,7 +16,7 @@ export default function WorkspaceLayout({ children }: Readonly<{ children: React
   return (
     <RootHtml fonts={siteFonts}>
       <WorkspaceNav />
-      <WorkspaceKeyGate>{children}</WorkspaceKeyGate>
+      {children}
       <WorkspaceFooter />
       {/* The agents page texture fades out sideways, so it lights up anywhere along its rows. */}
       <DotSpotlight selector=".page-bg" rows />

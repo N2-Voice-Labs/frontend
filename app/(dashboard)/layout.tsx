@@ -3,7 +3,6 @@ import { CommandPalette } from "@/components/features/agents/command-palette";
 import { DotSpotlight } from "@/components/shared/dot-spotlight";
 import { RootHtml } from "@/components/shared/root-html";
 import { WorkspaceFooter } from "@/components/workspace/workspace-footer";
-import { WorkspaceKeyGate } from "@/components/workspace/workspace-key-gate";
 import { WorkspaceNav } from "@/components/workspace/workspace-nav";
 import { siteFonts } from "@/lib/fonts/site";
 import { baseMetadata } from "@/lib/site-metadata";
@@ -34,7 +33,7 @@ export default function DashboardLayout({ children }: Readonly<{ children: React
       <WorkspaceNav />
       <div className="dash-root">
         <CommandPalette />
-        <div id="main-content" tabIndex={-1} className="dash-content"><WorkspaceKeyGate>{children}</WorkspaceKeyGate></div>
+        <div id="main-content" tabIndex={-1} className="dash-content">{children}</div>
       </div>
       <WorkspaceFooter />
       <DotSpotlight selector=".dash-content" />
