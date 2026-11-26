@@ -11,7 +11,7 @@ describe("UNAI content pages", () => {
     for (const [Page, href] of [[ProductsPage, "/products"], [SolutionsPage, "/solutions"], [DevelopersPage, "/developers"], [DemoPage, "/demo"], [ContactPage, "/contact"]] as const) {
       const { unmount } = render(<Page />);
       const nav = screen.getAllByRole("navigation", { name: "Main" })[0];
-      expect(within(nav).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/products", "/solutions", "/developers", "/demo", "/contact"]);
+      expect(within(nav).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/products", "/solutions", "/developers", "/demo", "/contact", "/agents"]);
       expect(within(nav).getByRole("link", { current: "page" }).getAttribute("href")).toBe(href);
       expect(screen.getByRole("heading", { level: 1 })).toBeTruthy();
       unmount();

@@ -7,6 +7,7 @@ export const SITE_NAV = [
   { href: ROUTES.developers, label: "Developers" },
   { href: ROUTES.demo, label: "Live demo" },
   { href: ROUTES.contact, label: "Contact" },
+  { href: ROUTES.agents, label: "Agents" },
 ] as const;
 
 /** What a capability honestly is today. Rendered as a chip; never upgrade one without evidence. */
