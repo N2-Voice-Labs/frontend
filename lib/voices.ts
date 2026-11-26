@@ -1,4 +1,4 @@
-import { request, withWorkspaceKey } from "./platform";
+import { request } from "./platform";
 
 export type VoiceStatus = "pending" | "processing" | "ready" | "failed" | "disabled";
 export type VoiceSource = "library" | "clone" | "design";
@@ -52,7 +52,7 @@ export const voiceActions: Partial<Record<VoiceStatus, { to: VoiceStatus; label:
  */
 export async function previewVoice(id: string, text: string): Promise<Blob> {
   const base = process.env.NEXT_PUBLIC_PLATFORM_URL ?? "http://localhost:8000";
-  const response = await fetch(`${base}/voices/${encodeURIComponent(id)}/preview`, { ...withWorkspaceKey(json("POST", { text })).init, cache: "no-store" });
+  const response = await fetch(`${base}/voices/${encodeURIComponent(id)}/preview`, { ...json("POST", { text }), cache: "no-store" });
   if (!response.ok) throw Object.assign(new Error(`Platform returned ${response.status}`), { status: response.status });
   return response.blob();
 }
