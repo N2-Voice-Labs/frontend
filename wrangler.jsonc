@@ -14,6 +14,13 @@
       "service": "voice-labs"
     }
   ],
+  // Runtime values for the server-side demo route (app/api/demo/session). Not secret.
+  // PLATFORM_API_KEY is a secret: set it in the dashboard (Settings > Variables and Secrets),
+  // never here.
+  "vars": {
+    "PLATFORM_URL": "https://api.13-55-24-212.sslip.io",
+    "DEMO_AGENTS": "{\"concierge\":\"db17bdfb-a537-4e92-b3a6-c5e1d4aab9c8\",\"inha-admissions\":\"db17bdfb-a537-4e92-b3a6-c5e1d4aab9c8\"}"
+  },
   // Per-IP limit for the public demo route (app/api/demo/session). Shared across isolates,
   // unlike the in-memory fallback used by `next dev`.
   "ratelimits": [
@@ -26,6 +33,10 @@
   // Branch builds (non-main) deploy with `wrangler preview`, which needs preview-safe bindings spelled out.
   // Previews get their own rate-limit counter so preview traffic never uses up production's.
   "previews": {
+    "vars": {
+      "PLATFORM_URL": "https://api.13-55-24-212.sslip.io",
+      "DEMO_AGENTS": "{\"concierge\":\"db17bdfb-a537-4e92-b3a6-c5e1d4aab9c8\",\"inha-admissions\":\"db17bdfb-a537-4e92-b3a6-c5e1d4aab9c8\"}"
+    },
     "ratelimits": [
       {
         "name": "DEMO_RATE_LIMITER",

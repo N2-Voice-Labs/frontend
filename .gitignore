@@ -12,6 +12,7 @@ dist/
 # Local environment files; keep the safe template in version control
 .env*
 !.env.example
+!.env.production
 
 # Test reports, coverage, and generated screenshots
 coverage/
