@@ -73,6 +73,8 @@ main{position:relative;z-index:1}
 .topbar-actions{display:flex;align-items:center;gap:22px}
 .topbar-sound,.topbar-link{display:inline-flex;align-items:center;gap:9px;background:none;border:0;padding:8px 0;font-family:var(--font-code);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--c-muted);text-decoration:none;cursor:pointer}
 .topbar-sound:hover,.topbar-link:hover,.topbar-sound[aria-pressed="true"]{color:var(--c-ink)}
+.topbar-cta{display:inline-flex;align-items:center;padding:8px 16px;border:1px solid rgba(236,231,220,.32);border-radius:999px;font-family:var(--font-code);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--c-ink);text-decoration:none;transition:background .2s,border-color .2s,color .2s}
+.topbar-cta:hover,.topbar-cta:focus-visible{background:var(--c-bridge);border-color:var(--c-bridge);color:var(--c-bg)}
 .topbar-eq{display:inline-flex;align-items:flex-end;gap:2px;height:11px}
 .topbar-eq i{width:2px;height:3px;background:currentColor}
 .topbar-eq[data-on="true"] i{animation:eq .9s ease-in-out infinite alternate}
