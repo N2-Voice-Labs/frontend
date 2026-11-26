@@ -1,3 +1,5 @@
+import { readWorkspaceKey, rejectWorkspaceKey } from "./workspace-key";
+
 const platformUrl = (process.env.NEXT_PUBLIC_PLATFORM_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 /**
@@ -145,9 +147,21 @@ export function withBearer(init: RequestInit | undefined, token?: string | null)
   return { ...init, headers };
 }
 
+/**
+ * Adds the workspace key (lib/workspace-key.ts) when the call has no Authorization of its own.
+ * Session tokens set by `withBearer` always win. Returns whether the key was added.
+ */
+export function withWorkspaceKey(init: RequestInit | undefined): { init: RequestInit | undefined; usedKey: boolean } {
+  const key = readWorkspaceKey();
+  if (!key || new Headers(init?.headers).has("authorization")) return { init, usedKey: false };
+  return { init: withBearer(init, key), usedKey: true };
+}
+
 /** The one place that talks to the Platform. Every other `lib/*` module builds on it. */
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${platformUrl}${path}`, { ...init, cache: "no-store" });
+  const auth = withWorkspaceKey(init);
+  const response = await fetch(`${platformUrl}${path}`, { ...auth.init, cache: "no-store" });
+  if (response.status === 401 && auth.usedKey) rejectWorkspaceKey();
   if (!response.ok) {
     let detail = `Platform returned ${response.status}`;
     try {
