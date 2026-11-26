@@ -1,10 +1,12 @@
 import { sameOrigin } from "@/lib/demo/server";
+import { isSignedIn } from "@/lib/workspace-auth";
 
 /**
  * /api/platform/*: the workspace's way to the Platform. This server adds the Platform API key
  * (the PLATFORM_API_KEY secret), so the workspace works without anyone typing a key and the key
  * never reaches the browser. A request that already carries its own token keeps it.
- * Same-origin only, and only the Platform areas the workspace uses.
+ * Signed-in only (the workspace login, lib/workspace-auth.ts), same-origin only, and only the
+ * Platform areas the workspace uses.
  */
 const ALLOWED = new Set([
   "agents", "agent-templates", "analytics", "calls", "campaigns", "conversations",
@@ -15,6 +17,7 @@ const PASS_RESPONSE = ["content-type", "content-disposition", "retry-after"];
 
 async function proxy(request: Request, ctx: { params: Promise<{ path: string[] }> }) {
   if (!sameOrigin(request)) return Response.json({ detail: "forbidden" }, { status: 403 });
+  if (!(await isSignedIn(request))) return Response.json({ detail: "login_required" }, { status: 401 });
   const { path } = await ctx.params;
   if (!path?.length || !ALLOWED.has(path[0])) return Response.json({ detail: "not_found" }, { status: 404 });
   const base = (process.env.PLATFORM_URL ?? "").replace(/\/$/, "");

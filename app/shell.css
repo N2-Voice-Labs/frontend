@@ -72,3 +72,16 @@ a.btn-ghost:hover,.btn-ghost:hover{border-color:var(--ink);color:var(--ink)}
 .nav .links a:hover,.nav .links a[aria-current="page"]{color:var(--ink)}
 .nav a.logo{color:var(--ink)}
 .nav .more-sheet a,.nav .menu-sheet a{color:var(--ink)}
+
+/* Workspace sign-in (components/workspace/workspace-login.tsx) */
+.key-gate{min-height:70vh;display:grid;place-items:center;padding:48px 20px}
+.key-gate-card{display:flex;flex-direction:column;gap:12px;width:100%;max-width:420px;padding:32px;border:1px solid var(--line,rgba(255,255,255,.14));border-radius:20px;background:color-mix(in srgb,var(--bg,#0e1011) 92%,var(--ink,#fff))}
+.key-gate-card h1{font-size:26px;font-weight:600;letter-spacing:-.02em;margin:0}
+.key-gate-card p{margin:0;color:var(--muted,#9a9fa2);line-height:1.55}
+.key-gate-crumb{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#9a9fa2)}
+.key-gate-label{font-size:14px;font-weight:600;margin-top:6px}
+.key-gate-card input{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line,rgba(255,255,255,.2));background:transparent;color:inherit;font:inherit}
+.key-gate-card input:focus-visible{outline:2px solid var(--acc,#d9f25b);outline-offset:2px}
+.key-gate-card .key-gate-error{color:#f2654f}
+.key-gate-card .btn{margin-top:6px}
+.key-gate-card .btn:disabled{opacity:.55;cursor:default;transform:none}

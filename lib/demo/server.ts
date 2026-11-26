@@ -26,17 +26,20 @@ export function memoryLimit(key: string, now = Date.now()) {
   return true;
 }
 
-/** Uses the Cloudflare rate-limit binding (shared across isolates) when deployed, memory otherwise. */
-export async function allowRequest(ip: string) {
+/**
+ * Uses the Cloudflare rate-limit binding (shared across isolates) when deployed, memory otherwise.
+ * `scope` keeps separate budgets (the demo, workspace login attempts) for the same IP.
+ */
+export async function allowRequest(ip: string, scope = "demo") {
   try {
     const { getCloudflareContext } = await import("@opennextjs/cloudflare");
     const { env } = await getCloudflareContext({ async: true });
     const limiter = (env as unknown as { DEMO_RATE_LIMITER?: Limiter }).DEMO_RATE_LIMITER;
-    if (limiter) return (await limiter.limit({ key: `demo:${ip}` })).success;
+    if (limiter) return (await limiter.limit({ key: `${scope}:${ip}` })).success;
   } catch {
     // Not running on Cloudflare.
   }
-  return memoryLimit(ip);
+  return memoryLimit(scope === "demo" ? ip : `${scope}:${ip}`);
 }
 
 export function clientIp(request: Request) {
