@@ -42,6 +42,8 @@ const messages: Record<string, string> = {
   selected_voice_unavailable: "That voice isn’t ready. Try again with the interpreter’s voice.",
   session_full: "Someone has already been invited to this call.",
   session_not_active: "This call has already ended.",
+  session_not_active_agent: "The call with the assistant had already ended, so it couldn't be passed to an officer. Start a new call and choose “Connect to Admissions Officer” while it is running.",
+  handoff_exists: "You have already asked for an officer on this call.",
   voice_session_not_found: "This call no longer exists.",
   runtime_unavailable: "The interpreter isn’t responding right now. Try again in a moment.",
   runtime_auth_not_configured: "The interpreter isn’t set up on this server yet.",
