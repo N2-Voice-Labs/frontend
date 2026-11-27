@@ -168,9 +168,12 @@ export function useAgentCall() {
   const handOff = useCallback(async (options: { language: string; name?: string | null; reason?: string | null }): Promise<Handoff> => {
     const session = sessionRef.current;
     if (!session) throw new Error("no_session");
-    await disconnect();
+    // Request the handoff while still in the AI room: leaving first makes the runtime end the AI session
+    // (participant_disconnected) before the request arrives, and the Platform then refuses it with
+    // 409 session_not_active_agent. The Platform ends the AI session itself as part of the handoff.
     const handoff = await createHandoff({ session_id: session.session_id, language: options.language, name: options.name, reason: options.reason }, session.session_token);
     sessionRef.current = null;
+    await disconnect();
     return handoff;
   }, [disconnect]);
 
